@@ -60,6 +60,8 @@ jobs:
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriHasDataExpHasData -DfailIfNoTests=false
+          else
+            echo "${{matrix.DB-name}} is not supported"
           fi
 
       #第 2 阶段测试开始==========================================
@@ -76,6 +78,8 @@ jobs:
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriNoDataExpNoData -DfailIfNoTests=false
+          else
+            echo "${{matrix.DB-name}} is not supported"
           fi
 
       #第 3 阶段测试开始==========================================
@@ -92,6 +96,8 @@ jobs:
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriHasDataExpNoData -DfailIfNoTests=false
+          else
+            echo "${{matrix.DB-name}} is not supported"
           fi
 
       #第 4 阶段测试开始==========================================
@@ -108,6 +114,8 @@ jobs:
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriNoDataExpHasData -DfailIfNoTests=false
+          else
+            echo "${{matrix.DB-name}} is not supported"
           fi
 
       - uses: codecov/codecov-action@v1
