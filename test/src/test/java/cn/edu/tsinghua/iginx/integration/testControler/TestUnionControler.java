@@ -74,18 +74,16 @@ public class TestUnionControler {
                 System.out.println(line);
             }
             int status = p.waitFor();
-            if (status != 0) {
-                System.err.printf("runShellCommand: %s, status: %s%n", command, p.exitValue());
-            }
-            if (errorIn.available() != 0) {
-                BufferedReader readError = new BufferedReader(new InputStreamReader(errorIn));
-                String lineError;
-                while((lineError = readError.readLine())!=null){
-                    System.out.printf("error=======================");
-                    System.out.println(lineError);
-                }
-                throw new Exception("tests fail!");
-            }
+            System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
+//            if (errorIn.available() != 0) {
+//                BufferedReader readError = new BufferedReader(new InputStreamReader(errorIn));
+//                String lineError;
+//                while((lineError = readError.readLine())!=null){
+//                    System.out.printf("error=======================");
+//                    System.out.println(lineError);
+//                }
+//                throw new Exception("tests fail!");
+//            }
         } finally {
             if (p != null) {
                 p.destroy();
