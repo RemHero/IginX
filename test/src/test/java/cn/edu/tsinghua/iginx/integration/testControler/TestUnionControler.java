@@ -59,38 +59,22 @@ public class TestUnionControler {
         }
     }
 
-    public static void runShellCommand(String command) {
+    public static void runShellCommand(String command) throws Exception {
         String[] cmdStrings = new String[] {"chmod", "+x", command};
 
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "pwd"});
-            InputStream in = p.getInputStream();
+            p = Runtime.getRuntime().exec(new String[] {command});
+            InputStream in = p.getInputStream(), errorIn = p.getErrorStream();
             BufferedReader read = new BufferedReader(new InputStreamReader(in));
             String line;
             while((line = read.readLine())!=null){
                 System.out.println(line);
             }
-
-            p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "cd /home/runner/work/IGinX/IGinX/; ls"});
-             in = p.getInputStream();
-             read = new BufferedReader(new InputStreamReader(in));
-            while((line = read.readLine())!=null){
-                System.out.println(line);
-            }
-
-            p = Runtime.getRuntime().exec(new String[] {command});
-             in = p.getInputStream();
-             read = new BufferedReader(new InputStreamReader(in));
-            while((line = read.readLine())!=null){
-                System.out.println(line);
-            }
             int status = p.waitFor();
-            if (status != 0) {
+            if (status != 0 || errorIn.available() != 0) {
                 System.err.printf("runShellCommand: %s, status: %s%n", command, status);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             if (p != null) {
                 p.destroy();
@@ -109,7 +93,7 @@ public class TestUnionControler {
     }
 
     @Test
-    public void testUnion() throws SessionException, ExecutionException {
+    public void testUnion() throws Exception {
         for (String cmd :STORAGEENGINELIST) {
             //set the test Environment
             session.executeSql(cmd);
