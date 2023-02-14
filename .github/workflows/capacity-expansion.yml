@@ -1,12 +1,11 @@
 name: "Capacity-Expansion-Test"
 on:
-  on:
-    push:
-      branches:
-        - main
-    pull_request:
-      branches:
-        - main
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - main
 env:
   VERSION: 0.6.0-SNAPSHOT
 concurrency:
