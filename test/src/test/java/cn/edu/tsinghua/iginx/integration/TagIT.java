@@ -143,7 +143,7 @@ public class TagIT {
                         + "+-----------------------+--------+\n"
                         + "|                   Path|DataType|\n"
                         + "+-----------------------+--------+\n"
-                        + "|              ah.hr01.s|    LONG|\n"
+                        + "|              ah.hr1.s|    LONG|\n"
                         + "|ah.hr01.s{t1=v1,t2=vv1}|    LONG|\n"
                         + "|              ah.hr01.v|    LONG|\n"
                         + "|ah.hr01.v{t1=v2,t2=vv1}|    LONG|\n"
