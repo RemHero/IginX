@@ -27,6 +27,8 @@ public class TestUnionControler {
     ));
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
+
+    private final boolean DEBUG = false;
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "/home/runner/work/IGinX/IGinX/.github/testUnion.sh";
     protected static Session session;
@@ -65,15 +67,15 @@ public class TestUnionControler {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {command});
-            InputStream errorIn = p.getErrorStream();
-//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
-//            String line;
-//            while((line = read.readLine())!=null){
-//                System.out.println(line);
-//            }
+            InputStream in = p.getInputStream(), errorIn = p.getErrorStream();
+            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while((line = read.readLine())!=null){
+                System.out.println(line);
+            }
             int status = p.waitFor();
             if (status != 0) {
-                System.err.printf("runShellCommand: %s, status: %s%n", command, status);
+                System.err.printf("runShellCommand: %s, status: %s%n", command, p.exitValue());
             }
             if (errorIn.available() != 0) {
                 BufferedReader readError = new BufferedReader(new InputStreamReader(errorIn));
