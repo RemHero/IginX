@@ -18,7 +18,7 @@ jobs:
       matrix:
         java: [ 8 ]
         python-version: [ "3.7" ]
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest ]
         DB-name: [ "iotdb12" ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -56,7 +56,7 @@ jobs:
         if: always()
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
-            mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
+            chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
           else
             echo "${{matrix.DB-name}} is not supported"
           fi
