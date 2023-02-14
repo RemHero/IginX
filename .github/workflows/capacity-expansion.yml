@@ -57,6 +57,7 @@ jobs:
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
+            "${GITHUB_WORKSPACE}/.github/testUnion.sh"
           else
             echo "${{matrix.DB-name}} is not supported"
           fi
