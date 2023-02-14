@@ -65,21 +65,21 @@ public class TestUnionControler {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {command});
-            InputStream in = p.getInputStream(), errorIn = p.getErrorStream();
-            BufferedReader read = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while((line = read.readLine())!=null){
-                System.out.println(line);
-            }
+            InputStream errorIn = p.getErrorStream();
+//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+//            String line;
+//            while((line = read.readLine())!=null){
+//                System.out.println(line);
+//            }
             int status = p.waitFor();
             if (status != 0) {
                 System.err.printf("runShellCommand: %s, status: %s%n", command, status);
             }
             if (errorIn.available() != 0) {
-                System.err.printf("error=======================");
                 BufferedReader readError = new BufferedReader(new InputStreamReader(errorIn));
                 String lineError;
                 while((lineError = readError.readLine())!=null){
+                    System.out.printf("error=======================");
                     System.out.println(lineError);
                 }
                 throw new Exception("tests fail!");
