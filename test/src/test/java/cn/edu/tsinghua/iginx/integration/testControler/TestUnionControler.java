@@ -57,7 +57,7 @@ public class TestUnionControler {
     }
 
     public static void runShellCommand(String command) {
-        String[] cmdStrings = new String[] {command};
+        String[] cmdStrings = new String[] {"sh", "-c", command};
 
         Process p = null;
         try {
