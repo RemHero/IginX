@@ -25,7 +25,7 @@ public class TestUnionControler {
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
-    private String MVNRUNTEST = "mvn test -q -Dtest=%s -DfailIfNoTests=false";
+    private String MVNRUNTEST = "${GITHUB_WORKSPACE}/.github/testUnion.sh";
     protected static Session session;
 
     private List<String> STORAGEENGINELIST = new ArrayList<>(Arrays.asList(
@@ -91,9 +91,7 @@ public class TestUnionControler {
             //set the test Environment
             session.executeSql(cmd);
             //run the test
-            for (String testName : testTasks) {
-                runShellCommand(String.format(MVNRUNTEST, testName));
-            }
+            runShellCommand(MVNRUNTEST);
         }
     }
 }
