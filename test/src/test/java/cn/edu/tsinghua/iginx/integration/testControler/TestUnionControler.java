@@ -72,8 +72,11 @@ public class TestUnionControler {
                 System.out.println(line);
             }
             int status = p.waitFor();
-            if (status != 0 || errorIn.available() != 0) {
+            if (status != 0 ) {
                 System.err.printf("runShellCommand: %s, status: %s%n", command, status);
+            }
+            if (errorIn.available() != 0) {
+                throw new Exception("tests fail!");
             }
         } finally {
             if (p != null) {
