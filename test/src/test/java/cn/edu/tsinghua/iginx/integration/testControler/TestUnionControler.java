@@ -69,10 +69,12 @@ public class TestUnionControler {
             p = Runtime.getRuntime().exec(new String[] {command});
             InputStream in = p.getInputStream(), errorIn = p.getErrorStream();
             BufferedReader read = new BufferedReader(new InputStreamReader(in));
-            String line;
+            String line, lastLine;
             while((line = read.readLine())!=null){
                 System.out.println(line);
+                lastLine = line;
             }
+            System.out.println("======================" + line);
             int status = p.waitFor();
             System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
 //            if (errorIn.available() != 0) {
