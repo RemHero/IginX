@@ -10,7 +10,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,8 +65,26 @@ public class TestUnionControler {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "pwd"});
+            InputStream in = p.getInputStream();
+            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while((line = read.readLine())!=null){
+                System.out.println(line);
+            }
+
             p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "cd /home/runner/work/IGinX/IGinX/; ls"});
+             in = p.getInputStream();
+             read = new BufferedReader(new InputStreamReader(in));
+            while((line = read.readLine())!=null){
+                System.out.println(line);
+            }
+
             p = Runtime.getRuntime().exec(new String[] {command});
+             in = p.getInputStream();
+             read = new BufferedReader(new InputStreamReader(in));
+            while((line = read.readLine())!=null){
+                System.out.println(line);
+            }
             int status = p.waitFor();
             if (status != 0) {
                 System.err.printf("runShellCommand: %s, status: %s%n", command, status);
