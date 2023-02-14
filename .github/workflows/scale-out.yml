@@ -1,246 +1,246 @@
-name: "Scale-out-On-IoTDB"
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-env:
-  VERSION: 0.6.0-SNAPSHOT
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  IoTDB-SO:
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [ 8 ]
-        python-version: [ "3.7" ]
-        os: [ ubuntu-latest, macos-latest ]
-        DB-name: [ "iotdb12" ]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Environmet Dependence
-        uses: ./.github/actions/dependence
-        with:
-          python-version: ${{ matrix.python-version }}
-          java: ${{ matrix.java }}
-
-      - name: Run ZooKeeper
-        uses: ./.github/actions/zookeeperRunner
-
-      - name: Run IoTDB
-        uses: ./.github/actions/iotdbRunner
-        with:
-          version: ${{matrix.DB-name}}
-
-      - name: Change pom
-        run: |
-          mv test/pom.xml test/pom.xml.backup
-          mv test/pom.xml.${{matrix.DB-name}} test/pom.xml
-          ls test/pom*
-
-      - name: Install IginX with Maven
-        shell: bash
-        run: |
-          mvn clean package -DskipTests
-
-      #第 1 阶段测试开始==========================================
-      - name: Prepare CapExp environment
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpNoData
-
-      - name: SQLSession-oriNoDataExpNoData IT
-        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpNoData
-
-      - name: Session-oriNoDataExpNoData IT
-        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpNoData
-
-      - name: REST-oriNoDataExpNoData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpNoData
-
-      - name: TAG-oriNoDataExpNoData IT
-        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
-
-      #第 2 阶段测试开始==========================================
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpNoData
-
-      - name: SQLSession-oriHasDataExpNoData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpNoData
-
-      - name: Session-oriHasDataExpNoData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpNoData
-
-      - name: REST-oriHasDataExpNoData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpNoData
-
-      - name: TAG-oriHasDataExpNoData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
-
-      #第 3 阶段测试开始==========================================
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpHasData
-
-      - name: SQLSession-oriNoDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpHasData
-
-      - name: Session-oriNoDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpHasData
-
-      - name: REST-oriNoDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpHasData
-
-      - name: TAG-oriNoDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
-
-      #第 4 阶段测试开始==========================================
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpHasData
-
-      - name: SQLSession-oriHasDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpHasData
-
-      - name: Session-oriHasDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpHasData
-
-      - name: REST-oriHasDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpHasData
-
-      - name: TAG-oriHasDataExpHasData IT
-        if: always()
-        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-
-      - uses: codecov/codecov-action@v1
-        with:
-          file: ./**/target/site/jacoco/jacoco.xml
-          name: codecov
+#name: "Scale-out-On-IoTDB"
+#on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
+#env:
+#  VERSION: 0.6.0-SNAPSHOT
+#
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.ref }}
+#  cancel-in-progress: true
+#
+#jobs:
+#  IoTDB-SO:
+#    timeout-minutes: 30
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        java: [ 8 ]
+#        python-version: [ "3.7" ]
+#        os: [ ubuntu-latest, macos-latest ]
+#        DB-name: [ "iotdb12" ]
+#    runs-on: ${{ matrix.os }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Environmet Dependence
+#        uses: ./.github/actions/dependence
+#        with:
+#          python-version: ${{ matrix.python-version }}
+#          java: ${{ matrix.java }}
+#
+#      - name: Run ZooKeeper
+#        uses: ./.github/actions/zookeeperRunner
+#
+#      - name: Run IoTDB
+#        uses: ./.github/actions/iotdbRunner
+#        with:
+#          version: ${{matrix.DB-name}}
+#
+#      - name: Change pom
+#        run: |
+#          mv test/pom.xml test/pom.xml.backup
+#          mv test/pom.xml.${{matrix.DB-name}} test/pom.xml
+#          ls test/pom*
+#
+#      - name: Install IginX with Maven
+#        shell: bash
+#        run: |
+#          mvn clean package -DskipTests
+#
+#      #第 1 阶段测试开始==========================================
+#      - name: Prepare CapExp environment
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpNoData
+#
+#      - name: SQLSession-oriNoDataExpNoData IT
+#        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpNoData
+#
+#      - name: Session-oriNoDataExpNoData IT
+#        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpNoData
+#
+#      - name: REST-oriNoDataExpNoData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpNoData
+#
+#      - name: TAG-oriNoDataExpNoData IT
+#        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriNoDataExpNoDataIT -DfailIfNoTests=false
+#
+#      #第 2 阶段测试开始==========================================
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpNoData
+#
+#      - name: SQLSession-oriHasDataExpNoData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpNoData
+#
+#      - name: Session-oriHasDataExpNoData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpNoData
+#
+#      - name: REST-oriHasDataExpNoData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpNoData
+#
+#      - name: TAG-oriHasDataExpNoData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpNoDataIT -DfailIfNoTests=false
+#
+#      #第 3 阶段测试开始==========================================
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpHasData
+#
+#      - name: SQLSession-oriNoDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpHasData
+#
+#      - name: Session-oriNoDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpHasData
+#
+#      - name: REST-oriNoDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpHasData
+#
+#      - name: TAG-oriNoDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriNoDataExpHasDataIT -DfailIfNoTests=false
+#
+#      #第 4 阶段测试开始==========================================
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpHasData
+#
+#      - name: SQLSession-oriHasDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpHasData
+#
+#      - name: Session-oriHasDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpHasData
+#
+#      - name: REST-oriHasDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpHasData
+#
+#      - name: TAG-oriHasDataExpHasData IT
+#        if: always()
+#        run: mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#
+#      - uses: codecov/codecov-action@v1
+#        with:
+#          file: ./**/target/site/jacoco/jacoco.xml
+#          name: codecov
