@@ -57,11 +57,13 @@ public class TestUnionControler {
     }
 
     public static void runShellCommand(String command) {
-        String[] cmdStrings = new String[] {command};
+        String[] cmdStrings = new String[] {"chmod", "+x", command};
 
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(cmdStrings);
+            p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "pwd"});
+            p = Runtime.getRuntime().exec(new String[] {"sh", "-c", "cd /home/runner/work/IGinX/IGinX/; ls"});
+            p = Runtime.getRuntime().exec(new String[] {command});
             int status = p.waitFor();
             if (status != 0) {
                 System.err.printf("runShellCommand: %s, status: %s%n", command, status);
