@@ -25,7 +25,7 @@ public class TestUnionControler {
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
-    private String MVNRUNTEST = "\"./.github/testUnion.sh\"";
+    private String MVNRUNTEST = "/home/runner/work/IGinX/IGinX/.github/testUnion.sh";
     protected static Session session;
 
     private List<String> STORAGEENGINELIST = new ArrayList<>(Arrays.asList(
@@ -57,7 +57,7 @@ public class TestUnionControler {
     }
 
     public static void runShellCommand(String command) {
-        String[] cmdStrings = new String[] {"sh", "-c", command};
+        String[] cmdStrings = new String[] {command};
 
         Process p = null;
         try {
