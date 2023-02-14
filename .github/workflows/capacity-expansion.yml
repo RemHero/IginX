@@ -57,7 +57,8 @@ jobs:
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             "pwd"
             chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
-            mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
+            "${GITHUB_WORKSPACE}/.github/testUnion.sh"
+#            mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
           else
             echo "${{matrix.DB-name}} is not supported"
           fi
