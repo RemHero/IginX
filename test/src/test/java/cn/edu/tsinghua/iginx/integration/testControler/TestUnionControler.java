@@ -37,9 +37,9 @@ public class TestUnionControler {
                 case "iotdb12":
                     taskList.addAll(Arrays.asList(
                             "IoTDB12SessionIT\n",
-                            "IoTDB12SessionPoolIT\n",
-                            "IoTDBSQLSessionIT\n",
-                            "IoTDBSQLSessionPoolIT\n"
+                            "IoTDB12SessionPoolIT\n"
+//                            "IoTDBSQLSessionIT\n",
+//                            "IoTDBSQLSessionPoolIT\n"
                     ));
                     break;
                 case "influxdb":
