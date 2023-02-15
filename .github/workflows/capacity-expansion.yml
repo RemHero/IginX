@@ -21,7 +21,6 @@ jobs:
         java: [ 8 ]
         python-version: [ "3.7" ]
         os: [ ubuntu-latest, macos-latest ]
-        DB-name: [ "iotdb12" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -69,13 +68,9 @@ jobs:
       - name: TestUnionControler IT
         if: always()
         run: |
-          if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
-            "pwd"
-            chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
-            mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
-          else
-            echo "${{matrix.DB-name}} is not supported"
-          fi
+          "pwd"
+          chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
+          mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
 
 #  IoTDB-CE:
 #    timeout-minutes: 20
