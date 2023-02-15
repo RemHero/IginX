@@ -38,7 +38,7 @@ public abstract class BaseSessionIT extends BaseSessionConcurrencyIT {
     protected String storageEngineType;
     protected int defaultPort2;
     protected Map<String, String> extraParams;
-    protected Boolean ifNeedCapExp = true;
+    protected Boolean ifNeedCapExp = false;
 
     //params for downSample
     private static final long PRECISION = 123L;

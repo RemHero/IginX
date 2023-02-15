@@ -2,13 +2,18 @@
 
 cd /home/runner/work/IGinX/IGinX/
 
-mvn test -q -Dtest=TagIT -DfailIfNoTests=false
+while read line
+do
+  echo $line
 
-if [ $? -ne 0 ];then
-	echo " make  -- Faile  : "$?
-	exit 1
-else
-	echo " make  -- Success !"
-fi
+  mvn test -q -Dtest=$line -DfailIfNoTests=false
+
+  if [ $? -ne 0 ];then
+  	echo " test  -- Faile  : "$?
+  	exit 1
+  else
+  	echo " test  -- Success !"
+  fi
+done <  /home/runner/work/IGinX/IGinX/test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
 
 cd /home/runner/work/IGinX/IGinX/test
