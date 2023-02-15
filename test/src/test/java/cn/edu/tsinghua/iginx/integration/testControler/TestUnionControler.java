@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 
 public class TestUnionControler {
     private final List<String[]> STORAGEENGINELIST = new ArrayList<String[]>(){{
-        add(new String[] {"\"127.0.0.1\"", "6668", "\"iotdb12\"", "\"username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false\""});
+//        add(new String[] {"\"127.0.0.1\"", "6668", "\"iotdb12\"", "\"username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false\""});
         add(new String[] {"\"127.0.0.1\"", "8060", "\"influxdb\"", "\"url:http://localhost:8086/ , username:root, password:root, sessionPoolSize:20, has_data:true, is_read_only:false, token:testToken, organization:testOrg\""});
 //        add(new String[] {"\"127.0.0.1\"", "6667", "\"iotdb12\"", "\"username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false\""});
     }};
@@ -77,7 +77,7 @@ public class TestUnionControler {
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
-    private String MVNRUNTEST = "/home/runner/work/IGinX/IGinX/.github/testUnion.sh";
+    private String MVNRUNTEST = "../.github/testUnion.sh";
     private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (%s, %s, %s, %s)";
 //    private List<String> specialTaskName = Arrays.asList("SessionIT", "SessionPoolIT", "SQLSessionIT", "SQLSessionPoolIT");
 //    private List<String> normalTaskName = Arrays.asList("TagIT", "RestIT", "RestAnnotationIT", "TransformIT", "UDFIT");

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd /home/runner/work/IGinX/IGinX/
+cd ..
 
 while read line
 do
@@ -16,4 +16,4 @@ do
   fi
 done <  /home/runner/work/IGinX/IGinX/test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
 
-cd /home/runner/work/IGinX/IGinX/test
+cd ./test
