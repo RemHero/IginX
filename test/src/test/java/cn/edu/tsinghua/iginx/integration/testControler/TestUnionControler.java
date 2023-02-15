@@ -78,7 +78,7 @@ public class TestUnionControler {
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
-    private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (\"%s\", \"%s\", \"%s\", \"%s\")";
+    private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (\"%s\", %s, \"%s\", \"%s\")";
 //    private List<String> specialTaskName = Arrays.asList("SessionIT", "SessionPoolIT", "SQLSessionIT", "SQLSessionPoolIT");
 //    private List<String> normalTaskName = Arrays.asList("TagIT", "RestIT", "RestAnnotationIT", "TransformIT", "UDFIT");
     protected static Session session;
