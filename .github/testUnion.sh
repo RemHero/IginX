@@ -14,6 +14,6 @@ do
     echo " test  -- Success !"
   fi
 
-done <  /home/runner/work/IGinX/IGinX/test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
+done <  ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
 
 cd ./test

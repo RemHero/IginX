@@ -76,6 +76,7 @@ public class TestUnionControler {
     }
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
+    private boolean DEBUG = false;
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
     private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (\"%s\", %s, \"%s\", \"%s\")";
@@ -111,7 +112,11 @@ public class TestUnionControler {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {command});
-            InputStream in = p.getInputStream();
+            InputStream in = null;
+            if (DEBUG)
+                in = p.getErrorStream();
+            else
+                in = p.getInputStream();
             BufferedReader read = new BufferedReader(new InputStreamReader(in));
             String line;
             while((line = read.readLine())!=null){
