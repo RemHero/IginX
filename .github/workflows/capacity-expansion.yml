@@ -66,14 +66,12 @@ jobs:
             echo "$RUNNER_OS is not supported"
             exit 1
           fi
-
       - name: TestUnionControler IT
         if: always()
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
             "pwd"
             chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
-#            "${GITHUB_WORKSPACE}/.github/testUnion.sh"
             mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
           else
             echo "${{matrix.DB-name}} is not supported"
