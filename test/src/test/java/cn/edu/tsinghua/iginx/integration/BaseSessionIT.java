@@ -21,9 +21,11 @@ package cn.edu.tsinghua.iginx.integration;
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
 import cn.edu.tsinghua.iginx.session.SessionAggregateQueryDataSet;
+import cn.edu.tsinghua.iginx.session.SessionExecuteSqlResult;
 import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
 import cn.edu.tsinghua.iginx.thrift.AggregateType;
 import cn.edu.tsinghua.iginx.thrift.DataType;
+import org.junit.After;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -48,6 +50,21 @@ public abstract class BaseSessionIT extends BaseSessionConcurrencyIT {
 
     long factSampleLen = (TIME_PERIOD / PRECISION) + ((TIME_PERIOD % PRECISION == 0) ? 0 : 1);
     double originAvg = (START_TIME + END_TIME) / 2.0;
+
+    @After
+    public void clearData() throws ExecutionException, SessionException {
+        if (!ifClearData) {
+            return;
+        }
+
+        String clearData = "CLEAR DATA;";
+
+        SessionExecuteSqlResult res = session.executeSql(clearData);
+        if (res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
+            logger.error("Clear date execute fail. Caused by: {}.", res.getParseErrorMsg());
+            fail();
+        }
+    }
 
     private String getSinglePath(int startPosition, int offset) {
         int pos = startPosition + offset;
