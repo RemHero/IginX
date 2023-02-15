@@ -34,6 +34,8 @@ public class Config {
 
     private String password = "root";
 
+    private String iginxName = "IGinX";
+
     private String metaStorage = "zookeeper";
 
     private String zookeeperConnectionString = "127.0.0.1:2181";
@@ -711,5 +713,13 @@ public class Config {
 
     public void setLocalParquetStorage(boolean localParquetStorage) {
         isLocalParquetStorage = localParquetStorage;
+    }
+
+    public String getIginxName() {
+        return iginxName;
+    }
+
+    public void setIginxName(String iginxName) {
+        this.iginxName = iginxName;
     }
 }

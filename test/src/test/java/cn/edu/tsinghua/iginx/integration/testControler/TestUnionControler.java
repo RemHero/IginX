@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,24 +20,70 @@ import java.util.List;
 import static org.junit.Assert.fail;
 
 public class TestUnionControler {
-//    private String iginxName = new Config().getIginxName();
-//    private List<String> testTasks = new ArrayList<>(Arrays.asList(
-//            "TagIT",
-//            "RestIT"
-//    ));
     private final List<String[]> STORAGEENGINELIST = new ArrayList<String[]>(){{
         add(new String[] {"\"127.0.0.1\"", "6668", "\"iotdb12\"", "\"username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false\""});
+        add(new String[] {"\"127.0.0.1\"", "8060", "\"influxdb\"", "\"url:http://localhost:8086/ , username:root, password:root, sessionPoolSize:20, has_data:true, is_read_only:false, token:testToken, organization:testOrg\""});
+//        add(new String[] {"\"127.0.0.1\"", "6667", "\"iotdb12\"", "\"username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false\""});
     }};
+
+    // write test IT name to the file
+    private void setTestTasks(String DBName) {
+        try {
+            File file = new File("./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt");//文件路径
+            FileWriter fileWriter = new FileWriter(file);
+            List<String> taskList = new ArrayList<>();
+            // test for specific DB
+            switch (DBName.toLowerCase()) {
+                case "iotdb12":
+                    taskList.addAll(Arrays.asList(
+                            "IoTDB12SessionIT\n",
+                            "IoTDB12SessionPoolIT\n",
+                            "IoTDBSQLSessionIT\n",
+                            "IoTDBSQLSessionPoolIT\n"
+                    ));
+                    break;
+                case "influxdb":
+                    taskList.addAll(Arrays.asList(
+                            "InfluxDBSessionIT\n",
+                            "InfluxDBSessionPoolIT\n",
+                            "InfluxDBSQLSessionIT\n",
+                            "InfluxDBSQLSessionPoolIT\n"
+                    ));
+                    break;
+                case "parquet":
+                    taskList.addAll(Arrays.asList(
+                            "ParquetSQLSessionIT\n",
+                            "ParquetSQLSessionPoolIT\n"
+                    ));
+                    break;
+                default:
+                    break;
+            }
+            // normal test
+            taskList.addAll(Arrays.asList(
+                    "TagIT\n",
+                    "RestIT\n",
+                    "RestAnnotationIT\n"
+            ));
+            for (String taskName : taskList) {
+                fileWriter.write(taskName);
+            }
+            fileWriter.flush();//刷新数据，不刷新写入不进去
+            fileWriter.close();//关闭流
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "/home/runner/work/IGinX/IGinX/.github/testUnion.sh";
     private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (%s, %s, %s, %s)";
-    private List<String> specialTaskName = Arrays.asList("SessionIT", "SessionPoolIT", "SQLSessionIT", "SQLSessionPoolIT");
-    private List<String> normalTaskName = Arrays.asList("TagIT", "RestIT", "RestAnnotationIT", "TransformIT", "UDFIT");
+//    private List<String> specialTaskName = Arrays.asList("SessionIT", "SessionPoolIT", "SQLSessionIT", "SQLSessionPoolIT");
+//    private List<String> normalTaskName = Arrays.asList("TagIT", "RestIT", "RestAnnotationIT", "TransformIT", "UDFIT");
     protected static Session session;
 
-    private String toCMD(String[] storageEngine) {
+    private String toCmd(String[] storageEngine) {
         return String.format(ADDSTORAGEENGINE, storageEngine[0], storageEngine[1], storageEngine[2], storageEngine[3]);
     }
 
@@ -61,8 +108,6 @@ public class TestUnionControler {
     }
 
     public void runShellCommand(String command) throws Exception {
-//        String[] cmdStrings = new String[] {"chmod", "+x", command};
-
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {command});
@@ -84,34 +129,6 @@ public class TestUnionControler {
         }
     }
 
-    // write test IT name to the file
-    private void setTestTasks(String DBName) {
-        try {
-            File file = new File("./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt");//文件路径
-            FileWriter fileWriter = new FileWriter(file);
-            if (DBName.contains("IoTDB")) {
-                fileWriter.write("IoTDB12SessionIT\n");
-                fileWriter.write("IoTDB12SessionPoolIT\n");
-                fileWriter.write("IoTDBSQLSessionIT\n");
-                fileWriter.write("IoTDBSQLSessionPoolIT\n");
-            }
-            if (DBName.contains("InfluxDB")) {
-                fileWriter.write("InfluxDBSessionIT\n");
-                fileWriter.write("InfluxDBSessionPoolIT\n");
-                fileWriter.write("InfluxDBSQLSessionIT\n");
-                fileWriter.write("InfluxDBSQLSessionPoolIT\n");
-            }
-            fileWriter.write("TagIT\n");
-            fileWriter.write("RestIT\n");
-//            fileWriter.write("RestAnnotationIT\n");
-
-            fileWriter.flush();//刷新数据，不刷新写入不进去
-            fileWriter.close();//关闭流
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @BeforeClass
     public static void setUp() {
         session = new Session("127.0.0.1", 6888, "root", "root");
@@ -124,14 +141,14 @@ public class TestUnionControler {
 
     @Test
     public void testUnion() throws Exception {
-//        for (String[] cmd :STORAGEENGINELIST) {
+        for (String[] cmd :STORAGEENGINELIST) {
             //set the test Environment
-            session.executeSql("ADD STORAGEENGINE (\"127.0.0.1\", 6668, \"iotdb12\", \"username:root, password:root, sessionPoolSize:20, has_data:true, is_read_only:false\");");
+            session.executeSql(toCmd(cmd));
             //set the test tasks with DBName
-//            setTestTasks(cmd[2]);
+            setTestTasks(cmd[2]);
             //run the test
             runShellCommand(MVNRUNTEST);
-//        }
+        }
     }
 }
 

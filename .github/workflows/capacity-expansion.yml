@@ -20,7 +20,7 @@ jobs:
       matrix:
         java: [ 8 ]
         python-version: [ "3.7" ]
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-latest, macos-latest ]
         DB-name: [ "iotdb12" ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           mvn clean package -DskipTests
-      #第 1 阶段测试开始==========================================
+
       - name: Prepare CapExp environment
         if: always()
         uses: ./.github/actions/capacityExpansionUnionTest
@@ -53,6 +53,20 @@ jobs:
           version: ${VERSION}
           DB-name: ${{matrix.DB-name}}
           Test-Way: oriNoDataExpNoData
+
+      - name: Run InfluxDB
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb.sh"
+            "${GITHUB_WORKSPACE}/.github/influxdb.sh"
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
+            "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
+          else
+            echo "$RUNNER_OS is not supported"
+            exit 1
+          fi
+
       - name: TestUnionControler IT
         if: always()
         run: |
