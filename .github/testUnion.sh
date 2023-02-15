@@ -4,9 +4,9 @@ cd ..
 
 while read line
 do
-  echo $line
-
-  mvn test -q -Dtest=$line -DfailIfNoTests=false
+  echo "test IT name : "$line
+  if [ $line -ne $'\n' ];then
+    mvn test -q -Dtest=$line -DfailIfNoTests=false
 
   if [ $? -ne 0 ];then
   	echo " test  -- Faile  : "$?
