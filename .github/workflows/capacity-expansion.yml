@@ -79,7 +79,6 @@ jobs:
             echo "${{matrix.DB-name}} is not supported"
           fi
 
-
 #  IoTDB-CE:
 #    timeout-minutes: 20
 #    strategy:
