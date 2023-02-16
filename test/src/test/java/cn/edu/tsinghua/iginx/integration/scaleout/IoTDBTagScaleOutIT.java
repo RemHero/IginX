@@ -15,7 +15,7 @@ public class IoTDBTagScaleOutIT extends TagIT implements IoTDBBaseScaleOutIT{
 
     public void DBConf() throws Exception {
         this.storageEngineType = FileReader.convertToString("./src/test/java/cn/edu/tsinghua/iginx/integration/DBConf.txt");
-//        TagIT.ifClearData = false;
+        TagIT.ifClearData = false;
     }
 
     @Test

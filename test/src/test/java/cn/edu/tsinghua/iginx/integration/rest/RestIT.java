@@ -124,6 +124,10 @@ public class RestIT {
     }
 
     public void capacityExpansion() throws Exception {
+        if (ifClearData) {
+            return;
+        }
+
         testQueryWithoutTags();
         testQueryWithTags();
         testQueryWrongTags();
