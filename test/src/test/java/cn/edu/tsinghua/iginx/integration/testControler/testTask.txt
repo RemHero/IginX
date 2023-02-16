@@ -1,5 +1,3 @@
-IoTDB12SessionIT
-IoTDB12SessionPoolIT
 IoTDBSQLSessionIT
 IoTDBSQLSessionPoolIT
 TagIT

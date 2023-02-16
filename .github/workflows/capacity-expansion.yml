@@ -73,6 +73,9 @@ jobs:
           "pwd"
           chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
           mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
+          mvn test -q -Dtest=IoTDBSQLSessionIT -DfailIfNoTests=false
+          mvn test -q -Dtest=IoTDBSQLSessionPoolIT -DfailIfNoTests=false
+          "${GITHUB_WORKSPACE}/.github/testUnion.sh"
 
 #  IoTDB-CE:
 #    timeout-minutes: 20
