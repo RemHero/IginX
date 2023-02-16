@@ -29,7 +29,7 @@ public class TestUnionControler {
     // write test IT name to the file
     private void setTestTasks(String DBName) {
         try {
-            File file = new File("./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt");//文件路径
+            File file = new File(FILEPATH);//文件路径
             FileWriter fileWriter = new FileWriter(file);
             List<String> taskList = new ArrayList<>();
             // test for specific DB
@@ -77,6 +77,7 @@ public class TestUnionControler {
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
     private boolean DEBUG = true;
+    private String FILEPATH = "./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt";
     private static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
     private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (\"%s\", %s, \"%s\", \"%s\")";
@@ -152,6 +153,7 @@ public class TestUnionControler {
             //set the test tasks with DBName
             setTestTasks(cmd[2]);
             //run the test
+            runShellCommand("pwd");
             runShellCommand(MVNRUNTEST);
         }
     }
