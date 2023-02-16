@@ -4,22 +4,20 @@ pwd
 
 cd ..
 
-sleep 5
+LISTS=($(cat ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt))
+echo "test IT name list : "${LISTS[*]}
 
-while read line
+for line in ${LISTS[@]}
 do
-  echo "test IT name : "$line
-  mvn test -q -Dtest=$line -DfailIfNoTests=false
+   echo "test IT name : "$line
+   mvn test -q -Dtest=$line -DfailIfNoTests=false
 
-  if [ $? -ne 0 ];then
-    echo " test  -- Faile  : "$?
-    exit 1
-  else
-    echo " test  -- Success !"
-  fi
-
-  sleep 5
-
-done <  ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
+   if [ $? -ne 0 ];then
+     echo " test  -- Faile  : "$?
+     exit 1
+   else
+     echo " test  -- Success !"
+   fi
+done
 
 cd test
