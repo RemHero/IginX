@@ -30,23 +30,29 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           java: ${{ matrix.java }}
-
       - name: Run ZooKeeper
         uses: ./.github/actions/zookeeperRunner
-
       - name: Run IoTDB
         uses: ./.github/actions/iotdbRunner
         with:
-          if-CapExp: "false"
-          version: ${{ matrix.DB-name }}
+          version: ${{matrix.DB-name}}
 
-      - name: Install with Maven
-        run: mvn clean package -DskipTests
+      - name: Change pom
+        run: |
+          mv test/pom.xml test/pom.xml.backup
+          mv test/pom.xml.${{matrix.DB-name}} test/pom.xml
+      - name: Install IginX with Maven
+        shell: bash
+        run: |
+          mvn clean package -DskipTests
 
-      - name: Start IginX
-        uses: ./.github/actions/iginxRunner
+      - name: Prepare CapExp environment
+        if: always()
+        uses: ./.github/actions/capacityExpansionUnionTest
         with:
           version: ${VERSION}
+          DB-name: ${{matrix.DB-name}}
+          Test-Way: oriNoDataExpNoData
 
       - name: Run InfluxDB
         run: |
