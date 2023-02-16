@@ -20,6 +20,7 @@ package cn.edu.tsinghua.iginx.integration;
 
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
+import cn.edu.tsinghua.iginx.integration.testControler.TestUnionControler;
 import cn.edu.tsinghua.iginx.session.SessionAggregateQueryDataSet;
 import cn.edu.tsinghua.iginx.session.SessionExecuteSqlResult;
 import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
@@ -53,15 +54,21 @@ public abstract class BaseSessionIT extends BaseSessionConcurrencyIT {
 
     @After
     public void clearData() throws ExecutionException, SessionException {
-        if (!ifClearData) {
-            return;
-        }
-
         String clearData = "CLEAR DATA;";
 
-        SessionExecuteSqlResult res = session.executeSql(clearData);
+        SessionExecuteSqlResult res = null;
+        try {
+            res = session.executeSql(clearData);
+        } catch (SessionException | ExecutionException e) {
+            logger.error("Statement: \"{}\" execute fail. Caused by:", clearData, e);
+            if (e.toString().equals(TestUnionControler.CLEARDATAEXCP)) {
+                logger.error("clear data fail and go on....");
+            }
+            else fail();
+        }
+
         if (res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
-            logger.error("Clear date execute fail. Caused by: {}.", res.getParseErrorMsg());
+            logger.error("Statement: \"{}\" execute fail. Caused by: {}.", clearData, res.getParseErrorMsg());
             fail();
         }
     }

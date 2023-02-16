@@ -25,7 +25,7 @@ public class IoTDBSessionScaleOutIT extends BaseSessionIT implements IoTDBBaseSc
         this.extraParams.put("sessionPoolSize", "100");
         this.storageEngineType = FileReader.convertToString("./src/test/java/cn/edu/tsinghua/iginx/integration/DBConf.txt");
 
-        this.ifClearData = false;
+//        this.ifClearData = false;
     }
 
     @Test
