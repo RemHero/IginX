@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 public class TestUnionControler {
     private final List<String[]> STORAGEENGINELIST = new ArrayList<String[]>(){{
         add(new String[] {"127.0.0.1", "6668", "iotdb12", "username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false"});
-//        add(new String[] {"127.0.0.1", "8060", "influxdb", "url:http://localhost:8086/ , username:user, password:12345678, sessionPoolSize:20, has_data:true, is_read_only:false, token:testToken, organization:testOrg"});
+        add(new String[] {"127.0.0.1", "8060", "influxdb", "url:http://localhost:8086/ , username:user, password:12345678, sessionPoolSize:20, has_data:true, is_read_only:false, token:testToken, organization:testOrg"});
 //        add(new String[] {"127.0.0.1", "6667", "iotdb12", "username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false"});
     }};
 
@@ -54,6 +54,12 @@ public class TestUnionControler {
                     taskList.addAll(Arrays.asList(
                             "ParquetSQLSessionIT\n",
                             "ParquetSQLSessionPoolIT\n"
+                    ));
+                    break;
+                case "timescaledb":
+                    taskList.addAll(Arrays.asList(
+                            "TimescaleDBSessionIT\n",
+                            "TimescaleDBSessionPoolIT\n"
                     ));
                     break;
                 default:
@@ -151,9 +157,9 @@ public class TestUnionControler {
             //set the test Environment
             session.executeSql(toCmd(cmd));
             //set the test tasks with DBName
-//            setTestTasks(cmd[2]);
+            setTestTasks(cmd[2]);
             //run the test
-//            runShellCommand(MVNRUNTEST);
+            runShellCommand(MVNRUNTEST);
         }
     }
 }
