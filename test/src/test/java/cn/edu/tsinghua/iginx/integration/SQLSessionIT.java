@@ -170,9 +170,9 @@ public abstract class SQLSessionIT {
 
     @Test
     public void capacityExpansion() {
-//        if (ifClearData) {
-//            return;
-//        }
+        if (ifClearData) {
+            return;
+        }
 
         testCountPath();
 
