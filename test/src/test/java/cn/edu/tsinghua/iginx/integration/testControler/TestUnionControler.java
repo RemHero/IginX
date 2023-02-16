@@ -119,16 +119,16 @@ public class TestUnionControler {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[] {command});
-            InputStream in = null;
-            if (DEBUG)
-                in = p.getErrorStream();
-            else
-                in = p.getInputStream();
-            BufferedReader read = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while((line = read.readLine())!=null){
-                System.out.println(line);
-            }
+//            InputStream in = null;
+//            if (DEBUG)
+//                in = p.getErrorStream();
+//            else
+//                in = p.getInputStream();
+//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+//            String line;
+//            while((line = read.readLine())!=null){
+//                System.out.println(line);
+//            }
             int status = p.waitFor();
             System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
             if (p.exitValue() != 0) {
