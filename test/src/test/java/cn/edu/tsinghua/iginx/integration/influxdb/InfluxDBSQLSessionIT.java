@@ -5,7 +5,7 @@ import cn.edu.tsinghua.iginx.integration.SQLSessionIT;
 public class InfluxDBSQLSessionIT extends SQLSessionIT {
     public InfluxDBSQLSessionIT() {
         super();
-        this.isAbleToDelete = false;
+        this.isAbleToDelete = true;
         this.isSupportSpecialPath = false;
         this.isAbleToShowTimeSeries = false;
     }
