@@ -60,14 +60,14 @@ public abstract class BaseSessionIT extends BaseSessionConcurrencyIT {
         try {
             res = session.executeSql(clearData);
         } catch (SessionException | ExecutionException e) {
-            logger.error("Statement: \"{}\" execute fail. Caused by:", clearData, e);
+            logger.error("Statement: \"{}\" execute fail. Caused by: {}", clearData, e.toString());
             if (e.toString().equals(TestUnionControler.CLEARDATAEXCP)) {
                 logger.error("clear data fail and go on....");
             }
             else fail();
         }
 
-        if (res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
+        if (res != null && res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
             logger.error("Statement: \"{}\" execute fail. Caused by: {}.", clearData, res.getParseErrorMsg());
             fail();
         }
