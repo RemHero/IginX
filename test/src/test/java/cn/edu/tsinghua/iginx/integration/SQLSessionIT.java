@@ -123,7 +123,7 @@ public abstract class SQLSessionIT {
             else fail();
         }
 
-        if (res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
+        if (res != null && res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
             logger.error("Statement: \"{}\" execute fail. Caused by: {}.", clearData, res.getParseErrorMsg());
             fail();
         }
