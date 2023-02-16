@@ -153,7 +153,6 @@ public class TestUnionControler {
             //set the test tasks with DBName
             setTestTasks(cmd[2]);
             //run the test
-            runShellCommand("pwd");
             runShellCommand(MVNRUNTEST);
         }
     }

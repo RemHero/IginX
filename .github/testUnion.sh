@@ -1,5 +1,7 @@
 #!/bin/sh
 
+pwd
+
 cd ..
 
 while read line
