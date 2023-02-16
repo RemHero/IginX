@@ -38,7 +38,7 @@ jobs:
         uses: ./.github/actions/iotdbRunner
         with:
           if-CapExp: "false"
-          version: ${{ matrix.iotdb-version }}
+          version: ${{ matrix.DB-name }}
 
       - name: Install with Maven
         run: mvn clean package -DskipTests
