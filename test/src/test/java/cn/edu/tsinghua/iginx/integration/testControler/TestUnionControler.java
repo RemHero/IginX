@@ -96,14 +96,14 @@ public class TestUnionControler {
         try {
             res = session.executeSql(clearData);
         } catch (SessionException | ExecutionException e) {
-            logger.error("Statement: \"{}\" execute fail. Caused by:", clearData, e);
-            if (e.toString().equals(CLEARDATAEXCP)) {
+            logger.error("Statement: \"{}\" execute fail. Caused by: {}", clearData, e.toString());
+            if (e.toString().equals(CLEARDATAEXCP) || e.toString().equals("\n" + CLEARDATAEXCP)) {
                 logger.error("clear data fail and go on....");
             }
             else fail();
         }
 
-        if (res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
+        if (res != null && res.getParseErrorMsg() != null && !res.getParseErrorMsg().equals("")) {
             logger.error("Statement: \"{}\" execute fail. Caused by: {}.", clearData, res.getParseErrorMsg());
             fail();
         }
