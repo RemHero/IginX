@@ -82,7 +82,7 @@ public class TestUnionControler {
     }
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
-    private boolean DEBUG = false;
+    private boolean DEBUG = true;
     private String FILEPATH = "./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt";
     public static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
@@ -118,17 +118,17 @@ public class TestUnionControler {
     public void runShellCommand(String command) throws Exception {
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(new String[] {command});
-//            InputStream in = null;
-//            if (DEBUG)
-//                in = p.getErrorStream();
-//            else
-//                in = p.getInputStream();
-//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
-//            String line;
-//            while((line = read.readLine())!=null){
-//                System.out.println(line);
-//            }
+            p = Runtime.getRuntime().exec(new String[] {"sh", "-c", command});
+            InputStream in = null;
+            if (DEBUG)
+                in = p.getErrorStream();
+            else
+                in = p.getInputStream();
+            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while((line = read.readLine())!=null){
+                System.out.println(line);
+            }
             int status = p.waitFor();
             System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
             if (p.exitValue() != 0) {
