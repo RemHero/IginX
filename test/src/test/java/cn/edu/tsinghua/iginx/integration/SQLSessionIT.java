@@ -116,7 +116,7 @@ public abstract class SQLSessionIT {
         try {
             res = session.executeSql(clearData);
         } catch (SessionException | ExecutionException e) {
-            logger.error("Statement: \"{}\" execute fail. Caused by:", clearData, e);
+            logger.error("Statement: \"{}\" execute fail. Caused by: {}", clearData, e.toString());
             if (e.toString().equals(TestUnionControler.CLEARDATAEXCP)) {
                 logger.error("clear data fail and go on....");
             }
