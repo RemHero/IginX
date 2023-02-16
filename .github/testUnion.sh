@@ -4,6 +4,8 @@ pwd
 
 cd ..
 
+sleep 5
+
 while read line
 do
   echo "test IT name : "$line
@@ -15,6 +17,8 @@ do
   else
     echo " test  -- Success !"
   fi
+
+  sleep 5
 
 done <  ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
 
