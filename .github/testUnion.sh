@@ -22,4 +22,4 @@ do
 
 done <  ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
 
-cd ./test
+cd test
