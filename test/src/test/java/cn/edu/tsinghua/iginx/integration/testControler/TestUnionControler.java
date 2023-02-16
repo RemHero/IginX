@@ -151,9 +151,9 @@ public class TestUnionControler {
             //set the test Environment
             session.executeSql(toCmd(cmd));
             //set the test tasks with DBName
-            setTestTasks(cmd[2]);
+//            setTestTasks(cmd[2]);
             //run the test
-            runShellCommand(MVNRUNTEST);
+//            runShellCommand(MVNRUNTEST);
         }
     }
 }
