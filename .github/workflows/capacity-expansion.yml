@@ -70,46 +70,46 @@ jobs:
           mvn test -q -Dtest=TagIT -DfailIfNoTests=false
           "${GITHUB_WORKSPACE}/.github/testUnion.sh"
 
-    IoTDB-SQL-ds:
-      strategy:
-        fail-fast: false
-        matrix:
-          java: [ 8 ]
-          python-version: [ "3.7" ]
-          os: [ ubuntu-latest ]
-          iotdb-version: [ iotdb12 ]
-      runs-on: ${{ matrix.os }}
-      steps:
-        - uses: actions/checkout@v2
-        - name: Environmet Dependence
-          uses: ./.github/actions/dependence
-          with:
-            python-version: ${{ matrix.python-version }}
-            java: ${{ matrix.java }}
+  IoTDB-SQL-ds:
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ 8 ]
+        python-version: [ "3.7" ]
+        os: [ ubuntu-latest ]
+        iotdb-version: [ iotdb12 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Environmet Dependence
+        uses: ./.github/actions/dependence
+        with:
+          python-version: ${{ matrix.python-version }}
+          java: ${{ matrix.java }}
 
-        - name: Run ZooKeeper
-          uses: ./.github/actions/zookeeperRunner
+      - name: Run ZooKeeper
+        uses: ./.github/actions/zookeeperRunner
 
-        - name: Run IoTDB
-          uses: ./.github/actions/iotdbRunner
-          with:
-            if-CapExp: "false"
-            version: ${{ matrix.iotdb-version }}
+      - name: Run IoTDB
+        uses: ./.github/actions/iotdbRunner
+        with:
+          if-CapExp: "false"
+          version: ${{ matrix.iotdb-version }}
 
-        - name: Install with Maven
-          run: mvn clean package -DskipTests
+      - name: Install with Maven
+        run: mvn clean package -DskipTests
 
-        - name: Start IginX
-          uses: ./.github/actions/iginxRunner
-          with:
-            version: ${VERSION}
+      - name: Start IginX
+        uses: ./.github/actions/iginxRunner
+        with:
+          version: ${VERSION}
 
-        - name: A Lame Integration Test with Maven for SQL
-          run: mvn test -q -Dtest=IoTDBSQLSessionIT -DfailIfNoTests=false
-        - uses: codecov/codecov-action@v1
-          with:
-            file: ./**/target/site/jacoco/jacoco.xml
-            name: codecov
+      - name: A Lame Integration Test with Maven for SQL
+        run: mvn test -q -Dtest=IoTDBSQLSessionIT -DfailIfNoTests=false
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./**/target/site/jacoco/jacoco.xml
+          name: codecov
 
 #  IoTDB-CE:
 #    timeout-minutes: 20
