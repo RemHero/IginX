@@ -49,6 +49,7 @@ public class TestUnionControler {
                     ));
                     break;
                 case "influxdb":
+                    taskList.clear();
                     taskList.addAll(Arrays.asList(
                             "InfluxDBSessionIT\n",
                             "InfluxDBSessionPoolIT\n",
@@ -82,7 +83,6 @@ public class TestUnionControler {
     }
 
     protected static final Logger logger = LoggerFactory.getLogger(TagIT.class);
-    private boolean DEBUG = true;
     private String FILEPATH = "./src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt";
     public static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
