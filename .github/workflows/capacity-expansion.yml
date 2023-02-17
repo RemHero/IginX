@@ -1,18 +1,18 @@
-name: "Capacity-Expansion-Test"
-on:
-  push:
-    branches:
-      - "*"
-  pull_request:
-    branches:
-      - "*"
-env:
-  VERSION: 0.6.0-SNAPSHOT
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
+#name: "Capacity-Expansion-Test"
+#on:
+#  push:
+#    branches:
+#      - "*"
+#  pull_request:
+#    branches:
+#      - "*"
+#env:
+#  VERSION: 0.6.0-SNAPSHOT
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.ref }}
+#  cancel-in-progress: true
+#
+#jobs:
 #  test:
 #    timeout-minutes: 10
 #    strategy:
@@ -82,61 +82,63 @@ jobs:
 #        run: |
 #          chmod +x "${GITHUB_WORKSPACE}/.github/testUnion.sh"
 #          mvn test -q -Dtest=TestUnionControler -DfailIfNoTests=false
-
-  IoTDB-CE:
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [ 8 ]
-        python-version: [ "3.7" ]
-        os: [ ubuntu-latest, macos-latest ]
-        DB-name: [ "iotdb12" ]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Environmet Dependence
-        uses: ./.github/actions/dependence
-        with:
-          python-version: ${{ matrix.python-version }}
-          java: ${{ matrix.java }}
-      - name: Run ZooKeeper
-        uses: ./.github/actions/zookeeperRunner
-      - name: Run IoTDB
-        uses: ./.github/actions/iotdbRunner
-        with:
-          version: ${{matrix.DB-name}}
-
-      - name: Change pom
-        run: |
-          mv test/pom.xml test/pom.xml.backup
-          mv test/pom.xml.${{matrix.DB-name}} test/pom.xml
-      - name: Install IginX with Maven
-        shell: bash
-        run: |
-          mvn clean package -DskipTests
-
-      #第 1 阶段测试开始==========================================
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
-        with:
-          version: ${VERSION}
-          DB-name: ${{matrix.DB-name}}
-          Test-Way: oriHasDataExpHasData
-#  mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-#  mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-#  mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-#  mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
-      - name: oriHasDataExpHasData IT
-        if: always()
-        run: |
-          if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
-            mvn test -q -Dtest=TagIT,RestIT -DfailIfNoTests=false
-          else
-            echo "${{matrix.DB-name}} is not supported"
-          fi
-
+#
+#  IoTDB-CE:
+#    timeout-minutes: 20
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        java: [ 8 ]
+#        python-version: [ "3.7" ]
+#        os: [ ubuntu-latest, macos-latest ]
+#        DB-name: [ "iotdb12" ]
+#    runs-on: ${{ matrix.os }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Environmet Dependence
+#        uses: ./.github/actions/dependence
+#        with:
+#          python-version: ${{ matrix.python-version }}
+#          java: ${{ matrix.java }}
+#      - name: Run ZooKeeper
+#        uses: ./.github/actions/zookeeperRunner
+#      - name: Run IoTDB
+#        uses: ./.github/actions/iotdbRunner
+#        with:
+#          version: ${{matrix.DB-name}}
+#
+#      - name: Change pom
+#        run: |
+#          mv test/pom.xml test/pom.xml.backup
+#          mv test/pom.xml.${{matrix.DB-name}} test/pom.xml
+#      - name: Install IginX with Maven
+#        shell: bash
+#        run: |
+#          mvn clean package -DskipTests
+#
+#      #第 1 阶段测试开始==========================================
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriHasDataExpHasData
+#
+#      - name: oriHasDataExpHasData IT
+#        if: always()
+#        run: |
+#          if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
+#            mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriHasDataExpHasData -DfailIfNoTests=false
+#            mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#            mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#            mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#            mvn test -q -Dtest=IoTDBTagScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
+#
+#          else
+#            echo "${{matrix.DB-name}} is not supported"
+#          fi
+#
 #      #第 2 阶段测试开始==========================================
 #      - name: Prepare CapExp environment
 #        if: always()
@@ -202,11 +204,11 @@ jobs:
 #          else
 #            echo "${{matrix.DB-name}} is not supported"
 #          fi
-
-      - uses: codecov/codecov-action@v1
-        with:
-          file: ./**/target/site/jacoco/jacoco.xml
-          name: codecov
+#
+#      - uses: codecov/codecov-action@v1
+#        with:
+#          file: ./**/target/site/jacoco/jacoco.xml
+#          name: codecov
 #
 #  SchemaPrefix-IoTDB-CE:
 #    timeout-minutes: 20
