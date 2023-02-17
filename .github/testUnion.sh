@@ -4,7 +4,8 @@ pwd
 
 cd ..
 
-LISTS=($(cat ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt))
+FILE = cat ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt
+LISTS=($FILE)
 echo "test IT name list : "${LISTS[*]}
 
 #for line in ${LISTS[@]}
