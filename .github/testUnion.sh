@@ -8,6 +8,7 @@ cd ..
 LISTS=($(cat ./test/src/test/java/cn/edu/tsinghua/iginx/integration/testControler/testTask.txt))
 echo "test IT name list : "${LISTS[*]}
 
+
 for line in ${LISTS[@]}
 do
    echo "test IT name : "$line
