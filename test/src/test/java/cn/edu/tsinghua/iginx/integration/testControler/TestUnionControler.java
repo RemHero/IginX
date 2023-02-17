@@ -32,6 +32,12 @@ public class TestUnionControler {
             File file = new File(FILEPATH);//文件路径
             FileWriter fileWriter = new FileWriter(file);
             List<String> taskList = new ArrayList<>();
+            // normal test
+            taskList.addAll(Arrays.asList(
+                    "TagIT\n",
+                    "RestAnnotationIT\n",
+                    "RestIT\n"
+            ));
             // test for specific DB
             switch (DBName.toLowerCase()) {
                 case "iotdb12":
@@ -65,12 +71,6 @@ public class TestUnionControler {
                 default:
                     break;
             }
-            // normal test
-            taskList.addAll(Arrays.asList(
-                    "TagIT\n",
-                    "RestAnnotationIT\n",
-                    "RestIT\n"
-            ));
             for (String taskName : taskList) {
                 fileWriter.write(taskName);
             }
