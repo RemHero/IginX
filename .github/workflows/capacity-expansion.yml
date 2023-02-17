@@ -46,22 +46,22 @@ jobs:
         run: |
           mvn clean package -DskipTests
           
-      - name: Set The DB Name
-        uses: ./.github/actions/confWriter
-        with:
-          confFile: DBName
-          DB-name: ${{matrix.DB-name}}
-
-      - name: Start IginX
-        uses: ./.github/actions/iginxRunner
-
-#      - name: Prepare CapExp environment
-#        if: always()
-#        uses: ./.github/actions/capacityExpansionUnionTest
+#      - name: Set The DB Name
+#        uses: ./.github/actions/confWriter
 #        with:
-#          version: ${VERSION}
+#          confFile: DBName
 #          DB-name: ${{matrix.DB-name}}
-#          Test-Way: oriNoDataExpNoData
+#
+#      - name: Start IginX
+#        uses: ./.github/actions/iginxRunner
+
+      - name: Prepare CapExp environment
+        if: always()
+        uses: ./.github/actions/capacityExpansionUnionTest
+        with:
+          version: ${VERSION}
+          DB-name: ${{matrix.DB-name}}
+          Test-Way: oriNoDataExpNoData
 
 #      - name: Run InfluxDB
 #        run: |
