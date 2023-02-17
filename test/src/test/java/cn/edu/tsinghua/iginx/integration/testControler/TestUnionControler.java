@@ -125,7 +125,7 @@ public class TestUnionControler {
 //            else
 //                in = p.getInputStream();
 
-            ProcessBuilder builder = new ProcessBuilder(Arrays.asList(command));
+            ProcessBuilder builder = new ProcessBuilder("/bin/bash " + command);
             builder.redirectErrorStream(true);
             p = builder.start();
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
