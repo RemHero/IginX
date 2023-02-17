@@ -45,6 +45,15 @@ jobs:
         shell: bash
         run: |
           mvn clean package -DskipTests
+          
+      - name: Set The DB Name
+        uses: ./.github/actions/confWriter
+        with:
+          confFile: DBName
+          DB-name: ${{matrix.DB-name}}
+
+      - name: Start IginX
+        uses: ./.github/actions/iginxRunner
 
 #      - name: Prepare CapExp environment
 #        if: always()
