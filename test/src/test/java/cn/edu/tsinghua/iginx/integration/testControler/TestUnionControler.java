@@ -118,17 +118,27 @@ public class TestUnionControler {
     public void runShellCommand(String command) throws Exception {
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(new String[] {"bash", command});
-            InputStream in = null;
-            if (DEBUG)
-                in = p.getErrorStream();
-            else
-                in = p.getInputStream();
-            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+//            p = Runtime.getRuntime().exec(new String[] {"bash", command});
+//            InputStream in = null;
+//            if (DEBUG)
+//                in = p.getErrorStream();
+//            else
+//                in = p.getInputStream();
+
+            ProcessBuilder builder = new ProcessBuilder("bash " + command);
+            builder.redirectErrorStream(true);
+            p = builder.start();
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
-            while((line = read.readLine())!=null){
+            while((line = br.readLine())!=null){
                 System.out.println(line);
             }
+
+//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
+//            String line;
+//            while((line = read.readLine())!=null){
+//                System.out.println(line);
+//            }
             int status = p.waitFor();
             System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
             if (p.exitValue() != 0) {
