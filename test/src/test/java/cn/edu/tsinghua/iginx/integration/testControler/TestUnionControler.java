@@ -21,9 +21,9 @@ import static org.junit.Assert.fail;
 
 public class TestUnionControler {
     private final List<String[]> STORAGEENGINELIST = new ArrayList<String[]>(){{
-//        add(new String[] {"127.0.0.1", "6668", "iotdb12", "username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false"});
-       // add(new String[] {"127.0.0.1", "8060", "influxdb", "url:http://localhost:8086/ , username:user, password:12345678, sessionPoolSize:20, has_data:false, is_read_only:false, token:testToken, organization:testOrg"});
-        add(new String[] {"127.0.0.1", "6668", "parquet", "dir:parquetData2, sessionPoolSize:20, has_data:false, is_read_only:false"});
+        add(new String[] {"127.0.0.1", "6668", "iotdb12", "username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false"});
+        add(new String[] {"127.0.0.1", "8060", "influxdb", "url:http://localhost:8086/ , username:user, password:12345678, sessionPoolSize:20, has_data:false, is_read_only:false, token:testToken, organization:testOrg"});
+//        add(new String[] {"127.0.0.1", "6668", "parquet", "dir:parquetData2, sessionPoolSize:20, has_data:false, is_read_only:false"});
     }};
 
     // write test IT name to the file
@@ -57,7 +57,6 @@ public class TestUnionControler {
                     ));
                     break;
                 case "parquet":
-//                    taskList.clear();
                     taskList.addAll(Arrays.asList(
                             "ParquetSQLSessionIT\n",
                             "ParquetSQLSessionPoolIT\n"
@@ -87,8 +86,6 @@ public class TestUnionControler {
     public static String CLEARDATAEXCP = "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
     private String MVNRUNTEST = "../.github/testUnion.sh";
     private String ADDSTORAGEENGINE = "ADD STORAGEENGINE (\"%s\", %s, \"%s\", \"%s\")";
-//    private List<String> specialTaskName = Arrays.asList("SessionIT", "SessionPoolIT", "SQLSessionIT", "SQLSessionPoolIT");
-//    private List<String> normalTaskName = Arrays.asList("TagIT", "RestIT", "RestAnnotationIT", "TransformIT", "UDFIT");
     protected static Session session;
 
     private String toCmd(String[] storageEngine) {
@@ -118,13 +115,6 @@ public class TestUnionControler {
     public void runShellCommand(String command) throws Exception {
         Process p = null;
         try {
-//            p = Runtime.getRuntime().exec(new String[] {"bash", command});
-//            InputStream in = null;
-//            if (DEBUG)
-//                in = p.getErrorStream();
-//            else
-//                in = p.getInputStream();
-
             ProcessBuilder builder = new ProcessBuilder(command);
             builder.redirectErrorStream(true);
             p = builder.start();
@@ -134,11 +124,6 @@ public class TestUnionControler {
                 System.out.println(line);
             }
 
-//            BufferedReader read = new BufferedReader(new InputStreamReader(in));
-//            String line;
-//            while((line = read.readLine())!=null){
-//                System.out.println(line);
-//            }
             int status = p.waitFor();
             System.err.printf("runShellCommand: %s, status: %s%n, %s%n", command, p.exitValue(), status);
             if (p.exitValue() != 0) {
