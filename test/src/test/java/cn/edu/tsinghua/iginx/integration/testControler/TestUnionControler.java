@@ -47,6 +47,7 @@ public class TestUnionControler {
                             "IoTDBSQLSessionIT\n",
                             "IoTDBSQLSessionPoolIT\n"
                     ));
+                    taskList.clear();
                     break;
                 case "influxdb":
                     taskList.clear();
@@ -56,6 +57,7 @@ public class TestUnionControler {
                     ));
                     break;
                 case "parquet":
+                    taskList.clear();
                     taskList.addAll(Arrays.asList(
                             "ParquetSQLSessionIT\n",
                             "ParquetSQLSessionPoolIT\n"
