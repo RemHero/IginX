@@ -129,7 +129,7 @@ jobs:
         if: always()
         run: |
           if [ "${{matrix.DB-name}}" == "iotdb12" ]; then
-            mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriHasDataExpHasData -DfailIfNoTests=false
+            mvn test -q -Dtest=IoTDB12HistoryDataCapacityExpansionIT#oriHasDataExpHasData,IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT,IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
             mvn test -q -Dtest=IoTDBSqlScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
             mvn test -q -Dtest=IoTDBSessionScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
             mvn test -q -Dtest=IoTDBRestfulScaleOutIT#oriHasDataExpHasDataIT -DfailIfNoTests=false
