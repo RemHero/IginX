@@ -118,7 +118,7 @@ public class TestUnionControler {
     public void runShellCommand(String command) throws Exception {
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(new String[] {command});
+            p = Runtime.getRuntime().exec(new String[] {"bash", command});
             InputStream in = null;
             if (DEBUG)
                 in = p.getErrorStream();
