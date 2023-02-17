@@ -46,35 +46,35 @@ jobs:
         run: |
           mvn clean package -DskipTests
           
-#      - name: Set The DB Name
-#        uses: ./.github/actions/confWriter
-#        with:
-#          confFile: DBName
-#          DB-name: ${{matrix.DB-name}}
-#
-#      - name: Start IginX
-#        uses: ./.github/actions/iginxRunner
-
-      - name: Prepare CapExp environment
-        if: always()
-        uses: ./.github/actions/capacityExpansionUnionTest
+      - name: Set The DB Name
+        uses: ./.github/actions/confWriter
         with:
-          version: ${VERSION}
+          confFile: DBName
           DB-name: ${{matrix.DB-name}}
-          Test-Way: oriNoDataExpNoData
 
-#      - name: Run InfluxDB
-#        run: |
-#          if [ "$RUNNER_OS" == "Linux" ]; then
-#            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb.sh"
-#            "${GITHUB_WORKSPACE}/.github/influxdb.sh"
-#          elif [ "$RUNNER_OS" == "macOS" ]; then
-#            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
-#            "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
-#          else
-#            echo "$RUNNER_OS is not supported"
-#            exit 1
-#          fi
+      - name: Start IginX
+        uses: ./.github/actions/iginxRunner
+
+#      - name: Prepare CapExp environment
+#        if: always()
+#        uses: ./.github/actions/capacityExpansionUnionTest
+#        with:
+#          version: ${VERSION}
+#          DB-name: ${{matrix.DB-name}}
+#          Test-Way: oriNoDataExpNoData
+
+      - name: Run InfluxDB
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb.sh"
+            "${GITHUB_WORKSPACE}/.github/influxdb.sh"
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            chmod +x "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
+            "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
+          else
+            echo "$RUNNER_OS is not supported"
+            exit 1
+          fi
 
       - name: TestUnionControler IT
         if: always()
