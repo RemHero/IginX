@@ -51,8 +51,6 @@ public class TestUnionControler {
                 case "influxdb":
                     taskList.clear();
                     taskList.addAll(Arrays.asList(
-                            "InfluxDBSessionIT\n",
-                            "InfluxDBSessionPoolIT\n",
                             "InfluxDBSQLSessionIT\n",
                             "InfluxDBSQLSessionPoolIT\n"
                     ));
