@@ -23,7 +23,7 @@ public class TestUnionControler {
     private final List<String[]> STORAGEENGINELIST = new ArrayList<String[]>(){{
         add(new String[] {"127.0.0.1", "6668", "iotdb12", "username:root, password:root, sessionPoolSize:20, has_data:false, is_read_only:false"});
        // add(new String[] {"127.0.0.1", "8060", "influxdb", "url:http://localhost:8086/ , username:user, password:12345678, sessionPoolSize:20, has_data:false, is_read_only:false, token:testToken, organization:testOrg"});
-        add(new String[] {"127.0.0.1", "6668", "parquet", "dir:parquetData, sessionPoolSize:20, has_data:false, is_read_only:false"});
+        add(new String[] {"127.0.0.1", "6669", "parquet", "dir:parquetData, sessionPoolSize:20, has_data:false, is_read_only:false"});
     }};
 
     // write test IT name to the file
