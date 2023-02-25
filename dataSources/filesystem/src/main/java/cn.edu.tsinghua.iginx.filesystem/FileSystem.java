@@ -20,10 +20,14 @@ package cn.edu.tsinghua.iginx.filesystem;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.NonExecutablePhysicalTaskException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
+import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalTaskExecuteFailureException;
+import cn.edu.tsinghua.iginx.engine.physical.exception.StorageInitializationException;
 import cn.edu.tsinghua.iginx.engine.physical.storage.IStorage;
 import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.StoragePhysicalTask;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.ClearEmptyRowStreamWrapper;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.operator.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
@@ -31,15 +35,36 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
+import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
 import cn.edu.tsinghua.iginx.utils.Pair;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class FileSystem implements IStorage {
-    @Override
+    private static final String STORAGE_ENGINE = "filesystem";
+    private final StorageEngineMeta meta;
+
+    public FileSystem(StorageEngineMeta meta) throws StorageInitializationException {
+        this.meta = meta;
+        if (!meta.getStorageEngine().equals(STORAGE_ENGINE)) {
+            throw new StorageInitializationException("unexpected database: " + meta.getStorageEngine());
+        }
+        if (!testConnection()) {
+            throw new StorageInitializationException("cannot connect to " + meta.toString());
+        }
+    }
+
+    private boolean testConnection() {
+        // fix it when add the remote filesystem
+        return true;
+    }
+
+
+        @Override
     public TaskExecuteResult execute(StoragePhysicalTask task) {
         List<Operator> operators = task.getOperators();
         if (operators.size() < 1) {
@@ -57,13 +82,15 @@ public class FileSystem implements IStorage {
                 FragmentMeta fragment = task.getTargetFragment();
                 filter = new AndFilter(Arrays.asList(new KeyFilter(Op.GE, fragment.getTimeInterval().getStartTime()), new KeyFilter(Op.L, fragment.getTimeInterval().getEndTime())));
             }
-            return isDummyStorageUnit ? executeQueryHistoryTask(task.getTargetFragment().getTsInterval(), project, filter) : executeQueryTask(storageUnit, project, filter);
+            // fix it
+//            return isDummyStorageUnit ? executeQueryHistoryTask(task.getTargetFragment().getTsInterval(), project, filter) : executeQueryTask(storageUnit, project, filter);
+            return executeQueryTask(storageUnit, project, filter);
         } else if (op.getType() == OperatorType.Insert) {
             Insert insert = (Insert) op;
-            return executeInsertTask(storageUnit, insert);
+//            return executeInsertTask(storageUnit, insert);
         } else if (op.getType() == OperatorType.Delete) {
             Delete delete = (Delete) op;
-            return executeDeleteTask(storageUnit, delete);
+//            return executeDeleteTask(storageUnit, delete);
         }
         return new TaskExecuteResult(new NonExecutablePhysicalTaskException("unsupported physical task"));
     }
@@ -81,5 +108,22 @@ public class FileSystem implements IStorage {
     @Override
     public void release() throws PhysicalException {
 
+    }
+
+    private TaskExecuteResult executeQueryTask(String storageUnit, Project project, Filter filter) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            for (String path : project.getPatterns()) {
+                builder.append(path);
+                builder.append(',');
+            }
+            String statement = String.format(QUERY_DATA, builder.deleteCharAt(builder.length() - 1).toString(), storageUnit, FilterTransformer.toString(filter));
+            logger.info("[Query] execute query: " + statement);
+            RowStream rowStream = new ClearEmptyRowStreamWrapper(new IoTDBQueryRowStream(sessionPool.executeQueryStatement(statement), true, project));
+            return new TaskExecuteResult(rowStream);
+        } catch (IoTDBConnectionException | StatementExecutionException e) {
+            logger.error(e.getMessage());
+            return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in iotdb12 failure", e));
+        }
     }
 }
