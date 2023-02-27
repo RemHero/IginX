@@ -92,7 +92,7 @@ jobs:
           version: ${VERSION}
 
       - name: A Lame Integration Test with Maven for IoTDB
-        run: mvn test -q -Dtest=RestIT -DfailIfNoTests=false -X
+        run: mvn test -q -Dtest=RestT -DfailIfNoTests=false
       - uses: codecov/codecov-action@v1
         with:
           file: ./**/target/site/jacoco/jacoco.xml
