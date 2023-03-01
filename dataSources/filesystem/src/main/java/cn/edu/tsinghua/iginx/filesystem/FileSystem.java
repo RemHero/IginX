@@ -26,8 +26,11 @@ import cn.edu.tsinghua.iginx.engine.physical.storage.IStorage;
 import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.StoragePhysicalTask;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.ClearEmptyRowStreamWrapper;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
+import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
+import cn.edu.tsinghua.iginx.engine.shared.data.write.ColumnDataView;
+import cn.edu.tsinghua.iginx.engine.shared.data.write.DataView;
+import cn.edu.tsinghua.iginx.engine.shared.data.write.RowDataView;
 import cn.edu.tsinghua.iginx.engine.shared.operator.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
@@ -36,8 +39,9 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemOperator;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.LocalFileSystem;
-import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
+import cn.edu.tsinghua.iginx.filesystem.wrapper.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.tools.SeriesOperator;
+import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
@@ -46,6 +50,7 @@ import cn.edu.tsinghua.iginx.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -95,10 +100,10 @@ public class FileSystem implements IStorage {
             return executeQueryTask(storageUnit, project, filter);
         } else if (op.getType() == OperatorType.Insert) {
             Insert insert = (Insert) op;
-//            return executeInsertTask(storageUnit, insert);
+            return executeInsertTask(storageUnit, insert);
         } else if (op.getType() == OperatorType.Delete) {
             Delete delete = (Delete) op;
-//            return executeDeleteTask(storageUnit, delete);
+            return executeDeleteTask(storageUnit, delete);
         }
         return new TaskExecuteResult(new NonExecutablePhysicalTaskException("unsupported physical task"));
     }
@@ -121,23 +126,53 @@ public class FileSystem implements IStorage {
     private TaskExecuteResult executeQueryTask(String storageUnit, Project project, Filter filter) {
         try {
             List<SeriesOperator> pathList = new ArrayList<>();
-            List<byte[]> result = new ArrayList<>();
-            // fix it
+            List<List<Record>> result = new ArrayList<>();
+            // fix it 如果有远程文件系统则需要server
             FileSystemOperator fileSystem = new LocalFileSystem();
             logger.info("[Query] execute query file: " + project.getPatterns());
             for(String path : project.getPatterns()) {
                 // not put storageUnit in front of path, may fix it
                 SeriesOperator seriesOperator = new SeriesOperator(null, path);
                 pathList.add(seriesOperator);
-                result.add(fileSystem.readFileByBytes(seriesOperator.getFilePath()));
+                result.add(fileSystem.read(new File(seriesOperator.getFilePath())));
             }
-
-            RowStream rowStream = new ClearEmptyRowStreamWrapper(new FileSystemQueryRowStream(result, pathList, project));
+            RowStream rowStream = new FileSystemQueryRowStream(result, pathList, project);
             return new TaskExecuteResult(rowStream);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in iotdb12 failure", e));
         }
+    }
+
+    private TaskExecuteResult executeInsertTask(String storageUnit, Insert insert) {
+        DataView dataView = insert.getData();
+        Exception e = null;
+        switch (dataView.getRawDataType()) {
+            case Row:
+            case NonAlignedRow:
+                e = insertRowRecords((RowDataView) dataView, storageUnit);
+                break;
+            case Column:
+            case NonAlignedColumn:
+                e = insertColumnRecords((ColumnDataView) dataView, storageUnit);
+                break;
+        }
+        if (e != null) {
+            return new TaskExecuteResult(null, new PhysicalException("execute insert task in influxdb failure", e));
+        }
+        return new TaskExecuteResult(null, null);
+    }
+
+    private Exception insertRowRecords(RowDataView data, String storageUnit) {
+        return null;
+    }
+
+    private Exception insertColumnRecords(ColumnDataView data, String storageUnit) {
+        return null;
+    }
+
+    private TaskExecuteResult executeDeleteTask(String storageUnit, Delete delete) {
+        return null;
     }
 }
 

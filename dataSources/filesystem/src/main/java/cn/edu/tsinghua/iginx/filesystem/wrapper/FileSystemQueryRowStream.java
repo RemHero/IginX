@@ -1,4 +1,4 @@
-package cn.edu.tsinghua.iginx.filesystem.query;
+package cn.edu.tsinghua.iginx.filesystem.wrapper;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
@@ -7,19 +7,17 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
 import cn.edu.tsinghua.iginx.filesystem.tools.SeriesOperator;
+import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileSystemQueryRowStream implements RowStream {
-    private final List<byte[]> dataset;
-
     private final Header header;
 
-    public FileSystemQueryRowStream(List<byte[]> result, List<SeriesOperator> pathList, Project project) {
+    public FileSystemQueryRowStream(List<List<Record>> result, List<SeriesOperator> pathList, Project project) {
         // fix it 先假设查询的全是文件
-        dataset = result;
         Field time = Field.KEY;
         List<Field> fields = new ArrayList<>();
 
@@ -27,7 +25,6 @@ public class FileSystemQueryRowStream implements RowStream {
             Field field = new Field(series.getFilePath(), DataType.BINARY, null);
             fields.add(field);
         }
-
         this.header = new Header(time, fields);
     }
 
@@ -43,11 +40,12 @@ public class FileSystemQueryRowStream implements RowStream {
 
     @Override
     public boolean hasNext() throws PhysicalException {
-        return false;
+
     }
 
     @Override
     public Row next() throws PhysicalException {
-        return null;
+
+        return new Row(header, timestamp, values);
     }
 }
