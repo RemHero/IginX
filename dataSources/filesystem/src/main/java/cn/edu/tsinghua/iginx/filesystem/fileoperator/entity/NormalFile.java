@@ -3,32 +3,46 @@ package cn.edu.tsinghua.iginx.filesystem.fileoperator.entity;
 import cn.edu.tsinghua.iginx.filesystem.fileoperator.FileOperator;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
-import static cn.edu.tsinghua.iginx.filesystem.FileSystem.MAXFILESIZE;
 
 public class NormalFile implements FileOperator {
-    @Override
-    public List<Record> queryFiles(File file) {
-        InputStream in;
-        int currentSize = 0;
-        File file = new File(fileName);
-        // 一次读一个字节 may fix it
-        in = Files.newInputStream(file.toPath());
-        int tempbyte;
-        while ((tempbyte = in.read()) != -1) {
-            res.add((byte) tempbyte);
-            if(currentSize >= MAXFILESIZE)
-                logger.error("the file size is lager than MAXFILESIZE {}", MAXFILESIZE);
+
+    public byte[] readFileToByteArrayUsingStream(Path path) throws IOException {
+        try (InputStream inputStream = Files.newInputStream(path);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int numRead = 0;
+            long fileSize = Files.size(path);
+            byte[] byteArray = new byte[(int) fileSize];
+
+            while ((numRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, numRead);
+            }
+
+            byteArray = outputStream.toByteArray();
+            return byteArray;
         }
-        in.close();
     }
 
     @Override
     public Exception writeFileData(File file, List<Record> values) {
         return null;
+    }
+
+    @Override
+    public List<Record> queryFiles(File file) throws IOException {
+        List<Record> res = new ArrayList<>();
+        byte[] byteArray = readFileToByteArrayUsingStream(file.toPath());
+        for (byte val : byteArray) {
+        }
     }
 }
