@@ -11,10 +11,21 @@ public class Record {
     private int MAXDATASETLEN = 100;
     private long timestamp;
     private DataType dataType;
-    private final byte[] rawData = new byte[MAXDATASETLEN];
+    private final Object rawData;
     private int index =  0;
 
-//    public void addRawDataRecord(List<Byte> oriData, int beg, int end) {
+    public Record(long timestamp, DataType dataType, Object rawData) {
+        this.timestamp = timestamp;
+        this.dataType = dataType;
+        this.rawData = rawData;
+    }
+
+    public Record(long timestamp, Object rawData) {
+        this.timestamp = timestamp;
+        this.rawData = rawData;
+    }
+
+    //    public void addRawDataRecord(List<Byte> oriData, int beg, int end) {
 //        for(int i = beg; i<end; i++) {
 //            rawData[index++] = oriData.get(i);
 //            if(index >= MAXDATASETLEN) {
@@ -33,7 +44,7 @@ public class Record {
         return res.toString();
     }
 
-    public byte[] getRawData() {
+    public Object getRawData() {
         return rawData;
     }
 
