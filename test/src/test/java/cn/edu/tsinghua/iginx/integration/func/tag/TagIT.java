@@ -26,7 +26,7 @@ public class TagIT {
 
     public TagIT() throws IOException {
         ConfLoder conf = new ConfLoder(Controller.CONFIG_FILE);
-        DBConf dbConf = conf.loadDBConf();
+        DBConf dbConf = conf.loadDBConf(conf.getStorageType());
         this.ifClearData = dbConf.getEnumValue(DBConf.DBConfType.isAbleToClearData);
         this.isAbleToDelete = dbConf.getEnumValue(DBConf.DBConfType.isAbleToDelete);
         this.ifScaleOutIn = conf.getStorageType() != null;
