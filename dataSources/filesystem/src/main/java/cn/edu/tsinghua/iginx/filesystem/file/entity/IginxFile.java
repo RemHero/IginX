@@ -9,12 +9,7 @@ import java.util.List;
 
 public class IginxFile implements Operator {
     @Override
-    public List<Record> read(File file) throws IOException {
-        return null;
-    }
-
-    @Override
-    public Exception write(File file, List<Record> values) {
+    public List<Record> getRecord(List<Object> rawData) {
         return null;
     }
 }

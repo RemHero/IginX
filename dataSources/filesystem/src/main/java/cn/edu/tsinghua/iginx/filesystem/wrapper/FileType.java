@@ -1,4 +1,4 @@
-package cn.edu.tsinghua.iginx.filesystem.file.property;
+package cn.edu.tsinghua.iginx.filesystem.wrapper;
 
 import cn.edu.tsinghua.iginx.filesystem.file.Operator;
 import cn.edu.tsinghua.iginx.filesystem.file.entity.IginxFile;

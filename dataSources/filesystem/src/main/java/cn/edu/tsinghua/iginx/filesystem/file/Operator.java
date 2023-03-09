@@ -10,7 +10,5 @@ import java.util.List;
  * 对于不同类型数据，以不同的方式读/写
  */
 public interface Operator {
-    List<Record> read(File file) throws IOException;
-
-    Exception write(File file, List<Record> values);
+    List<Record> getRecord(List<Object> rawData);
 }

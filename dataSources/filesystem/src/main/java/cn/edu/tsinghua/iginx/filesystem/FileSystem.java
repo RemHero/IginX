@@ -37,10 +37,10 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemEntity;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.LocalFileSystem;
+import cn.edu.tsinghua.iginx.filesystem.filesystem.IFileReader;
+import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.DefaultFileReader;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
-import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
+import cn.edu.tsinghua.iginx.filesystem.wrapper.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
@@ -128,7 +128,7 @@ public class FileSystem implements IStorage {
             List<FilePath> pathList = new ArrayList<>();
             List<List<Record>> result = new ArrayList<>();
             // fix it 如果有远程文件系统则需要server
-            FileSystemEntity fileSystem = new LocalFileSystem();
+            IFileReader fileSystem = new DefaultFileReader();
             logger.info("[Query] execute query file: " + project.getPatterns());
             for(String path : project.getPatterns()) {
                 // not put storageUnit in front of path, may fix it
@@ -165,7 +165,7 @@ public class FileSystem implements IStorage {
 
     private Exception insertRowRecords(RowDataView data, String storageUnit) {
         // fix it 如果有远程文件系统则需要server
-        FileSystemEntity fileSystem = new LocalFileSystem();
+        IFileReader fileSystem = new DefaultFileReader();
         if (fileSystem == null) {
             return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
         }

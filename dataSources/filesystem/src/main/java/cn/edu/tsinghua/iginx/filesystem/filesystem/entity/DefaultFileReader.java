@@ -1,8 +1,6 @@
 package cn.edu.tsinghua.iginx.filesystem.filesystem.entity;
 
-import cn.edu.tsinghua.iginx.filesystem.file.Operator;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemEntity;
-import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
+import cn.edu.tsinghua.iginx.filesystem.wrapper.FileType;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +11,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.util.List;
 
-public class LocalFileSystem implements FileSystemEntity {
-    private static final Logger logger = LoggerFactory.getLogger(LocalFileSystem.class);
+public class DefaultFileReader implements IFileReader {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultFileReader.class);
 
     @Override
     public List<Record> readFile(File file) throws IOException {
@@ -29,4 +27,6 @@ public class LocalFileSystem implements FileSystemEntity {
     public Exception writeFile(File file, List<Record> values) {
         return null;
     }
+
+    public class
 }

@@ -6,8 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public interface FileSystemEntity {
-    // read the file by bytes
+public class FileSystemImpl {
     public List<Record> readFile(File file) throws IOException;
     // read the part of the file
     public List<Record> readFile(File file, long begin, long end) throws IOException;
