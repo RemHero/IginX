@@ -697,7 +697,7 @@ public class TagIT {
 
     @Test
     public void testDeleteTSWithMultiTags() {
-        if (!isAbleToDelete) return;
+        if (!isAbleToDelete || ifScaleOutIn) return;
         String showTimeSeries = "SHOW TIME SERIES ah.*;";
         String expected =
                 "Time series:\n"
@@ -1279,7 +1279,7 @@ public class TagIT {
 
     @Test
     public void testClearData() throws SessionException, ExecutionException {
-        if (!ifClearData) return;
+        if (!ifClearData || ifScaleOutIn) return;
         clearData();
 
         String countPoints = "COUNT POINTS;";

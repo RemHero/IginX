@@ -79,6 +79,8 @@ public class ConfLoder {
             String tasks = null;
             if (storageEngine.toLowerCase().equals("influxdb"))
                 tasks = properties.getProperty("influxdb-" + TESTTASK);
+            else if (storageEngine.toLowerCase().equals("parquet"))
+                tasks = properties.getProperty("parquet-" + TESTTASK);
             else
                 tasks = properties.getProperty(TESTTASK);
             logInfo("the task of {} is :", storageEngine);
