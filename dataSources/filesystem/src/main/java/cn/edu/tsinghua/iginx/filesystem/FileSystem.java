@@ -37,10 +37,10 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemOperator;
+import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemEntity;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.LocalFileSystem;
-import cn.edu.tsinghua.iginx.filesystem.wrapper.FileSystemQueryRowStream;
-import cn.edu.tsinghua.iginx.filesystem.tools.SeriesOperator;
+import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
@@ -125,14 +125,14 @@ public class FileSystem implements IStorage {
 
     private TaskExecuteResult executeQueryTask(String storageUnit, Project project, Filter filter) {
         try {
-            List<SeriesOperator> pathList = new ArrayList<>();
+            List<FilePath> pathList = new ArrayList<>();
             List<List<Record>> result = new ArrayList<>();
             // fix it 如果有远程文件系统则需要server
-            FileSystemOperator fileSystem = new LocalFileSystem();
+            FileSystemEntity fileSystem = new LocalFileSystem();
             logger.info("[Query] execute query file: " + project.getPatterns());
             for(String path : project.getPatterns()) {
                 // not put storageUnit in front of path, may fix it
-                SeriesOperator seriesOperator = new SeriesOperator(null, path);
+                FilePath seriesOperator = new FilePath(null, path);
                 pathList.add(seriesOperator);
                 result.add(fileSystem.read(new File(seriesOperator.getFilePath())));
             }
@@ -164,6 +164,55 @@ public class FileSystem implements IStorage {
     }
 
     private Exception insertRowRecords(RowDataView data, String storageUnit) {
+        // fix it 如果有远程文件系统则需要server
+        FileSystemEntity fileSystem = new LocalFileSystem();
+        if (fileSystem == null) {
+            return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
+        }
+
+        for (int i = 0; i < data.getPathNum(); i++) {
+            schemas.add(new InfluxDBSchema(data.getPath(i), data.getTags(i)));
+        }
+
+        List<Point> points = new ArrayList<>();
+        for (int i = 0; i < data.getTimeSize(); i++) {
+            BitmapView bitmapView = data.getBitmapView(i);
+            int index = 0;
+            for (int j = 0; j < data.getPathNum(); j++) {
+                if (bitmapView.get(j)) {
+                    switch (data.getDataType(j)) {
+                        case BOOLEAN:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (boolean) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                        case INTEGER:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (int) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                        case LONG:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (long) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                        case FLOAT:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (float) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                        case DOUBLE:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (double) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                        case BINARY:
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), new String((byte[]) data.getValue(i, index))).time(data.getKey(i), WRITE_PRECISION));
+                            break;
+                    }
+                    index++;
+                }
+            }
+        }
+        try {
+            logger.info("开始数据写入");
+            fileSystem.write();
+            client.getWriteApiBlocking().writePoints(bucket.getId(), organization.getId(), points);
+        } catch (Exception e) {
+            logger.error("encounter error when write points to influxdb: ", e);
+        } finally {
+            logger.info("数据写入完毕！");
+        }
         return null;
     }
 

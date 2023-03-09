@@ -11,8 +11,8 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>fileSystem</artifactId>
-  <name>IGinX fileSystem</name>
+  <artifactId>filesystem</artifactId>
+  <name>IGinX FileSystem</name>
 
   <properties>
     <maven.compiler.source>8</maven.compiler.source>

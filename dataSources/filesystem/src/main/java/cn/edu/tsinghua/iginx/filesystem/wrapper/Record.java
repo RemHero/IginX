@@ -36,12 +36,13 @@ public class Record {
 //    }
 
     public String toString() {
-        StringBuilder res = new StringBuilder();
-        for (int i = 0; i < index; i++) {
-            res.append(rawData[i] + ",");
-        }
-        res.deleteCharAt(res.length() - 1);
-        return res.toString();
+//        StringBuilder res = new StringBuilder();
+//        for (int i = 0; i < index; i++) {
+//            res.append(rawData[i] + ",");
+//        }
+//        res.deleteCharAt(res.length() - 1);
+//        return res.toString();
+        return null;
     }
 
     public Object getRawData() {
@@ -50,5 +51,9 @@ public class Record {
 
     public void setMAXDATASETLEN(int length) {
         MAXDATASETLEN = length;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 }

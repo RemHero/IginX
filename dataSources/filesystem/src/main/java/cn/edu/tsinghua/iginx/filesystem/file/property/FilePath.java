@@ -1,18 +1,19 @@
-package cn.edu.tsinghua.iginx.filesystem.tools;
+package cn.edu.tsinghua.iginx.filesystem.file.property;
 
-public final class SeriesOperator {
+public final class FilePath {
     private static String SEPARATOR = "/";
     private String oriSeries;
     private String filePath;
     private String fileName;
 
-    public SeriesOperator(String storageUnit, String oriSeries) {
+    public FilePath(String storageUnit, String oriSeries) {
         this.oriSeries = oriSeries;
         convertSeriesToFileSystemPath(storageUnit, oriSeries);
     }
 
     private void convertSeriesToFileSystemPath(String storageUnit, String series) {
-        filePath = storageUnit + SEPARATOR + series.replace(".", SEPARATOR);
+        //之后根据规则修改获取文件名的方法， may fix it
+        filePath = storageUnit == null ? "":storageUnit + SEPARATOR + series.replace(".", SEPARATOR);
     }
 
     public String getOriSeries() {

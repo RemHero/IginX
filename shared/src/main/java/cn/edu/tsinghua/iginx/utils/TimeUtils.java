@@ -31,6 +31,8 @@ import java.time.temporal.ChronoField;
 import java.util.Calendar;
 
 public class TimeUtils {
+    public static final long MIN_AVAILABLE_TIME = 10L;
+    public static final long MAX_AVAILABLE_TIME = 9223372036854775804L;
 
     /* such as '2011-12-03'. */
     public static final DateTimeFormatter ISO_LOCAL_DATE_WIDTH_1_2;
