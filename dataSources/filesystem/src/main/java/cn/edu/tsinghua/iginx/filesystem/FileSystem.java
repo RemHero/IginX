@@ -37,6 +37,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
+import cn.edu.tsinghua.iginx.filesystem.exec.Executor;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.IFileReader;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.DefaultFileReader;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
@@ -60,6 +61,7 @@ public class FileSystem implements IStorage {
     public static final int MAXFILESIZE = 100_000_000;
     private static final Logger logger = LoggerFactory.getLogger(FileSystem.class);
     private final StorageEngineMeta meta;
+    private Executor executor;
 
     public FileSystem(StorageEngineMeta meta) throws StorageInitializationException {
         this.meta = meta;
@@ -72,7 +74,7 @@ public class FileSystem implements IStorage {
     }
 
     private boolean testConnection() {
-        // fix it when add the remote filesystem
+        // may fix it when add the remote filesystem
         return true;
     }
 
@@ -93,56 +95,46 @@ public class FileSystem implements IStorage {
                 filter = ((Select) operators.get(1)).getFilter();
             } else {
                 FragmentMeta fragment = task.getTargetFragment();
-                filter = new AndFilter(Arrays.asList(new KeyFilter(Op.GE, fragment.getTimeInterval().getStartTime()), new KeyFilter(Op.L, fragment.getTimeInterval().getEndTime())));
+                filter = new AndFilter(Arrays.asList(
+                        new KeyFilter(Op.GE, fragment.getTimeInterval().getStartTime()),
+                        new KeyFilter(Op.L, fragment.getTimeInterval().getEndTime())));
             }
-            // fix it
-//            return isDummyStorageUnit ? executeQueryHistoryTask(task.getTargetFragment().getTsInterval(), project, filter) : executeQueryTask(storageUnit, project, filter);
-            return executeQueryTask(storageUnit, project, filter);
+            return executor.executeProjectTask(
+                    project.getPatterns(),
+                    project.getTagFilter(),
+                    filter,
+                    storageUnit,
+                    isDummyStorageUnit);
         } else if (op.getType() == OperatorType.Insert) {
             Insert insert = (Insert) op;
-            return executeInsertTask(storageUnit, insert);
+            return executor.executeInsertTask(
+                    insert,
+                    storageUnit);
         } else if (op.getType() == OperatorType.Delete) {
             Delete delete = (Delete) op;
-            return executeDeleteTask(storageUnit, delete);
+            return executor.executeDeleteTask(
+                    delete,
+                    storageUnit);
         }
         return new TaskExecuteResult(new NonExecutablePhysicalTaskException("unsupported physical task"));
     }
 
     @Override
     public List<Timeseries> getTimeSeries() throws PhysicalException {
-        return null;
+        return executor.getTimeSeriesOfStorageUnit("*");
     }
 
     @Override
     public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException {
-        return null;
+        return executor.getBoundaryOfStorage();
     }
 
     @Override
     public void release() throws PhysicalException {
-
+        executor.close();
     }
 
-    private TaskExecuteResult executeQueryTask(String storageUnit, Project project, Filter filter) {
-        try {
-            List<FilePath> pathList = new ArrayList<>();
-            List<List<Record>> result = new ArrayList<>();
-            // fix it 如果有远程文件系统则需要server
-            IFileReader fileSystem = new DefaultFileReader();
-            logger.info("[Query] execute query file: " + project.getPatterns());
-            for(String path : project.getPatterns()) {
-                // not put storageUnit in front of path, may fix it
-                FilePath seriesOperator = new FilePath(null, path);
-                pathList.add(seriesOperator);
-                result.add(fileSystem.read(new File(seriesOperator.getFilePath())));
-            }
-            RowStream rowStream = new FileSystemQueryRowStream(result, pathList, project);
-            return new TaskExecuteResult(rowStream);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in iotdb12 failure", e));
-        }
-    }
+
 
     private TaskExecuteResult executeInsertTask(String storageUnit, Insert insert) {
         DataView dataView = insert.getData();
@@ -213,14 +205,6 @@ public class FileSystem implements IStorage {
         } finally {
             logger.info("数据写入完毕！");
         }
-        return null;
-    }
-
-    private Exception insertColumnRecords(ColumnDataView data, String storageUnit) {
-        return null;
-    }
-
-    private TaskExecuteResult executeDeleteTask(String storageUnit, Delete delete) {
         return null;
     }
 }
