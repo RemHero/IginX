@@ -6,6 +6,8 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
+import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.thrift.DataType;
@@ -19,12 +21,12 @@ public class FileSystemQueryRowStream implements RowStream {
     private final int[] indices;
     private int hasMoreRecords;
 
-    public FileSystemQueryRowStream(List<List<Record>> result, List<FilePath> pathList, Project project) {
+    public FileSystemQueryRowStream(List<List<Record>> result, List<FilePath> pathList, TagFilter tagFilter, Filter filter) {
         // fix it 先假设查询的全是NormalFile类型
         Field time = Field.KEY;
         List<Field> fields = new ArrayList<>();
 
-        for(FilePath series : pathList) {
+        for (FilePath series : pathList) {
             Field field = new Field(series.getFilePath(), DataType.INTEGER);// fix it 先假设查询的全是NormalFile类型
             fields.add(field);
         }

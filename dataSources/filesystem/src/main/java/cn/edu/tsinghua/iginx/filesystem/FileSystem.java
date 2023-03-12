@@ -100,8 +100,7 @@ public class FileSystem implements IStorage {
                         new KeyFilter(Op.L, fragment.getTimeInterval().getEndTime())));
             }
             return executor.executeProjectTask(
-                    project.getPatterns(),
-                    project.getTagFilter(),
+                    project,
                     filter,
                     storageUnit,
                     isDummyStorageUnit);
@@ -134,79 +133,6 @@ public class FileSystem implements IStorage {
         executor.close();
     }
 
-
-
-    private TaskExecuteResult executeInsertTask(String storageUnit, Insert insert) {
-        DataView dataView = insert.getData();
-        Exception e = null;
-        switch (dataView.getRawDataType()) {
-            case Row:
-            case NonAlignedRow:
-                e = insertRowRecords((RowDataView) dataView, storageUnit);
-                break;
-            case Column:
-            case NonAlignedColumn:
-                e = insertColumnRecords((ColumnDataView) dataView, storageUnit);
-                break;
-        }
-        if (e != null) {
-            return new TaskExecuteResult(null, new PhysicalException("execute insert task in influxdb failure", e));
-        }
-        return new TaskExecuteResult(null, null);
-    }
-
-    private Exception insertRowRecords(RowDataView data, String storageUnit) {
-        // fix it 如果有远程文件系统则需要server
-        IFileReader fileSystem = new DefaultFileReader();
-        if (fileSystem == null) {
-            return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
-        }
-
-        for (int i = 0; i < data.getPathNum(); i++) {
-            schemas.add(new InfluxDBSchema(data.getPath(i), data.getTags(i)));
-        }
-
-        List<Point> points = new ArrayList<>();
-        for (int i = 0; i < data.getTimeSize(); i++) {
-            BitmapView bitmapView = data.getBitmapView(i);
-            int index = 0;
-            for (int j = 0; j < data.getPathNum(); j++) {
-                if (bitmapView.get(j)) {
-                    switch (data.getDataType(j)) {
-                        case BOOLEAN:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (boolean) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                        case INTEGER:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (int) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                        case LONG:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (long) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                        case FLOAT:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (float) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                        case DOUBLE:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (double) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                        case BINARY:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), new String((byte[]) data.getValue(i, index))).time(data.getKey(i), WRITE_PRECISION));
-                            break;
-                    }
-                    index++;
-                }
-            }
-        }
-        try {
-            logger.info("开始数据写入");
-            fileSystem.write();
-            client.getWriteApiBlocking().writePoints(bucket.getId(), organization.getId(), points);
-        } catch (Exception e) {
-            logger.error("encounter error when write points to influxdb: ", e);
-        } finally {
-            logger.info("数据写入完毕！");
-        }
-        return null;
-    }
 }
 
 
