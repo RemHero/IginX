@@ -3,6 +3,7 @@ package cn.edu.tsinghua.iginx.filesystem.server;
 import cn.edu.tsinghua.iginx.conf.Config;
 import cn.edu.tsinghua.iginx.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iginx.filesystem.exec.Executor;
+import cn.edu.tsinghua.iginx.filesystem.thrift.FileSystemService;
 import cn.edu.tsinghua.iginx.parquet.thrift.ParquetService;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -28,7 +29,7 @@ public class FileSystemServer implements Runnable {
     }
 
     private void startServer() throws TTransportException {
-        TProcessor processor = new ParquetService.Processor<ParquetService.Iface>(new ParquetWorker(executor));
+        TProcessor processor = new FileSystemService.Processor<FileSystemService.Iface>(new FileSystemWorker(executor));
         TServerSocket serverTransport = new TServerSocket(port);
         TThreadPoolServer.Args args = new TThreadPoolServer
                 .Args(serverTransport)

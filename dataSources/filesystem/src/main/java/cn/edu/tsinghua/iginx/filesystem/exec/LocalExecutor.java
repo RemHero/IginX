@@ -4,7 +4,6 @@ import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalTaskExecuteFailureException;
 import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
-import cn.edu.tsinghua.iginx.engine.shared.TimeRange;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.ColumnDataView;
@@ -16,10 +15,8 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemImpl;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.IFileReader;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.DefaultFileReader;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
-import cn.edu.tsinghua.iginx.filesystem.wrapper.FilePath;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
@@ -35,7 +32,7 @@ public class LocalExecutor implements Executor {
     private static final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
 
     @Override
-    public TaskExecuteResult executeProjectTask(Project project, Filter filter, String storageUnit, boolean isDummyStorageUnit) {
+    public TaskExecuteResult executeProjectTask(Project project, String filter, String storageUnit, boolean isDummyStorageUnit) {
         List<String> series = project.getPatterns();
         TagFilter tagFilter = project.getTagFilter();
         if (isDummyStorageUnit) {
@@ -154,7 +151,7 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage() throws PhysicalException {
+    public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException {
         return null;
     }
 

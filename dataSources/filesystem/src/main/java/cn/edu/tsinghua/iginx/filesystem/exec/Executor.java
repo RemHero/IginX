@@ -13,11 +13,12 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
 import cn.edu.tsinghua.iginx.utils.Pair;
+
 import java.util.List;
 
 public interface Executor {
 
-    TaskExecuteResult executeProjectTask(Project project, Filter filter,
+    TaskExecuteResult executeProjectTask(Project project, String filter,
                                          String storageUnit, boolean isDummyStorageUnit);
 
     TaskExecuteResult executeInsertTask(Insert insert, String storageUnit);
@@ -26,7 +27,7 @@ public interface Executor {
 
     List<Timeseries> getTimeSeriesOfStorageUnit(String storageUnit) throws PhysicalException;
 
-    Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage() throws PhysicalException;
+    Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException;
 
     void close() throws PhysicalException;
 

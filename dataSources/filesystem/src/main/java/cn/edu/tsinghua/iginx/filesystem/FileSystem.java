@@ -20,17 +20,11 @@ package cn.edu.tsinghua.iginx.filesystem;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.NonExecutablePhysicalTaskException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
-import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalTaskExecuteFailureException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.StorageInitializationException;
 import cn.edu.tsinghua.iginx.engine.physical.storage.IStorage;
 import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.StoragePhysicalTask;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
-import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
-import cn.edu.tsinghua.iginx.engine.shared.data.write.ColumnDataView;
-import cn.edu.tsinghua.iginx.engine.shared.data.write.DataView;
-import cn.edu.tsinghua.iginx.engine.shared.data.write.RowDataView;
 import cn.edu.tsinghua.iginx.engine.shared.operator.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
@@ -38,11 +32,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.filesystem.exec.Executor;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.IFileReader;
-import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.DefaultFileReader;
-import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
-import cn.edu.tsinghua.iginx.filesystem.wrapper.FilePath;
-import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
+import cn.edu.tsinghua.iginx.filesystem.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
@@ -51,8 +41,6 @@ import cn.edu.tsinghua.iginx.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -101,7 +89,7 @@ public class FileSystem implements IStorage {
             }
             return executor.executeProjectTask(
                     project,
-                    filter,
+                    FilterTransformer.toString(filter),
                     storageUnit,
                     isDummyStorageUnit);
         } else if (op.getType() == OperatorType.Insert) {
@@ -125,7 +113,7 @@ public class FileSystem implements IStorage {
 
     @Override
     public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException {
-        return executor.getBoundaryOfStorage();
+        return executor.getBoundaryOfStorage(prefix);
     }
 
     @Override

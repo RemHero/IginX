@@ -1,6 +1,6 @@
 package cn.edu.tsinghua.iginx.filesystem.filesystem.entity;
 
-import cn.edu.tsinghua.iginx.filesystem.wrapper.FileType;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

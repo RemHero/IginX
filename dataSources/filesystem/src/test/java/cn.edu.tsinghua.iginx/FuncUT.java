@@ -4,7 +4,7 @@ import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.IFileReader;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.entity.DefaultFileReader;
-import cn.edu.tsinghua.iginx.filesystem.wrapper.FilePath;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import org.junit.Test;
@@ -19,12 +19,12 @@ public class FuncUT {
     @Test
     public void readLocalFile() throws IOException, PhysicalException {
         String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.txt";
-        int index =0;
+        int index = 0;
         byte[] resbyte = new byte[100];
         IFileReader fileSystem = new DefaultFileReader();
         List<Record> res = fileSystem.read(new File(path));
-        for(Record record : res) {
-            resbyte[index++] = (byte)record.getRawData();
+        for (Record record : res) {
+            resbyte[index++] = (byte) record.getRawData();
             System.out.println(record.getRawData());
         }
         System.out.println(new String(resbyte));
@@ -37,7 +37,7 @@ public class FuncUT {
         RowStream rowStream = new FileSystemQueryRowStream(result, pathList, null);
 
         System.out.println(rowStream.getHeader());
-        while(rowStream.hasNext()){
+        while (rowStream.hasNext()) {
             System.out.println(rowStream.next());
         }
     }

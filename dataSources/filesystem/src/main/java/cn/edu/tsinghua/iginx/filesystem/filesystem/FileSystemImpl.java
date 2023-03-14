@@ -9,7 +9,7 @@ import java.util.List;
 public class FileSystemImpl {
     // set the fileSystem type with constructor
     FileSystemImpl(/*FileSystemType type*/) {
-
+        
     }
 
     public List<Record> readFile(File file) throws IOException;

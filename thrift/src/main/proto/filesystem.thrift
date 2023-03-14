@@ -107,6 +107,6 @@ service FileSystemService {
 
     GetTimeSeriesOfStorageUnitResp getTimeSeriesOfStorageUnit(1: string storageUnit);
 
-    GetStorageBoundryResp getBoundaryOfStorage();
+    GetStorageBoundryResp getBoundaryOfStorage(1: string prefix);
 
 }
