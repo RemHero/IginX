@@ -1,25 +1,55 @@
 package cn.edu.tsinghua.iginx.filesystem.filesystem;
 
+import cn.edu.tsinghua.iginx.filesystem.file.IFileOperator;
+import cn.edu.tsinghua.iginx.filesystem.file.entity.DefaultFileOperator;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+/*
+ *缓存，索引以及优化策略都在这里执行
+ */
 public class FileSystemImpl {
+    IFileOperator fileOperator;
+
     // set the fileSystem type with constructor
-    FileSystemImpl(/*FileSystemType type*/) {
-        
+    public FileSystemImpl(/*FileSystemType type*/) {
+        fileOperator = new DefaultFileOperator();
     }
 
-    public List<Record> readFile(File file) throws IOException;
+    public List<Record> readFile(File file) throws IOException {
+        return readFile(file, -1, -1);
+    }
 
     // read the part of the file
-    public List<Record> readFile(File file, long begin, long end) throws IOException;
+    public List<Record> readFile(File file, long begin, long end) throws IOException {
+        return doReadFile(file, begin, end);
+    }
+
+    public List<Record> doReadFile(File file, long begin, long end) throws IOException {
+        List<Record> res;
+        switch (FileType.getFileType(file)) {
+            case IGINX_FILE:
+            case NORMAL_FILE:
+                res = fileOperator.TextFileReader(file);
+                break;
+            default:
+                res = fileOperator.TextFileReader(file);
+        }
+        return res;
+    }
 
     // write single file with bytes
-    public Exception writeFile(File file, List<Record> values);
+    public Exception writeFile(File file, List<Record> values) {
+        return null;
+    }
 
     // write multi file
-    public Exception writeFiles(List<File> file, List<List<Record>> values);
+    public Exception writeFiles(List<File> file, List<List<Record>> values) {
+        return null;
+    }
 }

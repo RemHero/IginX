@@ -8,12 +8,11 @@ public final class FilePath {
 
     public FilePath(String storageUnit, String oriSeries) {
         this.oriSeries = oriSeries;
-        convertSeriesToFileSystemPath(storageUnit, oriSeries);
     }
 
-    private void convertSeriesToFileSystemPath(String storageUnit, String series) {
+    private void convertSeriesToFileSystemPath(String storageUnit, String series, String separator) {
         //之后根据规则修改获取文件名的方法， may fix it
-        filePath = storageUnit == null ? "" : storageUnit + SEPARATOR + series.replace(".", SEPARATOR);
+        filePath = storageUnit == null ? "" : storageUnit + separator + series.replace(".", separator);
     }
 
     public String getOriSeries() {
