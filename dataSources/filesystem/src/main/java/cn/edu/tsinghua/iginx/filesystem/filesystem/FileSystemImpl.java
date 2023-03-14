@@ -34,7 +34,7 @@ public class FileSystemImpl {
         List<Record> res;
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
-            case NORMAL_FILE:
+            case TEXT_FILE:
                 res = fileOperator.TextFileReader(file);
                 break;
             default:
@@ -44,12 +44,25 @@ public class FileSystemImpl {
     }
 
     // write single file with bytes
-    public Exception writeFile(File file, List<Record> values) {
-        return null;
+    public Exception writeFile(File file, List<Record> value, boolean append) throws IOException {
+        return doWriteFile(file, value, append);
     }
 
     // write multi file
-    public Exception writeFiles(List<File> file, List<List<Record>> values) {
+    public Exception writeFiles(List<File> file, List<List<Record>> values, boolean append) {
         return null;
+    }
+
+    public Exception doWriteFile(File file, List<Record> value, boolean append) throws IOException {
+        Exception res;
+        switch (FileType.getFileType(file)) {
+            case IGINX_FILE:
+            case TEXT_FILE:
+                res = fileOperator.TextFileWriter(file, value, append);
+                break;
+            default:
+                res = fileOperator.TextFileWriter(file, value, append);
+        }
+        return res;
     }
 }

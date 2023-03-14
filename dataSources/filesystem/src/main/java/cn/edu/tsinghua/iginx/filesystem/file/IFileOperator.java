@@ -16,8 +16,8 @@ public interface IFileOperator {
     // read the line of [begin,end] of text file
     List<Record> TextFileReader(File file, long begin, long end) throws IOException;
 
-    List<Record> ByteFileWriter(File file, List<Record> values);
+    Exception ByteFileWriter(File file, byte[] bytes values, boolean append);
 
     // read the file by lines
-    List<Record> TextFileWriter(File file, List<Record> values);
+    Exception TextFileWriter(File file, byte[] bytes values, boolean append);
 }

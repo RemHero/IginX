@@ -41,13 +41,33 @@ public class DefaultFileOperator implements IFileOperator {
     }
 
     @Override
-    public List<Record> ByteFileWriter(File file, List<Record> values) {
+    public Exception ByteFileWriter(File file, byte[] bytes, boolean append) {
         return null;
     }
 
     @Override
-    public List<Record> TextFileWriter(File file, List<Record> values) {
+    public Exception TextFileWriter(File file, byte[] bytes, boolean append) {
         return null;
+    }
+
+    public void writeToFile(String content, File file, boolean append) throws IOException {
+        // 将字符串转换为字节数组
+        byte[] bytes = content.getBytes(charset);
+
+        // 使用Java NIO将字节数组写入文件
+        Path path = file.toPath();
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+        // 创建OpenOption选项数组
+        StandardOpenOption[] options;
+        if (append) {
+            options = new StandardOpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND};
+        } else {
+            options = new StandardOpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING};
+        }
+
+        // 使用OpenOption选项数组写入文件
+        Files.write(path, buffer.array(), options);
     }
 
     public byte[] readFileToByteArrayUsingStream(Path path) throws IOException {
