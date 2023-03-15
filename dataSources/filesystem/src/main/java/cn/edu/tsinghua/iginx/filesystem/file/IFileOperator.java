@@ -10,14 +10,22 @@ public interface IFileOperator {
     // read the file by bytes
     List<Record> ByteFileReader(File file);
 
-    // read the file by lines
+    // read the all the file
     List<Record> TextFileReader(File file);
 
-    // read the line of [begin,end] of text file
-    List<Record> TextFileReader(File file, long begin, long end) throws IOException;
+    // read the file by lines [begin, end]
+    List<Record> TextFileReaderByLine(File file, long begin, long end) throws IOException;
 
-    Exception ByteFileWriter(File file, byte[] bytes values, boolean append);
+    // read the all the file
+    List<Record> IginxFileReader(File file);
 
-    // read the file by lines
-    Exception TextFileWriter(File file, byte[] bytes values, boolean append);
+    // read the file by lines [begin, end]
+    List<Record> IginxFileReaderByKey(File file, long begin, long end) throws IOException;
+
+    // read the byte range [begin, end] of the file
+//    List<Record> TextFileReaderByByteSeek(File file, long begin, long end) throws IOException;
+
+    Exception ByteFileWriter(File file, byte[] bytes, boolean append);
+
+    Exception TextFileWriter(File file, byte[] bytes, boolean append);
 }

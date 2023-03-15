@@ -6,10 +6,9 @@ import cn.edu.tsinghua.iginx.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,15 +29,37 @@ public class DefaultFileOperator implements IFileOperator {
     }
 
     @Override
-    public List<Record> TextFileReader(File file, long begin, long end) throws IOException {
+    public List<Record> TextFileReaderByLine(File file, long begin, long end) throws IOException {
         List<Record> res = new ArrayList<>();
-        long timestamp = TimeUtils.MIN_AVAILABLE_TIME;
-        byte[] byteArray = readFileToByteArrayUsingStream(file.toPath());
-        for (byte val : byteArray) {
-            res.add(new Record(timestamp++, val));
+        long key = TimeUtils.MIN_AVAILABLE_TIME;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            long currentLine = 0;
+            String line;
+            while ((line = reader.readLine()) != null && currentLine <= end) {
+                if (currentLine >= begin) {
+                    res.add(new Record(key++, line));
+                }
+                currentLine++;
+            }
         }
         return res;
     }
+
+    // may fix it when use the cache and seek-tree
+//    @Override
+//    public List<Record> TextFileReaderByByteSeek(File file, long begin, long end) throws IOException {
+//        RandomAccessFile raf = new RandomAccessFile(file, "r");
+//        long position = begin;  // 指定从文件的第50个字节位置开始读取
+//        raf.seek(position);
+//        FileChannel channel = raf.getChannel();
+//        ByteBuffer buffer = ByteBuffer.allocate(1024);
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(raf.getFD())));
+//        String line;
+//        while ((line = reader.readLine()) != null) {
+//            System.out.println(line);
+//        }
+//        raf.close();
+//    }
 
     @Override
     public Exception ByteFileWriter(File file, byte[] bytes, boolean append) {

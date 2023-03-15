@@ -7,6 +7,7 @@ import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import java.util.List;
  */
 public class FileSystemImpl {
     IFileOperator fileOperator;
+    Charset charset;
 
     // set the fileSystem type with constructor
     public FileSystemImpl(/*FileSystemType type*/) {
@@ -27,6 +29,9 @@ public class FileSystemImpl {
 
     // read the part of the file
     public List<Record> readFile(File file, long begin, long end) throws IOException {
+        if (begin == -1 && end == -1) {
+            
+        }
         return doReadFile(file, begin, end);
     }
 
@@ -64,5 +69,9 @@ public class FileSystemImpl {
                 res = fileOperator.TextFileWriter(file, value, append);
         }
         return res;
+    }
+
+    public void setCharset(Charset charset) {
+        this.charset = charset;
     }
 }
