@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,26 +20,34 @@ public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
     private int BUFFERSIZE = 1024;
 
+//    @Override
+//    public List<Record> ByteFileReader(File file, Charset charset) {
+//        return null;
+//    }
+
     @Override
-    public List<Record> ByteFileReader(File file) {
-        return null;
+    public List<byte[]> TextFileReader(File file, Charset charset) throws IOException {
+        return TextFileReaderByLine(file, -1, -1, charset);
     }
 
     @Override
-    public List<Record> TextFileReader(File file) {
-        return null;
-    }
-
-    @Override
-    public List<Record> TextFileReaderByLine(File file, long begin, long end) throws IOException {
-        List<Record> res = new ArrayList<>();
+    public List<byte[]> TextFileReaderByLine(File file, long begin, long end, Charset charset) throws IOException {
+        List<byte[]> res = new ArrayList<>();
         long key = TimeUtils.MIN_AVAILABLE_TIME;
+        if (begin == -1 && end == -1) {
+            begin = 0;
+            end = Long.MAX_VALUE;
+        }
+        if (begin < 0 || end < 0) {
+            throw new IOException("Read information outside the boundary with BEGIN " + begin + " and END " + end);
+        }
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             long currentLine = 0;
             String line;
             while ((line = reader.readLine()) != null && currentLine <= end) {
                 if (currentLine >= begin) {
-                    res.add(new Record(key++, line));
+                    res.add(line.getBytes(charset));
                 }
                 currentLine++;
             }
@@ -61,20 +71,24 @@ public class DefaultFileOperator implements IFileOperator {
 //        raf.close();
 //    }
 
-    @Override
-    public Exception ByteFileWriter(File file, byte[] bytes, boolean append) {
-        return null;
-    }
+
+//    @Override
+//    public List<Record> IginxFileReader(File file) {
+//        return null;
+//    }
+
+//    @Override
+//    public List<Record> IginxFileReaderByKey(File file, long begin, long end) throws IOException {
+//        return null;
+//    }
+
+//    @Override
+//    public Exception ByteFileWriter(File file, byte[] bytes, boolean append) {
+//        return null;
+//    }
 
     @Override
-    public Exception TextFileWriter(File file, byte[] bytes, boolean append) {
-        return null;
-    }
-
-    public void writeToFile(String content, File file, boolean append) throws IOException {
-        // 将字符串转换为字节数组
-        byte[] bytes = content.getBytes(charset);
-
+    public Exception TextFileWriter(File file, byte[] bytes, boolean append) throws IOException {
         // 使用Java NIO将字节数组写入文件
         Path path = file.toPath();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -89,6 +103,11 @@ public class DefaultFileOperator implements IFileOperator {
 
         // 使用OpenOption选项数组写入文件
         Files.write(path, buffer.array(), options);
+        return null;
+    }
+
+    public void writeToFile(byte[] bytes, File file, boolean append) throws IOException {
+
     }
 
     public byte[] readFileToByteArrayUsingStream(Path path) throws IOException {

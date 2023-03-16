@@ -12,7 +12,7 @@ public class Record {
     private long timestamp;
     private DataType dataType;
     private final Object rawData;
-    private int index =  0;
+    private int index = 0;
 
     public Record(long timestamp, DataType dataType, Object rawData) {
         this.timestamp = timestamp;
@@ -23,6 +23,7 @@ public class Record {
     public Record(long timestamp, Object rawData) {
         this.timestamp = timestamp;
         this.rawData = rawData;
+        this.dataType = DataType.BINARY;
     }
 
     //    public void addRawDataRecord(List<Byte> oriData, int beg, int end) {
@@ -55,5 +56,9 @@ public class Record {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    public DataType getDataType() {
+        return dataType;
     }
 }

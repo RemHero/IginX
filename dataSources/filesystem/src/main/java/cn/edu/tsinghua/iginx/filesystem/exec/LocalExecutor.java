@@ -27,8 +27,12 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static cn.edu.tsinghua.iginx.thrift.DataType.*;
 
 public class LocalExecutor implements Executor {
+    FileSystemImpl fileSystem = new FileSystemImpl();
     private static final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
 
     @Override
@@ -42,7 +46,7 @@ public class LocalExecutor implements Executor {
         return null;
     }
 
-    private TaskExecuteResult executeQueryTask(String storageUnit, List<String> series, TagFilter tagFilter, Filter filter) {
+    public TaskExecuteResult executeQueryTask(String storageUnit, List<String> series, TagFilter tagFilter, Filter filter) {
         try {
             List<FilePath> pathList = new ArrayList<>();
             List<List<Record>> result = new ArrayList<>();
@@ -79,7 +83,7 @@ public class LocalExecutor implements Executor {
                 break;
             case Column:
             case NonAlignedColumn:
-//                e = insertColumnRecords((ColumnDataView) dataView, storageUnit);
+                e = insertColumnRecords((ColumnDataView) dataView, storageUnit);
                 break;
         }
         if (e != null) {
@@ -89,55 +93,114 @@ public class LocalExecutor implements Executor {
     }
 
     private Exception insertRowRecords(RowDataView data, String storageUnit) {
-        // fix it 如果有远程文件系统则需要server
-//        FileSystemImpl fileSystem = new FileSystemImpl();
-//        if (fileSystem == null) {
-//            return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
-//        }
-//
-//        for (int i = 0; i < data.getPathNum(); i++) {
-//            schemas.add(new InfluxDBSchema(data.getPath(i), data.getTags(i)));
-//        }
-//
-//        List<Point> points = new ArrayList<>();
-//        for (int i = 0; i < data.getTimeSize(); i++) {
-//            BitmapView bitmapView = data.getBitmapView(i);
-//            int index = 0;
-//            for (int j = 0; j < data.getPathNum(); j++) {
-//                if (bitmapView.get(j)) {
-//                    switch (data.getDataType(j)) {
-//                        case BOOLEAN:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (boolean) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                        case INTEGER:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (int) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                        case LONG:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (long) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                        case FLOAT:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (float) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                        case DOUBLE:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (double) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                        case BINARY:
-//                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), new String((byte[]) data.getValue(i, index))).time(data.getKey(i), WRITE_PRECISION));
-//                            break;
-//                    }
-//                    index++;
-//                }
-//            }
-//        }
-//        try {
-//            logger.info("开始数据写入");
-//            fileSystem.write();
-//            client.getWriteApiBlocking().writePoints(bucket.getId(), organization.getId(), points);
-//        } catch (Exception e) {
-//            logger.error("encounter error when write points to influxdb: ", e);
-//        } finally {
-//            logger.info("数据写入完毕！");
-//        }
+        List<List<Record>> valList = new ArrayList<>();
+        List<File> fileList = new ArrayList<>();
+        List<Boolean> ifAppend = new ArrayList<>();
+
+        if (fileSystem == null) {
+            return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
+        }
+
+        for (int j = 0; j < data.getPathNum(); j++) {
+            fileList.add(new File(new FilePath(null, data.getPath(j)).getFilePath()));
+            ifAppend.add(false);// always append, fix it!
+        }
+
+        for (int i = 0; i < data.getTimeSize(); i++) {
+            List<Record> val = new ArrayList<>();
+            BitmapView bitmapView = data.getBitmapView(i);
+            int index = 0;
+            for (int j = 0; j < data.getPathNum(); j++) {
+                if (bitmapView.get(j)) {
+                    switch (data.getDataType(j)) {
+                        case BOOLEAN:
+                            val.add(new Record(data.getKey(i), BOOLEAN, data.getValue(i, index)));
+                            break;
+                        case INTEGER:
+                            val.add(new Record(data.getKey(i), INTEGER, data.getValue(i, index)));
+                            break;
+                        case LONG:
+                            val.add(new Record(data.getKey(i), LONG, data.getValue(i, index)));
+                            break;
+                        case FLOAT:
+                            val.add(new Record(data.getKey(i), FLOAT, data.getValue(i, index)));
+                            break;
+                        case DOUBLE:
+                            val.add(new Record(data.getKey(i), DOUBLE, data.getValue(i, index)));
+                            break;
+                        case BINARY:
+                            val.add(new Record(data.getKey(i), BINARY, data.getValue(i, index)));
+                            break;
+                    }
+                    index++;
+                }
+            }
+            valList.add(val);
+        }
+        try {
+            logger.info("开始数据写入");
+            fileSystem.writeFiles(fileList, valList, ifAppend);
+        } catch (Exception e) {
+            logger.error("encounter error when write points to influxdb: ", e);
+        } finally {
+            logger.info("数据写入完毕！");
+        }
+        return null;
+    }
+
+    private Exception insertColumnRecords(ColumnDataView data, String storageUnit) {
+        List<List<Record>> valList = new ArrayList<>();
+        List<File> fileList = new ArrayList<>();
+        List<Boolean> ifAppend = new ArrayList<>();
+
+        if (fileSystem == null) {
+            return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
+        }
+
+        for (int j = 0; j < data.getPathNum(); j++) {
+            fileList.add(new File(new FilePath(null, data.getPath(j)).getFilePath()));
+            ifAppend.add(false);// always append, fix it!
+        }
+
+        for (int i = 0; i < data.getPathNum(); i++) {
+            List<Record> val = new ArrayList<>();
+            BitmapView bitmapView = data.getBitmapView(i);
+            int index = 0;
+            for (int j = 0; j < data.getTimeSize(); j++) {
+                if (bitmapView.get(j)) {
+                    switch (data.getDataType(i)) {
+                        case BOOLEAN:
+                            val.add(new Record(data.getKey(i), BOOLEAN, data.getValue(i, index)));
+                            break;
+                        case INTEGER:
+                            val.add(new Record(data.getKey(i), INTEGER, data.getValue(i, index)));
+                            break;
+                        case LONG:
+                            val.add(new Record(data.getKey(i), LONG, data.getValue(i, index)));
+                            break;
+                        case FLOAT:
+                            val.add(new Record(data.getKey(i), FLOAT, data.getValue(i, index)));
+                            break;
+                        case DOUBLE:
+                            val.add(new Record(data.getKey(i), DOUBLE, data.getValue(i, index)));
+                            break;
+                        case BINARY:
+                            val.add(new Record(data.getKey(i), BINARY, data.getValue(i, index)));
+                            break;
+                    }
+                    index++;
+                }
+            }
+        }
+
+        try {
+            logger.info("开始数据写入");
+            fileSystem.writeFiles(fileList, valList, ifAppend);
+        } catch (Exception e) {
+            logger.error("encounter error when write points to influxdb: ", e);
+        } finally {
+            logger.info("数据写入完毕！");
+        }
         return null;
     }
 

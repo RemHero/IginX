@@ -4,10 +4,13 @@ import cn.edu.tsinghua.iginx.filesystem.file.IFileOperator;
 import cn.edu.tsinghua.iginx.filesystem.file.entity.DefaultFileOperator;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
+import cn.edu.tsinghua.iginx.utils.TimeUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +19,7 @@ import java.util.List;
  */
 public class FileSystemImpl {
     IFileOperator fileOperator;
-    Charset charset;
+    Charset charset = StandardCharsets.UTF_8;
 
     // set the fileSystem type with constructor
     public FileSystemImpl(/*FileSystemType type*/) {
@@ -29,21 +32,24 @@ public class FileSystemImpl {
 
     // read the part of the file
     public List<Record> readFile(File file, long begin, long end) throws IOException {
-        if (begin == -1 && end == -1) {
-            
-        }
         return doReadFile(file, begin, end);
     }
 
-    public List<Record> doReadFile(File file, long begin, long end) throws IOException {
-        List<Record> res;
+    // not support the begin and end, fix it
+    private List<Record> doReadFile(File file, long begin, long end) throws IOException {
+        List<Record> res = new ArrayList<>();
+        List<byte[]> valList;
+        long key = TimeUtils.MIN_AVAILABLE_TIME;
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
             case TEXT_FILE:
-                res = fileOperator.TextFileReader(file);
+                valList = fileOperator.TextFileReader(file, charset);
                 break;
             default:
-                res = fileOperator.TextFileReader(file);
+                valList = fileOperator.TextFileReader(file, charset);
+        }
+        for (byte[] val : valList) {
+            res.add(new Record(key++, val));
         }
         return res;
     }
@@ -54,21 +60,47 @@ public class FileSystemImpl {
     }
 
     // write multi file
-    public Exception writeFiles(List<File> file, List<List<Record>> values, boolean append) {
+    public Exception writeFiles(List<File> files, List<List<Record>> values, List<Boolean> appends) throws IOException {
+        for (int i = 0; i < files.size(); i++) {
+            writeFile(files.get(i), values.get(i), appends.get(i));
+        }
         return null;
     }
 
-    public Exception doWriteFile(File file, List<Record> value, boolean append) throws IOException {
+    private Exception doWriteFile(File file, List<Record> value, boolean append) throws IOException {
         Exception res;
+
+        byte[] bytes = makeValueToBytes(value);
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
             case TEXT_FILE:
-                res = fileOperator.TextFileWriter(file, value, append);
+                res = fileOperator.TextFileWriter(file, bytes, append);
                 break;
             default:
-                res = fileOperator.TextFileWriter(file, value, append);
+                res = fileOperator.TextFileWriter(file, bytes, append);
         }
         return res;
+    }
+
+    private byte[] makeValueToBytes(List<Record> value) throws IOException {
+        List<byte[]> byteList = new ArrayList<>();
+        switch (value.get(0).getDataType()) {
+            case BINARY:
+            default:
+                for (Record val : value) {
+                    byteList.add(((String) val.getRawData()).getBytes(charset));
+                }
+                break;
+        }
+        return mergeByteArrays(byteList);
+    }
+
+    public byte[] mergeByteArrays(List<byte[]> arrays) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (byte[] array : arrays) {
+            outputStream.write(array);
+        }
+        return outputStream.toByteArray();
     }
 
     public void setCharset(Charset charset) {

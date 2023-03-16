@@ -26,7 +26,7 @@ public class FileSystemQueryRowStream implements RowStream {
         List<Field> fields = new ArrayList<>();
 
         for (FilePath series : pathList) {
-            Field field = new Field(series.getFilePath(), DataType.INTEGER);// fix it 先假设查询的全是NormalFile类型
+            Field field = new Field(series.getFilePath(), DataType.BINARY);// fix it 先假设查询的全是NormalFile类型
             fields.add(field);
         }
         this.rowData = result;
@@ -76,9 +76,9 @@ public class FileSystemQueryRowStream implements RowStream {
             if (record.getTimestamp() == timestamp) { // 考虑时间 ns may fix it
                 DataType dataType = header.getField(i).getType();
                 Object value = record.getRawData();
-                if (dataType == DataType.BINARY) {
-                    value = ((String) value).getBytes();
-                }
+//                if (dataType == DataType.BINARY) {
+//                    value = (String) value;
+//                }
                 values[i] = value;
                 indices[i]++;
                 if (indices[i] == records.size()) {
