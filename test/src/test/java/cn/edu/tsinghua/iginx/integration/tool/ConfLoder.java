@@ -22,7 +22,7 @@ public class ConfLoder {
     private List<StorageEngineMeta> storageEngineMetas = new ArrayList<>();
     private Map<DBConf.DBType, List<String>> taskMap = new HashMap<>();
     private static String confPath;
-    private boolean DEBUG = true;
+    private boolean DEBUG = false;
     private static String STORAGEENGINELIST = "storageEngineList";
     private String TESTTASK = "test-list";
     private static String DBCONF = "%s-config";
@@ -115,6 +115,9 @@ public class ConfLoder {
 
         DBConf dbConf = new DBConf();
 
+        if (storageEngine == null || storageEngine.isEmpty()) {
+            return dbConf;
+        }
         String confs = properties.getProperty(String.format(DBCONF, storageEngine));
         logInfo("the conf of {} is : {}", storageEngine, confs);
         List<String> confList = Arrays.asList(confs.split(","));
