@@ -24,7 +24,7 @@ public interface Executor {
 
     TaskExecuteResult executeInsertTask(Insert insert, String storageUnit);
 
-    TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) throws IOException;
+    TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit);
 
     List<Timeseries> getTimeSeriesOfStorageUnit(String storageUnit) throws PhysicalException;
 

@@ -2,6 +2,7 @@ package cn.edu.tsinghua.iginx.filesystem.filesystem;
 
 import cn.edu.tsinghua.iginx.filesystem.file.IFileOperator;
 import cn.edu.tsinghua.iginx.filesystem.file.entity.DefaultFileOperator;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.utils.TimeUtils;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.util.*;
 
 /*
@@ -23,6 +25,7 @@ public class FileSystemImpl {
     // set the fileSystem type with constructor
     public FileSystemImpl(/*FileSystemType type*/) {
         fileOperator = new DefaultFileOperator();
+        FilePath.setSeparator(System.getProperty("file.separator"));
     }
 
     public List<Record> readFile(File file) throws IOException {
@@ -66,7 +69,7 @@ public class FileSystemImpl {
         return null;
     }
 
-    public Exception deleteFile(File file) throws IOException {
+    public Exception deleteFile(File file) {
         return deleteFiles(Collections.singletonList(file));
     }
 
@@ -76,7 +79,7 @@ public class FileSystemImpl {
      * @param files 要删除的文件或目录列表
      * @throws Exception 如果删除操作失败则抛出异常
      */
-    public Exception deleteFiles(List<File> files) throws IOException {
+    public Exception deleteFiles(List<File> files) {
         for (File file : files) {
             Stack<File> stack = new Stack<>();
             stack.push(file);
@@ -91,7 +94,7 @@ public class FileSystemImpl {
                     }
                 }
                 if (!currentFile.delete()) {
-                    throw new IOException("Failed to delete file: " + currentFile.getAbsolutePath());
+                    return new IOException("Failed to delete file: " + currentFile.getAbsolutePath());
                 }
             }
         }

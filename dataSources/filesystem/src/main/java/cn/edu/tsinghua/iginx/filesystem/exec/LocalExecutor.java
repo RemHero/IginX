@@ -20,6 +20,7 @@ import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
+import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import org.slf4j.Logger;
@@ -27,11 +28,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.edu.tsinghua.iginx.thrift.DataType.*;
@@ -210,7 +214,7 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) throws IOException {
+    public TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) {
         if (delete.getTimeRanges() == null || delete.getTimeRanges().size() == 0) { // 没有传任何 time range
             FilePath filePath = new FilePath(storageUnit, null);
             fileSystem.deleteFile(new File(filePath.getFilePath()));
@@ -222,19 +226,101 @@ public class LocalExecutor implements Executor {
             FilePath filePath = new FilePath(storageUnit, path);
             fileList.add(new File(filePath.getFilePath()));
         }
-        
+
         fileSystem.deleteFiles(fileList);
         return new TaskExecuteResult(null, null);
     }
 
     @Override
     public List<Timeseries> getTimeSeriesOfStorageUnit(String storageUnit) throws PhysicalException {
-        return null;
+        List<Timeseries> files = new ArrayList<>();
+        Stack<File> stack = new Stack<>();
+        FilePath filePath = new FilePath(storageUnit, null);
+        File directory = new File(filePath.getFilePath());// fix it , 这里的 storageUnit 需要转化为一个目录
+        stack.push(directory);
+
+        files.add(new Timeseries(directory.getPath(), BINARY));// may fix it，所有都默认为binary
+
+        while (!stack.isEmpty()) {
+            File current = stack.pop();
+            File[] fileList = null;
+            if (current.isDirectory())
+                fileList = current.listFiles();
+            if (fileList != null) {
+                for (File file : fileList) {
+                    if (file.isDirectory()) {
+                        stack.push(file);
+                    }
+                    files.add(new Timeseries(file.getPath(), BINARY));// may fix it，所有都默认为binary
+                }
+            }
+        }
+        return files;
     }
 
     @Override
     public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException {
-        return null;
+        List<File> files = new ArrayList<>();
+        Stack<File> stack = new Stack<>();
+        FilePath filePath = new FilePath(prefix, null);
+        File directory = new File(filePath.getFilePath());// fix it , 这里的 storageUnit 需要转化为一个目录
+        stack.push(directory);
+
+        files.add(directory);// may fix it，所有都默认为binary
+
+        while (!stack.isEmpty()) {
+            File current = stack.pop();
+            File[] fileList = null;
+            if (current.isDirectory())
+                fileList = current.listFiles();
+            if (fileList != null) {
+                for (File file : fileList) {
+                    if (file.isDirectory()) {
+                        stack.push(file);
+                    }
+                    files.add(file);// may fix it，所有都默认为binary
+                }
+            }
+        }
+
+        List<File> minMaxFiles = findMinMaxFile(files);
+        File minPathFile = minMaxFiles.get(0);
+        File maxPathFile = minMaxFiles.get(1);
+
+        Date minFileCreateTime = getCreationTime(minPathFile);
+        Date maxFileCreateTime = getCreationTime(maxPathFile);
+
+        TimeSeriesRange timeSeriesRange = new TimeSeriesInterval(FilePath.convertFilePathToSeries(minPathFile.getPath()),
+            FilePath.convertFilePathToSeries(maxPathFile.getPath()));
+        TimeInterval timeInterval = new TimeInterval(minFileCreateTime.getTime(), maxFileCreateTime.getTime());
+        
+        return new Pair<>(timeSeriesRange, timeInterval);
+    }
+
+    private Date getCreationTime(File file) {
+        try {
+            Path filePath = Paths.get(file.getAbsolutePath());
+            BasicFileAttributes attributes = Files.readAttributes(filePath, BasicFileAttributes.class);
+            return new Date(attributes.creationTime().toMillis());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<File> findMinMaxFile(List<File> fileList) {
+        List<File> twoFiles = new ArrayList<>();
+        // 按字母序排序
+        Collections.sort(fileList);
+
+        // 找到最小和最大的File
+        File minFile = fileList.get(0);
+        File maxFile = fileList.get(fileList.size() - 1);
+
+        twoFiles.add(minFile);
+        twoFiles.add(maxFile);
+
+        return twoFiles;
     }
 
     @Override
