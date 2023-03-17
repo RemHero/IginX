@@ -11,8 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /*
  *缓存，索引以及优化策略都在这里执行
@@ -67,6 +66,38 @@ public class FileSystemImpl {
         return null;
     }
 
+    public Exception deleteFile(File file) throws IOException {
+        return deleteFiles(Collections.singletonList(file));
+    }
+
+    /**
+     * 删除文件或目录
+     *
+     * @param files 要删除的文件或目录列表
+     * @throws Exception 如果删除操作失败则抛出异常
+     */
+    public Exception deleteFiles(List<File> files) throws IOException {
+        for (File file : files) {
+            Stack<File> stack = new Stack<>();
+            stack.push(file);
+            while (!stack.isEmpty()) {
+                File currentFile = stack.pop();
+                if (currentFile.isDirectory()) {
+                    File[] fileList = currentFile.listFiles();
+                    if (fileList != null && fileList.length > 0) {
+                        for (File subFile : fileList) {
+                            stack.push(subFile);
+                        }
+                    }
+                }
+                if (!currentFile.delete()) {
+                    throw new IOException("Failed to delete file: " + currentFile.getAbsolutePath());
+                }
+            }
+        }
+        return null;
+    }
+
     private Exception doWriteFile(File file, List<Record> value, boolean append) throws IOException {
         Exception res;
 
@@ -88,7 +119,7 @@ public class FileSystemImpl {
             case BINARY:
             default:
                 for (Record val : value) {
-                    byteList.add(((String) val.getRawData()).getBytes(charset));
+                    byteList.add((byte[]) val.getRawData());
                 }
                 break;
         }

@@ -14,6 +14,7 @@ import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
 import cn.edu.tsinghua.iginx.utils.Pair;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface Executor {
@@ -23,7 +24,7 @@ public interface Executor {
 
     TaskExecuteResult executeInsertTask(Insert insert, String storageUnit);
 
-    TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit);
+    TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) throws IOException;
 
     List<Timeseries> getTimeSeriesOfStorageUnit(String storageUnit) throws PhysicalException;
 

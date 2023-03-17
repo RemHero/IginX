@@ -4,6 +4,7 @@ import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalTaskExecuteFailureException;
 import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
+import cn.edu.tsinghua.iginx.engine.shared.TimeRange;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.ColumnDataView;
@@ -25,6 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -205,8 +210,49 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) {
-        return null;
+    public TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) throws IOException {
+        if (delete.getTimeRanges() == null || delete.getTimeRanges().size() == 0) { // 没有传任何 time range
+            FilePath filePath = new FilePath(storageUnit, null);
+            fileSystem.deleteFile(new File(filePath.getFilePath()));
+            return new TaskExecuteResult(null, null);
+        }
+        // 删除某些序列的某一段数据
+        Bucket bucket = bucketMap.get(storageUnit);
+        if (bucket == null) {
+            synchronized (this) {
+                bucket = bucketMap.get(storageUnit);
+                if (bucket == null) {
+                    List<Bucket> bucketList = client.getBucketsApi()
+                        .findBucketsByOrgName(this.organizationName).stream()
+                        .filter(b -> b.getName().equals(storageUnit))
+                        .collect(Collectors.toList());
+                    if (bucketList.isEmpty()) {
+                        bucket = client.getBucketsApi().createBucket(storageUnit, organization);
+                    } else {
+                        bucket = bucketList.get(0);
+                    }
+                    bucketMap.put(storageUnit, bucket);
+                }
+            }
+        }
+        if (bucket == null) { // 没有数据，当然也不用删除
+            return new TaskExecuteResult(null, null);
+        }
+
+        List<InfluxDBSchema> schemas = delete.getPatterns().stream().map(InfluxDBSchema::new).collect(Collectors.toList());
+        for (InfluxDBSchema schema : schemas) {
+            for (TimeRange timeRange : delete.getTimeRanges()) {
+                client.getDeleteApi().delete(
+                    OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeRange.getActualBeginTime()), ZoneId.of("UTC")),
+                    OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeRange.getActualEndTime()), ZoneId.of("UTC")),
+                    String.format(DELETE_DATA, schema.getMeasurement(), schema.getField()),
+                    bucket,
+                    organization
+                );
+
+            }
+        }
+        return new TaskExecuteResult(null, null);
     }
 
     @Override

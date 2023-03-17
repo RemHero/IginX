@@ -11,6 +11,7 @@ import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemImpl;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
+import cn.edu.tsinghua.iginx.utils.TimeUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -59,6 +60,26 @@ public class FuncUT {
         while (rowStream.hasNext()) {
             System.out.println(new String((byte[]) rowStream.next().getValue(0)));
         }
+    }
+
+    @Test
+    public void testInsertRowRecords() throws IOException {
+        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.txt";
+        FileSystemImpl fileSystem = new FileSystemImpl();
+        List<List<Record>> valList = new ArrayList<>();
+        List<File> fileList = new ArrayList<>();
+        List<Boolean> ifAppend = new ArrayList<>();
+
+        fileList.add(new File(path));
+
+        valList.add(new ArrayList<Record>() {{
+            long key = TimeUtils.MIN_AVAILABLE_TIME;
+            add(new Record(key++, "lhz never give up!\n".getBytes()));
+            add(new Record(key++, "happy every day!\n".getBytes()));
+        }});
+
+        ifAppend.add(false);
+        fileSystem.writeFiles(fileList, valList, ifAppend);
     }
 
 }
