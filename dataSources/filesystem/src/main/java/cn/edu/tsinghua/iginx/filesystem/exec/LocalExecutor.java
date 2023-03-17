@@ -216,28 +216,6 @@ public class LocalExecutor implements Executor {
             fileSystem.deleteFile(new File(filePath.getFilePath()));
             return new TaskExecuteResult(null, null);
         }
-        // 删除某些序列的某一段数据
-        Bucket bucket = bucketMap.get(storageUnit);
-        if (bucket == null) {
-            synchronized (this) {
-                bucket = bucketMap.get(storageUnit);
-                if (bucket == null) {
-                    List<Bucket> bucketList = client.getBucketsApi()
-                        .findBucketsByOrgName(this.organizationName).stream()
-                        .filter(b -> b.getName().equals(storageUnit))
-                        .collect(Collectors.toList());
-                    if (bucketList.isEmpty()) {
-                        bucket = client.getBucketsApi().createBucket(storageUnit, organization);
-                    } else {
-                        bucket = bucketList.get(0);
-                    }
-                    bucketMap.put(storageUnit, bucket);
-                }
-            }
-        }
-        if (bucket == null) { // 没有数据，当然也不用删除
-            return new TaskExecuteResult(null, null);
-        }
 
         List<InfluxDBSchema> schemas = delete.getPatterns().stream().map(InfluxDBSchema::new).collect(Collectors.toList());
         for (InfluxDBSchema schema : schemas) {
