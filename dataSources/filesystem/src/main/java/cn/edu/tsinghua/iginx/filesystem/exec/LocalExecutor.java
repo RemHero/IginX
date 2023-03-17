@@ -217,19 +217,13 @@ public class LocalExecutor implements Executor {
             return new TaskExecuteResult(null, null);
         }
 
-        List<InfluxDBSchema> schemas = delete.getPatterns().stream().map(InfluxDBSchema::new).collect(Collectors.toList());
-        for (InfluxDBSchema schema : schemas) {
-            for (TimeRange timeRange : delete.getTimeRanges()) {
-                client.getDeleteApi().delete(
-                    OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeRange.getActualBeginTime()), ZoneId.of("UTC")),
-                    OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeRange.getActualEndTime()), ZoneId.of("UTC")),
-                    String.format(DELETE_DATA, schema.getMeasurement(), schema.getField()),
-                    bucket,
-                    organization
-                );
-
-            }
+        List<File> fileList = new ArrayList<>();
+        for (String path : delete.getPatterns()) {
+            FilePath filePath = new FilePath(storageUnit, path);
+            fileList.add(new File(filePath.getFilePath()));
         }
+        
+        fileSystem.deleteFiles(fileList);
         return new TaskExecuteResult(null, null);
     }
 
