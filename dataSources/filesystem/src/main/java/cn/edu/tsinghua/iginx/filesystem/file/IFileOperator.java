@@ -17,11 +17,8 @@ public interface IFileOperator {
     // read the file by lines [begin, end]
     List<byte[]> TextFileReaderByLine(File file, long begin, long end, Charset charset) throws IOException;
 
-    // read the all the file
-//    List<byte[]> IginxFileReader(File file);
-
-    // read the file by lines [begin, end]
-//    List<byte[]> IginxFileReaderByKey(File file, long begin, long end) throws IOException;
+    // read the file by key [begin, end]
+    List<Record> IginxFileReaderByKey(File file, long begin, long end) throws IOException;
 
     // read the byte range [begin, end] of the file
 //    List<Record> TextFileReaderByByteSeek(File file, long begin, long end) throws IOException;
@@ -29,4 +26,6 @@ public interface IFileOperator {
 //    Exception ByteFileWriter(File file, byte[] bytes, boolean append);
 
     Exception TextFileWriter(File file, byte[] bytes, boolean append) throws IOException;
+
+    Exception IginxFileWriter(File file, List<Record> valList) throws IOException;
 }

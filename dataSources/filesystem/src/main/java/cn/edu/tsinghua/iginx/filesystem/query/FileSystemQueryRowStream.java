@@ -60,7 +60,7 @@ public class FileSystemQueryRowStream implements RowStream {
                 continue;
             }
             Record record = records.get(index);
-            timestamp = Math.min(record.getTimestamp(), timestamp);
+            timestamp = Math.min(record.getKey(), timestamp);
         }
         if (timestamp == Long.MAX_VALUE) {
             return null;
@@ -73,7 +73,7 @@ public class FileSystemQueryRowStream implements RowStream {
                 continue;
             }
             Record record = records.get(index);
-            if (record.getTimestamp() == timestamp) { // 考虑时间 ns may fix it
+            if (record.getKey() == timestamp) { // 考虑时间 ns may fix it
                 DataType dataType = header.getField(i).getType();
                 Object value = record.getRawData();
 //                if (dataType == DataType.BINARY) {

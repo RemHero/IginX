@@ -40,10 +40,12 @@ public class FileSystemImpl {
     // not support the begin and end, fix it
     private List<Record> doReadFile(File file, long begin, long end) throws IOException {
         List<Record> res = new ArrayList<>();
-        List<byte[]> valList;
+        List<byte[]> valList = new ArrayList<>();
         long key = TimeUtils.MIN_AVAILABLE_TIME;
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
+                res = fileOperator.IginxFileReaderByKey(file, begin, end);
+                break;
             case TEXT_FILE:
                 valList = fileOperator.TextFileReader(file, charset);
                 break;

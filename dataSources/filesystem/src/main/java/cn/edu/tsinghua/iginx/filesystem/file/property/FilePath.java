@@ -13,7 +13,8 @@ public final class FilePath {
 
     private void convertSeriesToFileSystemPath(String storageUnit, String series, String separator) {
         //之后根据规则修改获取文件名的方法， may fix it
-        filePath = storageUnit == null ? "" : separator + storageUnit + separator + series;
+        filePath = series == null ? storageUnit : series;//临时逻辑
+//        filePath = storageUnit == null ? "" : separator + storageUnit + separator + series;
 //        filePath = storageUnit == null ? "" : storageUnit + separator + series.replace(".", separator);
     }
 

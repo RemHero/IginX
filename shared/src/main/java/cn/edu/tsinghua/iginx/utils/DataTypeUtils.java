@@ -20,6 +20,8 @@ package cn.edu.tsinghua.iginx.utils;
 
 import cn.edu.tsinghua.iginx.thrift.DataType;
 
+import java.lang.reflect.Type;
+
 public class DataTypeUtils {
 
     public static boolean isNumber(DataType dataType) {
@@ -47,6 +49,25 @@ public class DataTypeUtils {
             case "double":
                 return DataType.DOUBLE;
             case "binary":
+                return DataType.BINARY;
+            default:
+                return null;
+        }
+    }
+
+    public static DataType convertPqrquetTypeToDataType(org.apache.parquet.schema.Type type) {
+        switch (type.toString()) {
+            case "BOOLEAN":
+                return DataType.BOOLEAN;
+            case "INT64":
+                return DataType.INTEGER;
+            case "LONG":
+                return DataType.LONG;
+            case "FLOAT":
+                return DataType.FLOAT;
+            case "DOUBLE":
+                return DataType.DOUBLE;
+            case "BINARY":
                 return DataType.BINARY;
             default:
                 return null;

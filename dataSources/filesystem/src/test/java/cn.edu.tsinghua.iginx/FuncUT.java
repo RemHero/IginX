@@ -1,6 +1,7 @@
 package cn.edu.tsinghua.iginx;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
+import cn.edu.tsinghua.iginx.engine.physical.storage.domain.Timeseries;
 import cn.edu.tsinghua.iginx.engine.physical.task.TaskExecuteResult;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.filesystem.FileSystem;
@@ -11,6 +12,9 @@ import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemImpl;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
+import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
+import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
+import cn.edu.tsinghua.iginx.utils.Pair;
 import cn.edu.tsinghua.iginx.utils.TimeUtils;
 import org.junit.Test;
 
@@ -64,7 +68,7 @@ public class FuncUT {
 
     @Test
     public void testInsertRowRecords() throws IOException {
-        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.txt";
+        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz2.txt";
         FileSystemImpl fileSystem = new FileSystemImpl();
         List<List<Record>> valList = new ArrayList<>();
         List<File> fileList = new ArrayList<>();
@@ -82,4 +86,42 @@ public class FuncUT {
         fileSystem.writeFiles(fileList, valList, ifAppend);
     }
 
+    @Test
+    public void testDeleteFiles() throws IOException {
+        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz2.txt";
+        File file = new File(path);
+        FileSystemImpl fileSystem = new FileSystemImpl();
+        fileSystem.deleteFiles(Collections.singletonList(file));
+    }
+
+    @Test
+    public void testGetTimeSeriesOfStorageUnit() throws IOException, PhysicalException {
+        String path = "src";
+        LocalExecutor localExecutor = new LocalExecutor();
+        List<Timeseries> pathList = localExecutor.getTimeSeriesOfStorageUnit(path);
+        for (Timeseries timeseries : pathList) {
+            System.out.println(timeseries.getPath());
+        }
+    }
+
+    @Test
+    public void testGetBoundaryOfStorage() throws IOException, PhysicalException {
+        String path = "src";
+        LocalExecutor localExecutor = new LocalExecutor();
+        Pair<TimeSeriesRange, TimeInterval> res = localExecutor.getBoundaryOfStorage(path);
+        System.out.println(res.k.getStartTimeSeries());
+        System.out.println(res.k.getEndTimeSeries());
+        System.out.println(res.v.getStartTime());
+        System.out.println(res.v.getEndTime());
+    }
+
+    @Test
+    public void testReadIginxFileByKey() throws IOException {
+        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.iginx.parquet";
+        FileSystemImpl fileSystem = new FileSystemImpl();
+        List<Record> res = fileSystem.readFile(new File(path), 0, 100);
+        for (Record record : res) {
+            System.out.println(record.getRawData());
+        }
+    }
 }

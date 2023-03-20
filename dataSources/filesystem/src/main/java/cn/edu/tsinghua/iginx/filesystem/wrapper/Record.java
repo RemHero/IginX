@@ -9,19 +9,19 @@ import java.util.List;
 public class Record {
     private static final Logger logger = LoggerFactory.getLogger(Record.class);
     private int MAXDATASETLEN = 100;
-    private long timestamp;
+    private long key;
     private DataType dataType;
-    private final Object rawData;
+    private Object rawData;
     private int index = 0;
 
-    public Record(long timestamp, DataType dataType, Object rawData) {
-        this.timestamp = timestamp;
+    public Record(long key, DataType dataType, Object rawData) {
+        this.key = key;
         this.dataType = dataType;
         this.rawData = rawData;
     }
 
-    public Record(long timestamp, Object rawData) {
-        this.timestamp = timestamp;
+    public Record(long key, Object rawData) {
+        this.key = key;
         this.rawData = rawData;
         this.dataType = DataType.BINARY;
     }
@@ -54,11 +54,19 @@ public class Record {
         MAXDATASETLEN = length;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getKey() {
+        return key;
     }
 
     public DataType getDataType() {
         return dataType;
+    }
+
+    public void setKey(long key) {
+        this.key = key;
+    }
+
+    public void setRawData(Object rawData) {
+        this.rawData = rawData;
     }
 }
