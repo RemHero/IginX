@@ -11,10 +11,16 @@ import org.apache.parquet.filter2.predicate.FilterApi;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.api.InitContext;
 import org.apache.parquet.hadoop.api.ReadSupport;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.api.*;
+import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.hadoop.metadata.FileMetaData;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
@@ -92,12 +98,26 @@ public class DefaultFileOperator implements IFileOperator {
     public List<Record> readIginxFileByKey(File file, long begin, long end) throws IOException {
         List<Record> recordList = new ArrayList<>();
         ParquetReader.Builder<Object[]> readerBuilder = ParquetReader.builder(new MyReadSupport(), new org.apache.hadoop.fs.Path(file.getPath()));
-
-        // 读取文件元数据
-        FileMetaData metaData = ParquetFileReader.readFooter((InputFile) file.toPath(), ParquetMetadataConverter.NO_FILTER).getFileMetaData();
-
-        // 获取schema
-        MessageType schema = metaData.getSchema();
+        ParquetMetadata metadata = null;
+        MessageType schema = null;
+        try {
+            // 读取文件元数据
+//        FileMetaData metaData = ParquetFileReader.readFooter(inputFile, ParquetMetadataConverter.NO_FILTER).getFileMetaData();
+            metadata = ParquetFileReader.readFooter(new Configuration(), new org.apache.hadoop.fs.Path(file.getPath()));
+            if (metadata.getBlocks().isEmpty()) {
+                System.out.println("Parquet文件为空");
+                throw new IOException("Parquet文件为空");
+            } else {
+                // 获取schema
+                schema = metadata.getFileMetaData().getSchema();
+            }
+        } catch (IOException e) {
+            if (e.getMessage().equals("File is empty")) {
+                System.out.println("Parquet文件为空");
+                throw new IOException("Parquet文件为空");
+            }
+        }
+//        MessageType schema = metaData.getSchema();
 
         // 构造谓词
         FilterPredicate predicate = FilterApi.and(
@@ -290,6 +310,42 @@ public class DefaultFileOperator implements IFileOperator {
 
     @Override
     public Exception IginxFileWriter(File file, List<Record> valList) throws IOException {
+        // 创建Parquet文件的模式
+        MessageType schema = new MessageType("schema",
+            new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.INT64, "KEY"),
+            new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.BINARY, "VALUE"));
+
+        // 创建Parquet文件的配置
+        Configuration conf = new Configuration();
+        org.apache.hadoop.fs.Path filePath = new org.apache.hadoop.fs.Path(file.getPath());
+        org.apache.hadoop.fs.FileSystem fs = filePath.getFileSystem(conf);
+        if (!fs.exists(filePath)) {
+            // 如果文件不存在，则创建文件
+            FileMetaData fileMetaData = new FileMetaData(schema);
+//            ParquetMetadata metadata = new ParquetMetadata(metaData);
+            ParquetMetadata metadata = new ParquetMetadata(fileMetaData, null);
+            HadoopOutputFile outputFile = HadoopOutputFile.fromPath(filePath, conf);
+            ParquetFileWriter writer = new ParquetFileWriter(outputFile, metadata.getCreatedBy(), schema,
+                ParquetFileWriter.Mode.CREATE, CompressionCodecName.SNAPPY, 1024, 1024, 512);
+            writer.close();
+        }
+
+        // 创建Parquet文件的写入器
+        ParquetWriter<Record> writer = new ParquetWriter.Builder<>(new HadoopOutputFile(filePath, conf))
+            .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+            .withCompressionCodec(CompressionCodecName.SNAPPY)
+            .withSchema(schema)
+            .build();
+
+        // 向Parquet文件中写入数据
+        for (Record record : valList) {
+            long key = record.getKey();
+            byte[] value = record.getRawData();
+            writer.write(new Record(key, value));
+        }
+
+        // 关闭Parquet文件的写入器
+        writer.close();
         return null;
     }
 
