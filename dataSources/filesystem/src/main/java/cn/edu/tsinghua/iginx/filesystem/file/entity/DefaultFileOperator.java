@@ -94,194 +94,46 @@ public class DefaultFileOperator implements IFileOperator {
 //        }
 //        raf.close();
 //    }
-
-    public List<Record> readIginxFileByKey(File file, long begin, long end) throws IOException {
-        List<Record> recordList = new ArrayList<>();
-        ParquetReader.Builder<Object[]> readerBuilder = ParquetReader.builder(new MyReadSupport(), new org.apache.hadoop.fs.Path(file.getPath()));
-        ParquetMetadata metadata = null;
-        MessageType schema = null;
-        try {
-            // 读取文件元数据
-//        FileMetaData metaData = ParquetFileReader.readFooter(inputFile, ParquetMetadataConverter.NO_FILTER).getFileMetaData();
-            metadata = ParquetFileReader.readFooter(new Configuration(), new org.apache.hadoop.fs.Path(file.getPath()));
-            if (metadata.getBlocks().isEmpty()) {
-                System.out.println("Parquet文件为空");
-                throw new IOException("Parquet文件为空");
-            } else {
-                // 获取schema
-                schema = metadata.getFileMetaData().getSchema();
+    private Map<String, String> readIginxMetaInfo(File file) throws IOException {
+        Map<String, String> result = new HashMap<>();
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
+        int lineCount = 1;
+        while ((line = reader.readLine()) != null) {
+            if (lineCount == 1) {
+                result.put("series", line);
+            } else if (lineCount == 2) {
+                result.put("type", line);
             }
-        } catch (IOException e) {
-            if (e.getMessage().equals("File is empty")) {
-                System.out.println("Parquet文件为空");
-                throw new IOException("Parquet文件为空");
-            }
+            lineCount++;
         }
-//        MessageType schema = metaData.getSchema();
-
-        // 构造谓词
-        FilterPredicate predicate = FilterApi.and(
-            FilterApi.gtEq(FilterApi.longColumn("KEY"), begin),
-            FilterApi.ltEq(FilterApi.longColumn("KEY"), end));
-
-        // 设置谓词下推
-        readerBuilder.withFilter((FilterCompat.Filter) predicate);
-
-        // 打开reader
-        ParquetReader<Object[]> reader = readerBuilder.build();
-
-        // 读取数据
-        Object[] rawRecord;
-
-        while ((rawRecord = reader.read()) != null) {
-            Long key = (Long) rawRecord[0];
-            Object value = rawRecord[1];
-            recordList.add(new Record(key, DataTypeUtils.convertPqrquetTypeToDataType(schema.getType("VALUE")), value));
-        }
-
-        // 关闭reader
         reader.close();
-
-        // 返回结果
-        return recordList;
+        return result;
     }
 
-    public class MyReadSupport extends ReadSupport<Object[]> {
-
-        @Override
-        public ReadContext init(InitContext context) {
-            return new ReadContext(context.getFileSchema());
+    public List<Record> readIginxFileByKey(File file, long begin, long end, Charset charset) throws IOException {
+        Map<String, String> fileInfo = readIginxMetaInfo(file);
+        List<Record> res = new ArrayList<>();
+        long key = TimeUtils.MIN_AVAILABLE_TIME;
+        if (begin == -1 && end == -1) {
+            begin = 0;
+            end = Long.MAX_VALUE;
+        }
+        if (begin < 0 || end < 0 || (begin > end)) {
+            throw new IOException("Read information outside the boundary with BEGIN " + begin + " and END " + end);
         }
 
-        @Override
-        public RecordMaterializer<Object[]> prepareForRead(Configuration configuration, Map<String, String> keyValueMetaData, MessageType fileSchema, ReadContext readContext) {
-            return new MyRecordMaterializer(fileSchema);
-        }
-
-    }
-
-    public class MyRecordMaterializer extends RecordMaterializer<Object[]> {
-        private Object[] record;
-        private MessageType fileSchema;
-        private Map<String, Type> fieldSchemaMap = new HashMap<>();
-
-        public MyRecordMaterializer(MessageType fileSchema) {
-            this.fileSchema = fileSchema;
-            for (Type type : fileSchema.getFields()) {
-                fieldSchemaMap.put(type.getName(), type);
-            }
-        }
-
-        @Override
-        public Object[] getCurrentRecord() {
-            return record;
-        }
-
-        @Override
-        public GroupConverter getRootConverter() {
-            return new GroupConverter() {
-                private Object[] record = new Object[2];
-
-                @Override
-                public Converter getConverter(int fieldIndex) {
-                    Type fieldType = fileSchema.getType(fieldIndex);
-                    switch (fieldType.getName()) {
-                        case "KEY":
-                            return new PrimitiveConverter() {
-                                @Override
-                                public void addLong(long value) {
-                                    record[0] = value;
-                                }
-                            };
-                        case "VALUE":
-                            Type valueSchema = fieldSchemaMap.get("VALUE");
-                            return new MyValueConverter(valueSchema) {
-                                @Override
-                                public void setValue(Object value) {
-                                    record[1] = value;
-                                }
-                            };
-                        default:
-                            throw new IllegalArgumentException("Unknown field type: " + fieldType.getName());
-                    }
-                }
-
-                @Override
-                public void start() {
-                    // no-op
-                }
-
-                @Override
-                public void end() {
-                    // no-op
-                }
-            };
-        }
-
-        private abstract class MyValueConverter extends PrimitiveConverter {
-            private Type valueSchema;
-            private Object value;
-
-            protected MyValueConverter(Type valueSchema) {
-                this.valueSchema = valueSchema;
-            }
-
-            public abstract void setValue(Object value);
-
-            @Override
-            public void addBinary(Binary value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value.getBytes());
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
-                }
-            }
-
-            @Override
-            public void addBoolean(boolean value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
-                }
-            }
-
-            @Override
-            public void addDouble(double value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
-                }
-            }
-
-            @Override
-            public void addFloat(float value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
-                }
-            }
-
-            @Override
-            public void addInt(int value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
-                }
-            }
-
-            @Override
-            public void addLong(long value) {
-                if (valueSchema.isPrimitive()) {
-                    setValue(value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported value schema: " + valueSchema);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] kv = line.split(",", 2);
+                key = Long.parseLong(kv[0]);
+                if (key >= begin && key <= end) {
+                    res.add(new Record(Long.parseLong(kv[0]), DataTypeUtils.strToDataType(fileInfo.get("type")), kv[1]));
                 }
             }
         }
+        return res;
     }
 
 //    private static class MyReadSupport extends ReadSupport<Object[]> {
@@ -304,48 +156,13 @@ public class DefaultFileOperator implements IFileOperator {
 
 
     @Override
-    public List<Record> IginxFileReaderByKey(File file, long begin, long end) throws IOException {
-        return readIginxFileByKey(file, begin, end);
+    public List<Record> IginxFileReaderByKey(File file, long begin, long end, Charset charset) throws IOException {
+        return readIginxFileByKey(file, begin, end, charset);
     }
 
     @Override
     public Exception IginxFileWriter(File file, List<Record> valList) throws IOException {
-        // 创建Parquet文件的模式
-        MessageType schema = new MessageType("schema",
-            new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.INT64, "KEY"),
-            new PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.BINARY, "VALUE"));
-
-        // 创建Parquet文件的配置
-        Configuration conf = new Configuration();
-        org.apache.hadoop.fs.Path filePath = new org.apache.hadoop.fs.Path(file.getPath());
-        org.apache.hadoop.fs.FileSystem fs = filePath.getFileSystem(conf);
-        if (!fs.exists(filePath)) {
-            // 如果文件不存在，则创建文件
-            FileMetaData fileMetaData = new FileMetaData(schema);
-//            ParquetMetadata metadata = new ParquetMetadata(metaData);
-            ParquetMetadata metadata = new ParquetMetadata(fileMetaData, null);
-            HadoopOutputFile outputFile = HadoopOutputFile.fromPath(filePath, conf);
-            ParquetFileWriter writer = new ParquetFileWriter(outputFile, metadata.getCreatedBy(), schema,
-                ParquetFileWriter.Mode.CREATE, CompressionCodecName.SNAPPY, 1024, 1024, 512);
-            writer.close();
-        }
-
-        // 创建Parquet文件的写入器
-        ParquetWriter<Record> writer = new ParquetWriter.Builder<>(new HadoopOutputFile(filePath, conf))
-            .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-            .withCompressionCodec(CompressionCodecName.SNAPPY)
-            .withSchema(schema)
-            .build();
-
-        // 向Parquet文件中写入数据
-        for (Record record : valList) {
-            long key = record.getKey();
-            byte[] value = record.getRawData();
-            writer.write(new Record(key, value));
-        }
-
-        // 关闭Parquet文件的写入器
-        writer.close();
+        
         return null;
     }
 
