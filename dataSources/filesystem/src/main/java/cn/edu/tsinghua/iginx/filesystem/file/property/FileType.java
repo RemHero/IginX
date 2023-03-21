@@ -11,7 +11,7 @@ public class FileType {
 
     public static Type getFileType(File file) {
         String fileName = file.getName();
-        if (fileName.endsWith(".iginx.parquet")) {
+        if (fileName.contains(".iginx")) {
             return Type.IGINX_FILE;
         } else if (fileName.endsWith(".txt")) {
             return Type.TEXT_FILE;

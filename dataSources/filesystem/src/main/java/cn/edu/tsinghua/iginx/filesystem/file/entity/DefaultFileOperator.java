@@ -1,31 +1,11 @@
 package cn.edu.tsinghua.iginx.filesystem.file.entity;
 
 import cn.edu.tsinghua.iginx.filesystem.file.IFileOperator;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FileMeta;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.DataTypeUtils;
 import cn.edu.tsinghua.iginx.utils.TimeUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.parquet.filter2.compat.FilterCompat;
-import org.apache.parquet.filter2.predicate.FilterApi;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.hadoop.ParquetFileWriter;
-import org.apache.parquet.hadoop.ParquetReader;
-import org.apache.parquet.hadoop.ParquetWriter;
-import org.apache.parquet.hadoop.api.InitContext;
-import org.apache.parquet.hadoop.api.ReadSupport;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.hadoop.util.HadoopOutputFile;
-import org.apache.parquet.io.api.*;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
-import org.apache.parquet.hadoop.metadata.FileMetaData;
-import org.apache.parquet.hadoop.util.HadoopInputFile;
-import org.apache.parquet.io.InputFile;
-import org.apache.parquet.schema.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +14,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static cn.edu.tsinghua.iginx.thrift.DataType.BINARY;
 
 public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
@@ -123,9 +106,12 @@ public class DefaultFileOperator implements IFileOperator {
             throw new IOException("Read information outside the boundary with BEGIN " + begin + " and END " + end);
         }
 
+        long currentLine = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                currentLine++;
+                if (currentLine < FileMeta.IGINXFILEVALINDEX) continue;
                 String[] kv = line.split(",", 2);
                 key = Long.parseLong(kv[0]);
                 if (key >= begin && key <= end) {
@@ -160,9 +146,203 @@ public class DefaultFileOperator implements IFileOperator {
         return readIginxFileByKey(file, begin, end, charset);
     }
 
+    private String convertObjectToString(Object obj, DataType type) {
+        if (obj == null) {
+            return null;
+        }
+
+        if (type == null) {
+            type = BINARY;
+        }
+
+        String strValue = null;
+        try {
+            switch (type) {
+                case BINARY:
+                    strValue = new String((byte[]) obj);
+                    break;
+                case INTEGER:
+                    strValue = Integer.toString((int) obj);
+                    break;
+                case DOUBLE:
+                    strValue = Double.toString((double) obj);
+                    break;
+                case FLOAT:
+                    strValue = Float.toString((float) obj);
+                    break;
+                case BOOLEAN:
+                    strValue = Boolean.toString((boolean) obj);
+                    break;
+                case LONG:
+                    strValue = Long.toString((long) obj);
+                    break;
+                default:
+                    strValue = null;
+                    break;
+            }
+        } catch (Exception e) {
+            strValue = null;
+        }
+
+        return strValue;
+    }
+
+    private final String recordToString(Record record) {
+        return record.getKey() + "," + convertObjectToString(record.getRawData(), record.getDataType());
+    }
+
+    private Exception appendValToIginxFile(File file, List<Record> valList) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+            for (Record record : valList) {
+                writer.write(recordToString(record));
+            }
+        }
+        return null;
+    }
+
+    private void createIginxFile(File file, Record record) throws IOException {
+        Path csvPath = Paths.get(file.getPath());
+
+        try {
+            if (!Files.exists(csvPath)) {
+                Files.createFile(csvPath);
+            } else {
+                return;
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvPath.toFile()))) {
+                writer.newLine();
+                writer.write(record.getDataType().toString());
+                for (int i = 0; i < FileMeta.IGINXFILEVALINDEX - 2; i++) {
+                    writer.newLine();
+                }
+            }
+
+        } catch (IOException e) {
+            throw new IOException("Cannot create file: " + file.getAbsolutePath());
+        }
+    }
+
+    int getFileLineNumber(File file) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            int lines = 0;
+            while (reader.readLine() != null) {
+                lines++;
+            }
+            return lines;
+        } catch (IOException e) {
+            throw new IOException("Cannot get file: " + file.getAbsolutePath());
+        }
+    }
+
+    private void replaceFile(File file, File tempFile) throws IOException {
+        if (!tempFile.exists()) {
+            throw new IOException("Temp file does not exist.");
+        }
+        if (!file.exists()) {
+            throw new IOException("Original file does not exist.");
+        }
+        Files.move(tempFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    }
+
     @Override
     public Exception IginxFileWriter(File file, List<Record> valList) throws IOException {
-        
+        int BUFFER_SIZE = 8192; // 8 KB
+        if (file.exists() && file.isDirectory()) {
+            throw new IOException("Cannot write to directory: " + file.getAbsolutePath());
+        }
+
+        if (!file.exists()) {
+            createIginxFile(file, valList.get(0));
+            return appendValToIginxFile(file, valList);
+        }
+
+        if (getFileLineNumber(file) == FileMeta.IGINXFILEVALINDEX) {
+            return appendValToIginxFile(file, valList);
+        }
+
+        // Check if valList can be directly appended to the end of the file
+        if (file.exists() && file.length() > 0) {
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                long lastKey = 0L;
+                raf.seek(Math.max(file.length() - BUFFER_SIZE, 0));
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int n = raf.read(buffer);
+                String lastLine = new String();
+                while (n != -1) {
+                    String data = new String(buffer, 0, n);
+                    String[] lines, fields;
+                    lastLine += data;
+                    if (!lastLine.contains("\n") || lastLine.indexOf("\n") == lastLine.lastIndexOf("\n")) {//是否确切包含了最后一行
+                        raf.seek(Math.max(raf.getFilePointer() - BUFFER_SIZE, 0));
+                        n = raf.read(buffer);
+                        continue;
+                    }
+                    lines = lastLine.split("\\r?\\n");
+                    fields = lines[lines.length - 1].split(",", 2);
+                    lastKey = Long.parseLong(fields[0]);
+                    if (lastKey < valList.get(0).getKey()) {
+                        return appendValToIginxFile(file, valList);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Create temporary file
+        File tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
+        BufferedWriter writer = null;
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            writer = new BufferedWriter(new FileWriter(tempFile));
+            int valIndex = 0, maxLen = valList.size();
+            long minKey = Math.min(valList.get(0).getKey(), Long.MAX_VALUE);
+            long currentLine = 0L;
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    currentLine++;
+                    if (currentLine < FileMeta.IGINXFILEVALINDEX) {
+                        writer.write(line);
+                        writer.newLine();
+                        continue;
+                    }
+                    String[] kv = line.split(",", 2);
+                    long key = Long.parseLong(kv[0]);
+                    boolean isCovered = false;
+                    while (key >= minKey) {
+                        if (key == minKey) isCovered = true;
+                        if (valIndex >= maxLen) break;
+                        Record record = valList.get(valIndex++);
+                        minKey = record.getKey();
+                        writer.write(recordToString(record));
+                    }
+                    if (!isCovered) {
+                        writer.write(line);
+                    }
+                    if (valIndex >= maxLen) break;
+                }
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        replaceFile(file, tempFile);
         return null;
     }
 

@@ -44,7 +44,7 @@ public class FileSystemImpl {
         long key = TimeUtils.MIN_AVAILABLE_TIME;
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
-                res = fileOperator.IginxFileReaderByKey(file, begin, end);
+                res = fileOperator.IginxFileReaderByKey(file, begin, end, charset);
                 break;
             case TEXT_FILE:
                 valList = fileOperator.TextFileReader(file, charset);
@@ -109,6 +109,8 @@ public class FileSystemImpl {
         byte[] bytes = makeValueToBytes(value);
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
+                res = fileOperator.IginxFileWriter(file, value);
+                break;
             case TEXT_FILE:
                 res = fileOperator.TextFileWriter(file, bytes, append);
                 break;

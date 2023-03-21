@@ -116,10 +116,18 @@ public class FuncUT {
     }
 
     @Test
-    public void testReadIginxFileByKey() throws IOException {
-        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.iginx.parquet";
+    public void testReadAndWriteIginxFileByKey() throws IOException {
+        String path = "src/test/java/cn.edu.tsinghua.iginx/lhz.iginx.csv";
         FileSystemImpl fileSystem = new FileSystemImpl();
-        List<Record> res = fileSystem.readFile(new File(path), 0, 100);
+        List<Record> valList = new ArrayList<Record>() {{
+            long key = TimeUtils.MIN_AVAILABLE_TIME;
+            add(new Record(key++, "lhz never give up!\n".getBytes()));
+            add(new Record(key++, "happy every day!\n".getBytes()));
+        }};
+
+        fileSystem.writeFile(new File(path), valList, false);
+
+        List<Record> res = fileSystem.readFile(new File(path), 0, 11);
         for (Record record : res) {
             System.out.println(record.getRawData());
         }
