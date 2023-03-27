@@ -245,6 +245,12 @@ public class InfluxDBStorage implements IStorage {
             Pair<String, String> pair = SchemaTransformer.processPatternForQuery(pattern, tagFilter);
             String bucketName = pair.k;
             String query = pair.v;
+
+            if (client.getBucketsApi().findBucketByName(bucketName) == null) {
+                logger.warn("storage engine {} doesn't exist", bucketName);
+                return new TaskExecuteResult(new InfluxDBQueryRowStream(Collections.emptyList(), project));
+            }
+
             String fullQuery = "";
             if (bucketQueries.containsKey(bucketName)) {
                 fullQuery = bucketQueries.get(bucketName);
