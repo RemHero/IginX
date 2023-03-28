@@ -60,6 +60,7 @@ public class BaseSessionIT extends BaseSessionConcurrencyIT {
         SessionExecuteSqlResult res = null;
         try {
             res = session.executeSql(clearData);
+            session.closeSession();
         } catch (SessionException | ExecutionException e) {
             logger.error("Statement: \"{}\" execute fail. Caused by: {}", clearData, e.toString());
             if (e.toString().equals(Controller.CLEARDATAEXCP)) {
