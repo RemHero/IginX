@@ -484,16 +484,16 @@ public class InfluxDBStorage implements IStorage {
                             points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (boolean) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
                             break;
                         case INTEGER:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (int) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (int) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
                             break;
                         case LONG:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (long) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (long) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
                             break;
                         case FLOAT:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (float) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (float) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
                             break;
                         case DOUBLE:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (double) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (double) data.getValue(i, index)).time(data.getKey(i), WRITE_PRECISION));
                             break;
                         case BINARY:
                             points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), new String((byte[]) data.getValue(i, index))).time(data.getKey(i), WRITE_PRECISION));
@@ -550,16 +550,16 @@ public class InfluxDBStorage implements IStorage {
                             points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (boolean) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
                             break;
                         case INTEGER:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (int) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (int) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
                             break;
                         case LONG:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (long) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (long) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
                             break;
                         case FLOAT:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (float) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (float) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
                             break;
                         case DOUBLE:
-                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (double) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
+                            points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), (Number) (double) data.getValue(i, index)).time(data.getKey(j), WRITE_PRECISION));
                             break;
                         case BINARY:
                             points.add(Point.measurement(schema.getMeasurement()).addTags(schema.getTags()).addField(schema.getField(), new String((byte[]) data.getValue(i, index))).time(data.getKey(j), WRITE_PRECISION));
