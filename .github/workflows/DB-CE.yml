@@ -112,7 +112,7 @@ jobs:
       - name: show iginx log
         if: always()
         run: |
-          cat ./.github/iginx_log.txt
+          cat iginx.log
 
       - uses: codecov/codecov-action@v1
         with:
