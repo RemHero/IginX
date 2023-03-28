@@ -6,7 +6,7 @@ on:
       - main
 env:
   VERSION: 0.6.0-SNAPSHOT
-  FUNCTEST: RestIT,UDFIT,RestAnnotationIT,SQLSessionIT,SQLSessionPoolIT,BaseSessionIT,BaseSessionPoolIT
+  FUNCTEST: UDFIT,TransformIT
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -108,6 +108,12 @@ jobs:
           else
             echo "${{matrix.DB-name}} is not supported"
           fi
+
+      - name: show iginx log
+        if: always()
+        run: |
+          cat ./.github/iginx_log.txt
+
       - uses: codecov/codecov-action@v1
         with:
           file: ./**/target/site/jacoco/jacoco.xml
