@@ -101,7 +101,7 @@ public class TransformIT {
     }
 
     @AfterClass
-    public void tearDown() throws SessionException, ExecutionException {
+    public static void tearDown() throws SessionException, ExecutionException {
         dropAllTask();
         session.closeSession();
     }
@@ -146,7 +146,7 @@ public class TransformIT {
         }
     }
 
-    private void dropAllTask() throws SessionException, ExecutionException {
+    private static void dropAllTask() throws SessionException, ExecutionException {
         SessionExecuteSqlResult result = session.executeSql(SHOW_REGISTER_TASK_SQL);
         for (RegisterTaskInfo info : result.getRegisterTaskInfos()) {
             session.executeSql(String.format(DROP_SQL_FORMATTER, info.getClassName()));
