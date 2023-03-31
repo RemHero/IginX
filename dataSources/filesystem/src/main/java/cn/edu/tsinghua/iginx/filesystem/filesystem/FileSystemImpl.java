@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /*
@@ -34,6 +37,11 @@ public class FileSystemImpl {
 
     // read the part of the file
     public List<Record> readFile(File file, long begin, long end) throws IOException {
+        Path path = Paths.get(file.getPath());
+
+        if (!Files.exists(path))
+            return new ArrayList<>();
+
         return doReadFile(file, begin, end);
     }
 
@@ -106,15 +114,17 @@ public class FileSystemImpl {
     private Exception doWriteFile(File file, List<Record> value, boolean append) throws IOException {
         Exception res;
 
-        byte[] bytes = makeValueToBytes(value);
+        byte[] bytes;
         switch (FileType.getFileType(file)) {
             case IGINX_FILE:
                 res = fileOperator.IginxFileWriter(file, value);
                 break;
             case TEXT_FILE:
+                bytes = makeValueToBytes(value);
                 res = fileOperator.TextFileWriter(file, bytes, append);
                 break;
             default:
+                bytes = makeValueToBytes(value);
                 res = fileOperator.TextFileWriter(file, bytes, append);
         }
         return res;

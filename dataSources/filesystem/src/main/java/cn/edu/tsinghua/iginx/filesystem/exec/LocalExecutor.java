@@ -293,7 +293,7 @@ public class LocalExecutor implements Executor {
         TimeSeriesRange timeSeriesRange = new TimeSeriesInterval(FilePath.convertFilePathToSeries(minPathFile.getPath()),
             FilePath.convertFilePathToSeries(maxPathFile.getPath()));
         TimeInterval timeInterval = new TimeInterval(minFileCreateTime.getTime(), maxFileCreateTime.getTime());
-        
+
         return new Pair<>(timeSeriesRange, timeInterval);
     }
 
