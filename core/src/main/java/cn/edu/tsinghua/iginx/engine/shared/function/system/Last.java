@@ -113,7 +113,7 @@ public class Last implements MappingFunction {
             resultRows.add(new Row(header, entry.getValue().k, new Object[]{rows.getHeader().getField(entry.getKey()).getFullName().getBytes(StandardCharsets.UTF_8),
                     ValueUtils.toString(entry.getValue().v, rows.getHeader().getField(entry.getKey()).getType()).getBytes(StandardCharsets.UTF_8)}));
         }
-        resultRows.sort(Comparator.comparingLong(Row::getKey));
+        resultRows.sort(ValueUtils.firstLastRowComparator());
         return new Table(header, resultRows);
     }
 
