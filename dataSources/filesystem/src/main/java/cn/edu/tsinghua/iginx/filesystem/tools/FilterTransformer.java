@@ -1,32 +1,17 @@
 package cn.edu.tsinghua.iginx.filesystem.tools;
 
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.*;
+import cn.edu.tsinghua.iginx.utils.JsonUtils;
+import com.alibaba.fastjson2.JSON;
 
 import java.util.stream.Collectors;
 
 public class FilterTransformer {
-    public static String toString(Filter filter) {
+    public static byte[] toString(Filter filter) {
         if (filter == null) {
-            return "";
+            return null;
         }
-        switch (filter.getType()) {
-            case And:
-                return toString((AndFilter) filter);
-            case Or:
-                return toString((OrFilter) filter);
-            case Not:
-                return toString((NotFilter) filter);
-            case Value:
-                return toString((ValueFilter) filter);
-            case Key:
-                return toString((KeyFilter) filter);
-            default:
-                return "";
-        }
-    }
-
-    private static String toString(AndFilter filter) {
-        return filter.getChildren().stream().map(FilterTransformer::toString).collect(Collectors.joining(" and ", "(", ")"));
+        return JsonUtils.toJson(filter);
     }
 
     private static String toString(NotFilter filter) {

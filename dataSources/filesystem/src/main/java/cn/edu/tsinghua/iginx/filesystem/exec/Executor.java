@@ -19,7 +19,7 @@ import java.util.List;
 
 public interface Executor {
 
-    TaskExecuteResult executeProjectTask(Project project, String filter,
+    TaskExecuteResult executeProjectTask(Project project, byte[] filter,
                                          String storageUnit, boolean isDummyStorageUnit);
 
     TaskExecuteResult executeInsertTask(Insert insert, String storageUnit);

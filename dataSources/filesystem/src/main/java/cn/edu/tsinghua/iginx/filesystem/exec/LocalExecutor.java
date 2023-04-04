@@ -45,14 +45,14 @@ public class LocalExecutor implements Executor {
     private static final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
 
     @Override
-    public TaskExecuteResult executeProjectTask(Project project, String filter, String storageUnit, boolean isDummyStorageUnit) {
+    public TaskExecuteResult executeProjectTask(Project project, byte[] filter, String storageUnit, boolean isDummyStorageUnit) {
         List<String> series = project.getPatterns();
         TagFilter tagFilter = project.getTagFilter();
         if (isDummyStorageUnit) {
-//            return executeDummyProjectTask(storageUnit, series, tagFilter, filter);
+            return executeDummyProjectTask(storageUnit, series, tagFilter, filter);
         }
-//        return executeQueryTask(storageUnit, series, tagFilter, filter);
-        return null;
+
+        return executeQueryTask(storageUnit, series, tagFilter, filter);
     }
 
     public TaskExecuteResult executeQueryTask(String storageUnit, List<String> series, TagFilter tagFilter, Filter filter) {

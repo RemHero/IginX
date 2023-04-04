@@ -89,7 +89,7 @@ public class FileSystem implements IStorage {
             }
             return executor.executeProjectTask(
                     project,
-                    FilterTransformer.toString(filter),
+                    FilterTransformer.toBytes(filter),
                     storageUnit,
                     isDummyStorageUnit);
         } else if (op.getType() == OperatorType.Insert) {
