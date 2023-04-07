@@ -31,11 +31,11 @@ public final class DBConf {
         isSupportTagKV
     }
 
-    private boolean ableToClearData;
-    private boolean ableToDelete;
-    private boolean ableToShowTimeSeries;
-    private boolean supportSpecialPath;
-    private boolean supportTagKV;
+    private boolean ableToClearData = true;
+    private boolean ableToDelete = true;
+    private boolean ableToShowTimeSeries = true;
+    private boolean supportSpecialPath = true;
+    private boolean supportTagKV = true;
 
     public static DBConfType getDBConfType(String str) {
         switch (str) {

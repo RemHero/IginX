@@ -26,8 +26,7 @@ public class ConfLoder {
     private String TESTTASK = "test-list";
     private static String DBCONF = "%s-config";
     private String RUNNINGSTORAGE = "./src/test/resources/DBConf.txt";
-    private String IFSCALEOUTIN =
-            "./src/test/resources/ifScaleOutIn.txt";
+    private String IFSCALEOUTIN = "./src/test/resources/ifScaleOutIn.txt";
 
     public String getStorageType() {
         String storageType = FileReader.convertToString(RUNNINGSTORAGE);
@@ -114,6 +113,9 @@ public class ConfLoder {
 
         DBConf dbConf = new DBConf();
 
+        if (storageEngine == null || storageEngine.isEmpty()) {
+            return dbConf;
+        }
         String confs = properties.getProperty(String.format(DBCONF, storageEngine));
         logInfo("the conf of {} is : {}", storageEngine, confs);
         List<String> confList = Arrays.asList(confs.split(","));
