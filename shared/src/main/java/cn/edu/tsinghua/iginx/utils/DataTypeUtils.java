@@ -20,12 +20,13 @@ package cn.edu.tsinghua.iginx.utils;
 
 import cn.edu.tsinghua.iginx.thrift.DataType;
 
-import java.lang.reflect.Type;
-
 public class DataTypeUtils {
 
     public static boolean isNumber(DataType dataType) {
-        return dataType == DataType.INTEGER || dataType == DataType.LONG || dataType == DataType.FLOAT || dataType == DataType.DOUBLE;
+        return dataType == DataType.INTEGER
+                || dataType == DataType.LONG
+                || dataType == DataType.FLOAT
+                || dataType == DataType.DOUBLE;
     }
 
     public static boolean isFloatingNumber(DataType dataType) {
@@ -55,22 +56,22 @@ public class DataTypeUtils {
         }
     }
 
-    public static DataType convertPqrquetTypeToDataType(org.apache.parquet.schema.Type type) {
-        switch (type.toString()) {
-            case "BOOLEAN":
-                return DataType.BOOLEAN;
-            case "INT64":
-                return DataType.INTEGER;
-            case "LONG":
-                return DataType.LONG;
-            case "FLOAT":
-                return DataType.FLOAT;
-            case "DOUBLE":
-                return DataType.DOUBLE;
-            case "BINARY":
-                return DataType.BINARY;
+    public static Object getValWithDataType(String val, DataType type){
+        switch (type) {
+            case BOOLEAN:
+                return Boolean.parseBoolean(val);
+            case LONG:
+                return Long.parseLong(val);
+            case DOUBLE:
+                return Double.parseDouble(val);
+            case BINARY:
+                return val.getBytes();
+            case INTEGER:
+                return Integer.parseInt(val);
+            case FLOAT:
+                return Float.parseFloat(val);
             default:
-                return null;
+                return val;
         }
     }
 }

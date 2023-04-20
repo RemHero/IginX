@@ -15,14 +15,20 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.Insert;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
+import cn.edu.tsinghua.iginx.filesystem.file.property.FileMeta;
 import cn.edu.tsinghua.iginx.filesystem.filesystem.FileSystemImpl;
+import cn.edu.tsinghua.iginx.filesystem.query.FSResultTable;
+import cn.edu.tsinghua.iginx.filesystem.query.FileSystemHistoryQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.query.FileSystemQueryRowStream;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
+import cn.edu.tsinghua.iginx.filesystem.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
+import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.Pair;
+import cn.edu.tsinghua.iginx.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static cn.edu.tsinghua.iginx.thrift.DataType.*;
 
@@ -48,37 +50,53 @@ public class LocalExecutor implements Executor {
     public TaskExecuteResult executeProjectTask(Project project, byte[] filter, String storageUnit, boolean isDummyStorageUnit) {
         List<String> series = project.getPatterns();
         TagFilter tagFilter = project.getTagFilter();
+        Filter filterEntity = FilterTransformer.toFilter(filter);
         if (isDummyStorageUnit) {
-            return executeDummyProjectTask(storageUnit, series, tagFilter, filter);
+            return executeDummyProjectTask(series, filterEntity);
         }
 
-        return executeQueryTask(storageUnit, series, tagFilter, filter);
+        return executeQueryTask(storageUnit, series, tagFilter, filterEntity);
     }
 
     public TaskExecuteResult executeQueryTask(String storageUnit, List<String> series, TagFilter tagFilter, Filter filter) {
         try {
-            List<FilePath> pathList = new ArrayList<>();
-            List<List<Record>> result = new ArrayList<>();
+            List<javafx.util.Pair<FilePath,Integer>> pathMap = new ArrayList<>();
+            List<FSResultTable> result = new ArrayList<>();
             // fix it 如果有远程文件系统则需要server
             FileSystemImpl fileSystem = new FileSystemImpl();
             logger.info("[Query] execute query file: " + series);
             for (String path : series) {
-                // not put storageUnit in front of path, may fix it
-                FilePath seriesOperator = new FilePath(null, path);
-                pathList.add(seriesOperator);
-                result.add(fileSystem.readFile(new File(seriesOperator.getFilePath())));
+                result.addAll(fileSystem.readFile(new File(FilePath.toIginxPath(storageUnit,path)), tagFilter, filter));
+                FilePath filePath = new FilePath(storageUnit, path);
+                pathMap.add(new javafx.util.Pair<>(filePath,result.size()));
             }
-            RowStream rowStream = new FileSystemQueryRowStream(result, pathList, tagFilter, filter);
+            RowStream rowStream = new FileSystemQueryRowStream(result,pathMap,storageUnit);
             return new TaskExecuteResult(rowStream);
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error(e.getMessage());
-            return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in iotdb12 failure", e));
+            return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in fileSystem failure", e));
         }
     }
 
-    private TaskExecuteResult executeDummyProjectTask(String storageUnit, List<String> paths, TagFilter tagFilter,
-                                                      Filter filter) {
-        return null;
+    private TaskExecuteResult executeDummyProjectTask(List<String> series, Filter filter) {
+        try {
+            List<javafx.util.Pair<FilePath,Integer>> pathMap = new ArrayList<>();
+            List<FSResultTable> result = new ArrayList<>();
+            // fix it 如果有远程文件系统则需要server
+            FileSystemImpl fileSystem = new FileSystemImpl();
+            logger.info("[Query] execute query file: " + series);
+            for (String path : series) {
+                result.addAll(fileSystem.readFile(new File(FilePath.toNormalFilePath(path)), filter));
+                FilePath filePath = new FilePath(null, path);
+                pathMap.add(new javafx.util.Pair<>(filePath,result.size()));
+            }
+            RowStream rowStream = new FileSystemHistoryQueryRowStream(result,pathMap);
+            return new TaskExecuteResult(rowStream);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new TaskExecuteResult(new PhysicalTaskExecuteFailureException("execute project task in fileSystem failure", e));
+        }
     }
 
     @Override
@@ -96,7 +114,8 @@ public class LocalExecutor implements Executor {
                 break;
         }
         if (e != null) {
-            return new TaskExecuteResult(null, new PhysicalException("execute insert task in influxdb failure", e));
+            e.printStackTrace();
+            return new TaskExecuteResult(null, new PhysicalException("execute insert task in fileSystem failure", e));
         }
         return new TaskExecuteResult(null, null);
     }
@@ -105,14 +124,20 @@ public class LocalExecutor implements Executor {
         List<List<Record>> valList = new ArrayList<>();
         List<File> fileList = new ArrayList<>();
         List<Boolean> ifAppend = new ArrayList<>();
+        List<Map<String, String>> tagList = new ArrayList<>();
 
         if (fileSystem == null) {
             return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
         }
 
         for (int j = 0; j < data.getPathNum(); j++) {
-            fileList.add(new File(new FilePath(null, data.getPath(j)).getFilePath()));
+            fileList.add(new File(FilePath.toIginxPath(storageUnit,data.getPath(j))));
+            tagList.add(data.getTags(j));
             ifAppend.add(false);// always append, fix it!
+        }
+
+        for (int j = 0; j < data.getPathNum(); j++) {
+            valList.add(new ArrayList<>());
         }
 
         for (int i = 0; i < data.getTimeSize(); i++) {
@@ -121,36 +146,37 @@ public class LocalExecutor implements Executor {
             int index = 0;
             for (int j = 0; j < data.getPathNum(); j++) {
                 if (bitmapView.get(j)) {
+                    DataType dataType = null;
                     switch (data.getDataType(j)) {
                         case BOOLEAN:
-                            val.add(new Record(data.getKey(i), BOOLEAN, data.getValue(i, index)));
+                            dataType=BOOLEAN;
                             break;
                         case INTEGER:
-                            val.add(new Record(data.getKey(i), INTEGER, data.getValue(i, index)));
+                            dataType=INTEGER;
                             break;
                         case LONG:
-                            val.add(new Record(data.getKey(i), LONG, data.getValue(i, index)));
+                            dataType=LONG;
                             break;
                         case FLOAT:
-                            val.add(new Record(data.getKey(i), FLOAT, data.getValue(i, index)));
+                            dataType=FLOAT;
                             break;
                         case DOUBLE:
-                            val.add(new Record(data.getKey(i), DOUBLE, data.getValue(i, index)));
+                            dataType=DOUBLE;
                             break;
                         case BINARY:
-                            val.add(new Record(data.getKey(i), BINARY, data.getValue(i, index)));
+                            dataType=BINARY;
                             break;
                     }
+                    valList.get(j).add(new Record(data.getKey(i), dataType, data.getValue(i, index)));
                     index++;
                 }
             }
-            valList.add(val);
         }
         try {
             logger.info("开始数据写入");
-            fileSystem.writeFiles(fileList, valList, ifAppend);
+            fileSystem.writeFiles(fileList, valList, tagList, ifAppend);
         } catch (Exception e) {
-            logger.error("encounter error when write points to influxdb: ", e);
+            logger.error("encounter error when write points to fileSystem: ", e);
         } finally {
             logger.info("数据写入完毕！");
         }
@@ -161,13 +187,15 @@ public class LocalExecutor implements Executor {
         List<List<Record>> valList = new ArrayList<>();
         List<File> fileList = new ArrayList<>();
         List<Boolean> ifAppend = new ArrayList<>();
+        List<Map<String, String>> tagList = new ArrayList<>();
 
         if (fileSystem == null) {
             return new PhysicalTaskExecuteFailureException("get fileSystem failure!");
         }
 
         for (int j = 0; j < data.getPathNum(); j++) {
-            fileList.add(new File(new FilePath(null, data.getPath(j)).getFilePath()));
+            fileList.add(new File(FilePath.toIginxPath(storageUnit,data.getPath(j))));
+            tagList.add(data.getTags(j));
             ifAppend.add(false);// always append, fix it!
         }
 
@@ -179,34 +207,35 @@ public class LocalExecutor implements Executor {
                 if (bitmapView.get(j)) {
                     switch (data.getDataType(i)) {
                         case BOOLEAN:
-                            val.add(new Record(data.getKey(i), BOOLEAN, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), BOOLEAN, data.getValue(i, index)));
                             break;
                         case INTEGER:
-                            val.add(new Record(data.getKey(i), INTEGER, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), INTEGER, data.getValue(i, index)));
                             break;
                         case LONG:
-                            val.add(new Record(data.getKey(i), LONG, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), LONG, data.getValue(i, index)));
                             break;
                         case FLOAT:
-                            val.add(new Record(data.getKey(i), FLOAT, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), FLOAT, data.getValue(i, index)));
                             break;
                         case DOUBLE:
-                            val.add(new Record(data.getKey(i), DOUBLE, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), DOUBLE, data.getValue(i, index)));
                             break;
                         case BINARY:
-                            val.add(new Record(data.getKey(i), BINARY, data.getValue(i, index)));
+                            val.add(new Record(data.getKey(j), BINARY, data.getValue(i, index)));
                             break;
                     }
                     index++;
                 }
             }
+            valList.add(val);
         }
 
         try {
             logger.info("开始数据写入");
-            fileSystem.writeFiles(fileList, valList, ifAppend);
+            fileSystem.writeFiles(fileList, valList, tagList,ifAppend);
         } catch (Exception e) {
-            logger.error("encounter error when write points to influxdb: ", e);
+            logger.error("encounter error when write points to fileSystem: ", e);
         } finally {
             logger.info("数据写入完毕！");
         }
@@ -215,112 +244,88 @@ public class LocalExecutor implements Executor {
 
     @Override
     public TaskExecuteResult executeDeleteTask(Delete delete, String storageUnit) {
+        if(storageUnit.equals("unit0000000001")) {
+            System.out.println("iiiii");
+        }
+        List<String> paths = delete.getPatterns();
         if (delete.getTimeRanges() == null || delete.getTimeRanges().size() == 0) { // 没有传任何 time range
-            FilePath filePath = new FilePath(storageUnit, null);
-            fileSystem.deleteFile(new File(filePath.getFilePath()));
-            return new TaskExecuteResult(null, null);
+            List<File> fileList = new ArrayList<>();
+            if (paths.size() == 1 && paths.get(0).equals("*") && delete.getTagFilter() == null) {
+                try {
+                    fileSystem.deleteFile(new File(FilePath.toIginxPath(storageUnit,null)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    logger.error("encounter error when clear data: " + e.getMessage());
+                }
+            } else {
+                for (String path : paths) {
+                    fileList.add(new File(FilePath.toIginxPath(storageUnit,path)));
+                }
+                try {
+                    fileSystem.deleteFiles(fileList,delete.getTagFilter());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    logger.error("encounter error when clear data: " + e.getMessage());
+                }
+            }
+        } else {
+            List<File> fileList = new ArrayList<>();
+            try {
+                if (paths.size() != 0) {
+                    for (String path : paths) {
+                        fileList.add(new File(FilePath.toIginxPath(storageUnit,path)));
+                    }
+                    for (TimeRange timeRange: delete.getTimeRanges()) {
+                        fileSystem.trimFilesContent(fileList,delete.getTagFilter() ,timeRange.getActualBeginTime(), timeRange.getActualEndTime());
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                logger.error("encounter error when delete data: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
-
-        List<File> fileList = new ArrayList<>();
-        for (String path : delete.getPatterns()) {
-            FilePath filePath = new FilePath(storageUnit, path);
-            fileList.add(new File(filePath.getFilePath()));
-        }
-
-        fileSystem.deleteFiles(fileList);
         return new TaskExecuteResult(null, null);
     }
 
     @Override
     public List<Timeseries> getTimeSeriesOfStorageUnit(String storageUnit) throws PhysicalException {
         List<Timeseries> files = new ArrayList<>();
-        Stack<File> stack = new Stack<>();
-        FilePath filePath = new FilePath(storageUnit, null);
-        File directory = new File(filePath.getFilePath());// fix it , 这里的 storageUnit 需要转化为一个目录
-        stack.push(directory);
 
-        files.add(new Timeseries(directory.getPath(), BINARY));// may fix it，所有都默认为binary
+        File directory = new File(FilePath.toIginxPath(storageUnit,null));// fix it , 这里的 storageUnit 需要转化为一个目录
 
-        while (!stack.isEmpty()) {
-            File current = stack.pop();
-            File[] fileList = null;
-            if (current.isDirectory())
-                fileList = current.listFiles();
-            if (fileList != null) {
-                for (File file : fileList) {
-                    if (file.isDirectory()) {
-                        stack.push(file);
-                    }
-                    files.add(new Timeseries(file.getPath(), BINARY));// may fix it，所有都默认为binary
-                }
-            }
+        List<javafx.util.Pair<File, FileMeta>> res = fileSystem.getAllIginXFiles(directory);
+
+        for (javafx.util.Pair<File, FileMeta> pair : res) {
+            File file = pair.getKey();
+            FileMeta meta = pair.getValue();
+            files.add(new Timeseries(FilePath.convertAbsolutePathToSeries(file.getAbsolutePath(),file.getName(), storageUnit),meta.getDataType(),meta.getTag()));
         }
         return files;
     }
 
     @Override
     public Pair<TimeSeriesRange, TimeInterval> getBoundaryOfStorage(String prefix) throws PhysicalException {
-        List<File> files = new ArrayList<>();
-        Stack<File> stack = new Stack<>();
-        FilePath filePath = new FilePath(prefix, null);
-        File directory = new File(filePath.getFilePath());// fix it , 这里的 storageUnit 需要转化为一个目录
-        stack.push(directory);
+        File directory = new File(FilePath.toNormalFilePath(prefix));
 
-        files.add(directory);// may fix it，所有都默认为binary
+        List<File> files = fileSystem.getBoundaryFiles(directory);
 
-        while (!stack.isEmpty()) {
-            File current = stack.pop();
-            File[] fileList = null;
-            if (current.isDirectory())
-                fileList = current.listFiles();
-            if (fileList != null) {
-                for (File file : fileList) {
-                    if (file.isDirectory()) {
-                        stack.push(file);
-                    }
-                    files.add(file);// may fix it，所有都默认为binary
-                }
-            }
-        }
+        File minPathFile = files.get(0);
+        File maxPathFile = files.get(1);
 
-        List<File> minMaxFiles = findMinMaxFile(files);
-        File minPathFile = minMaxFiles.get(0);
-        File maxPathFile = minMaxFiles.get(1);
+        TimeSeriesRange tsInterval = null;
+        if (prefix == null)
+            tsInterval = new TimeSeriesInterval(FilePath.convertAbsolutePathToSeries(minPathFile.getAbsolutePath(),minPathFile.getName(), null),
+                FilePath.convertAbsolutePathToSeries(maxPathFile.getAbsolutePath(),maxPathFile.getName(), null));
+        else
+            tsInterval = new TimeSeriesInterval(prefix, StringUtils.nextString(prefix));
 
-        Date minFileCreateTime = getCreationTime(minPathFile);
-        Date maxFileCreateTime = getCreationTime(maxPathFile);
+        //对于pb级的文件系统，遍历是不可能的，直接接入
+        List<Long> time = fileSystem.getBoundaryTime(directory);
+        TimeInterval timeInterval = new TimeInterval(time.get(0)==Long.MAX_VALUE?0:time.get(0),
+            time.get(1)==Long.MIN_VALUE?Long.MAX_VALUE:time.get(0));
 
-        TimeSeriesRange timeSeriesRange = new TimeSeriesInterval(FilePath.convertFilePathToSeries(minPathFile.getPath()),
-            FilePath.convertFilePathToSeries(maxPathFile.getPath()));
-        TimeInterval timeInterval = new TimeInterval(minFileCreateTime.getTime(), maxFileCreateTime.getTime());
-
-        return new Pair<>(timeSeriesRange, timeInterval);
-    }
-
-    private Date getCreationTime(File file) {
-        try {
-            Path filePath = Paths.get(file.getAbsolutePath());
-            BasicFileAttributes attributes = Files.readAttributes(filePath, BasicFileAttributes.class);
-            return new Date(attributes.creationTime().toMillis());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private List<File> findMinMaxFile(List<File> fileList) {
-        List<File> twoFiles = new ArrayList<>();
-        // 按字母序排序
-        Collections.sort(fileList);
-
-        // 找到最小和最大的File
-        File minFile = fileList.get(0);
-        File maxFile = fileList.get(fileList.size() - 1);
-
-        twoFiles.add(minFile);
-        twoFiles.add(maxFile);
-
-        return twoFiles;
+        return new Pair<>(tsInterval, timeInterval);
     }
 
     @Override

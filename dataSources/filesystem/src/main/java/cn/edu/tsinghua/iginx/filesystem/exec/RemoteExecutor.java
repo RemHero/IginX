@@ -60,7 +60,7 @@ public class RemoteExecutor implements Executor {
     }
 
     @Override
-    public TaskExecuteResult executeProjectTask(Project project, String filter, String storageUnit, boolean isDummyStorageUnit) {
+    public TaskExecuteResult executeProjectTask(Project project, byte[] filter, String storageUnit, boolean isDummyStorageUnit) {
         ProjectReq req = new ProjectReq(storageUnit, isDummyStorageUnit, project.getPatterns());
         if (project.getTagFilter() != null) {
             req.setTagFilter(constructRawTagFilter(project.getTagFilter()));

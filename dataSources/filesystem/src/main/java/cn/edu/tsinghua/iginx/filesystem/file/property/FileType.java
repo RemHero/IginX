@@ -6,17 +6,21 @@ public class FileType {
 
     public static enum Type {
         IGINX_FILE,
-        TEXT_FILE
+        NORMAL_FILE,
+        DIR
     }
 
     public static Type getFileType(File file) {
         String fileName = file.getName();
+        if(file.isDirectory()) {
+            return Type.DIR;
+        }
         if (fileName.contains(".iginx")) {
             return Type.IGINX_FILE;
         } else if (fileName.endsWith(".txt")) {
-            return Type.TEXT_FILE;
+            return Type.NORMAL_FILE;
         } else {
-            return Type.TEXT_FILE;
+            return Type.NORMAL_FILE;
         }
     }
 }

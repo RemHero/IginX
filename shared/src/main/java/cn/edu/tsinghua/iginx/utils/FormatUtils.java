@@ -46,7 +46,8 @@ public class FormatUtils {
         return blockLine.toString();
     }
 
-    private static String buildRow(List<List<String>> cache, int rowIdx, List<Integer> maxSizeList) {
+    private static String buildRow(
+            List<List<String>> cache, int rowIdx, List<Integer> maxSizeList) {
         StringBuilder builder = new StringBuilder();
         builder.append("|");
         int maxSize;

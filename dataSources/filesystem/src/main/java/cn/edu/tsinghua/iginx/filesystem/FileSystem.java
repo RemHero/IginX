@@ -32,6 +32,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.filesystem.exec.Executor;
+import cn.edu.tsinghua.iginx.filesystem.exec.LocalExecutor;
 import cn.edu.tsinghua.iginx.filesystem.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.metadata.entity.FragmentMeta;
 import cn.edu.tsinghua.iginx.metadata.entity.StorageEngineMeta;
@@ -53,6 +54,7 @@ public class FileSystem implements IStorage {
 
     public FileSystem(StorageEngineMeta meta) throws StorageInitializationException {
         this.meta = meta;
+        executor= new LocalExecutor();
         if (!meta.getStorageEngine().equals(STORAGE_ENGINE)) {
             throw new StorageInitializationException("unexpected database: " + meta.getStorageEngine());
         }
@@ -89,7 +91,7 @@ public class FileSystem implements IStorage {
             }
             return executor.executeProjectTask(
                     project,
-                    FilterTransformer.toBytes(filter),
+                    FilterTransformer.toBinary(filter),
                     storageUnit,
                     isDummyStorageUnit);
         } else if (op.getType() == OperatorType.Insert) {

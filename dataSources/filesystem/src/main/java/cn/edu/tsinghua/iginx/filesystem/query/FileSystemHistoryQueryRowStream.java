@@ -5,26 +5,24 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import javafx.util.Pair;
-import jdk.nashorn.internal.runtime.ListAdapter;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileSystemQueryRowStream implements RowStream {
+public class FileSystemHistoryQueryRowStream implements RowStream {
     private final Header header;
     private final List<FSResultTable> rowData;
-    private final int[] indices;
+    private final int[][] indices;
+    private final int[] round;
     private int hasMoreRecords = 0;
 
     // may fix it ，可能可以不用传pathMap
-    public FileSystemQueryRowStream(List<FSResultTable> result, List<Pair<FilePath,Integer>> pathMap,String storageUnit) {
+    public FileSystemHistoryQueryRowStream(List<FSResultTable> result, List<Pair<FilePath,Integer>> pathMap) {
         Field time = Field.KEY;
         List<Field> fields = new ArrayList<>();
 
@@ -41,12 +39,13 @@ public class FileSystemQueryRowStream implements RowStream {
 //            }
 //            index++;
             File file = resultTable.getFile();
-            series=FilePath.convertAbsolutePathToSeries(file.getAbsolutePath(),file.getName(),storageUnit);
+            series=FilePath.convertAbsolutePathToSeries(file.getAbsolutePath(),file.getName(),null);
             Field field = new Field(series, resultTable.getDataType(), resultTable.getTags());// fix it 先假设查询的全是NormalFile类型
             fields.add(field);
         }
 
-        this.indices = new int[this.rowData.size()];
+        this.indices = new int[this.rowData.size()][1024*2];
+        this.round = new int[this.rowData.size()];
         this.header = new Header(time, fields);
         for (int i = 0; i < this.rowData.size(); i++) {
             if(this.rowData.get(i).getVal().size()!=0)
@@ -73,35 +72,37 @@ public class FileSystemQueryRowStream implements RowStream {
     public Row next() throws PhysicalException {
         long timestamp = Long.MAX_VALUE;
         for (int i = 0; i < this.rowData.size(); i++) {
-            int index = indices[i];
+            int index = round[i];
             List<Record> records = this.rowData.get(i).getVal();
             if (index == records.size()) { // 数据已经消费完毕了
                 continue;
             }
-            Record record = records.get(index);
-            timestamp = Math.min(record.getKey(), timestamp);
+            timestamp = Math.min(indices[i][index], timestamp);
         }
         if (timestamp == Long.MAX_VALUE) {
             return null;
         }
         Object[] values = new Object[rowData.size()];
         for (int i = 0; i < this.rowData.size(); i++) {
-            int index = indices[i];
+            int index = round[i];
             List<Record> records = this.rowData.get(i).getVal();
             if (index == records.size()) { // 数据已经消费完毕了
                 continue;
             }
-            Record record = records.get(index);
-            if (record.getKey() == timestamp) { // 考虑时间 ns may fix it
+            byte[] val = (byte[])records.get(index).getRawData();
+            if (indices[i][index] == timestamp) { // 考虑时间 ns may fix it
                 DataType dataType = header.getField(i).getType();
-                Object value = record.getRawData();
+                byte[] newVal = new byte[1];
+                newVal[0] = val[indices[i][index]];
+                Object value =newVal;
 //                if (dataType == DataType.BINARY) {
 //                    value = (String) value;
 //                }
                 values[i] = value;
-                indices[i]++;
-                if (indices[i] == records.size()) {
-                    hasMoreRecords--;
+                indices[i][index]++;
+                if (indices[i][index] == val.length) {
+                    round[i]++;
+                    if(round[i]==records.size()) hasMoreRecords--;
                 }
             }
         }

@@ -9,6 +9,7 @@ import java.util.List;
 public class Record {
     private static final Logger logger = LoggerFactory.getLogger(Record.class);
     private int MAXDATASETLEN = 100;
+    public static int preperty = 100;
     private long key;
     private DataType dataType;
     private Object rawData;

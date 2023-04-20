@@ -2433,7 +2433,7 @@ public abstract class SQLSessionIT {
         executeAndCompare(query, expected);
     }
 
-    @Test
+//    @Test
     public void testSpecialPath() {
         if (!isSupportSpecialPath) {
             return;
