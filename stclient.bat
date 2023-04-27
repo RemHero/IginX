@@ -1,0 +1,1 @@
+.\client\target\iginx-client-0.6.0-SNAPSHOT\sbin\start_cli.bat

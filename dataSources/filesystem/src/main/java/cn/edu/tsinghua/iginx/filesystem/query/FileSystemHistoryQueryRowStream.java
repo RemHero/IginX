@@ -17,6 +17,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
     private final int[][] indices;
     private final int[] round;
     private int hasMoreRecords = 0;
+    private int batch=1024*10;
 
     public FileSystemHistoryQueryRowStream() {
         Field time = Field.KEY;
@@ -24,7 +25,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
 
         this.rowData = new ArrayList<>();
         ;
-        this.indices = new int[0][1024 * 2];
+        this.indices = new int[0][1024 * 1024];
         this.round = new int[0];
         this.header = new Header(time, fields);
         for (int i = 0; i < this.rowData.size(); i++) {
@@ -49,7 +50,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
             fields.add(field);
         }
 
-        this.indices = new int[this.rowData.size()][1024 * 2];
+        this.indices = new int[this.rowData.size()][1024 * 1024];
         this.round = new int[this.rowData.size()];
         this.header = new Header(time, fields);
         for (int i = 0; i < this.rowData.size(); i++) {
@@ -81,7 +82,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
             if (index == records.size()) { // 数据已经消费完毕了
                 continue;
             }
-            timestamp = Math.min(indices[i][index], timestamp);
+            timestamp = Math.min(indices[i][index]/batch, timestamp);
         }
         if (timestamp == Long.MAX_VALUE) {
             return null;
@@ -95,12 +96,14 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
             }
             byte[] val = (byte[]) records.get(index).getRawData();
             if (indices[i][index] == timestamp) {
-                byte[] newVal = new byte[1];
-                newVal[0] = val[indices[i][index]];
+                int len = Math.min(batch,val.length-indices[i][index]);
+                byte[] newVal = new byte[len];
+                System.arraycopy(val,indices[i][index],newVal,0,len);
+//                newVal[] = val[indices[i][index]];
                 Object value = newVal;
                 values[i] = value;
-                indices[i][index]++;
-                if (indices[i][index] == val.length) {
+                indices[i][index]+=batch;
+                if (indices[i][index] >= val.length) {
                     round[i]++;
                     if (round[i] == records.size()) hasMoreRecords--;
                 }

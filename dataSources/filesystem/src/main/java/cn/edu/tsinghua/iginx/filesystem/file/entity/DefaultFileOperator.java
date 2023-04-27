@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
-    private int BUFFERSIZE = 1024 * 1024;
+    private int BUFFERSIZE = 1024 * 100;
 
     @Override
     public List<Record> normalFileReader(File file, long begin, long end, Charset charset)

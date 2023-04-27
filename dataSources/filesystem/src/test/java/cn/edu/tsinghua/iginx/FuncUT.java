@@ -22,8 +22,8 @@ import cn.edu.tsinghua.iginx.metadata.entity.TimeInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.TimeSeriesRange;
 import cn.edu.tsinghua.iginx.utils.JsonUtils;
 import cn.edu.tsinghua.iginx.utils.Pair;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.*;
 import org.apache.commons.jexl3.*;
 import org.junit.Test;
@@ -249,5 +249,29 @@ public class FuncUT {
     @Test
     public void testGetRoot() {
         System.out.println(ConfLoader.getRootPath());
+    }
+
+    @Test
+    public void testJSON() {
+        int loop=10000;
+        while(loop--!=0) {
+            int v1=1000000,v2=2000000;
+            Filter keyFilter1 = new KeyFilter(Op.GE, v1);
+            Filter keyFilter2 = new KeyFilter(Op.L, v2);
+            List<Filter> child = new ArrayList<>();
+            child.add(keyFilter2);
+            child.add(keyFilter1);
+
+
+            Filter andFilter = new AndFilter(child);
+
+            byte[] res = JsonUtils.toJson(andFilter);
+            System.out.println(new String(res));
+            String ttres = new String(res);
+            if(ttres.lastIndexOf("\"op\":0")!=ttres.indexOf("\"op\":0")){
+                System.out.println(ttres);
+                break;
+            }
+        }
     }
 }

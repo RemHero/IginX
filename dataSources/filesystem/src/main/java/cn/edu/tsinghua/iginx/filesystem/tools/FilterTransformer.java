@@ -2,6 +2,8 @@ package cn.edu.tsinghua.iginx.filesystem.tools;
 
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.*;
 import cn.edu.tsinghua.iginx.utils.JsonUtils;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
@@ -13,13 +15,12 @@ public class FilterTransformer {
             return null;
         }
         byte[] res = JsonUtils.toJson(filter);
-
         Stack<Filter> S = new Stack<>();
         S.push(filter);
         Integer index = 0;
         AndFilter andFilter = null;
         OrFilter orFilter = null;
-        List<Filter> childs = null;
+        List<Filter> childs = new ArrayList<>();
         while (!S.empty()) {
             boolean isLeafFilter = true;
             Filter tmpFilter = S.pop();
@@ -27,12 +28,16 @@ public class FilterTransformer {
                 switch (filter.getType()) {
                     case And:
                         andFilter = (AndFilter) filter;
-                        childs = andFilter.getChildren();
+                        for(Filter f : andFilter.getChildren()) {
+                            childs.add(f);
+                        }
                         isLeafFilter = false;
                         break;
                     case Or:
                         orFilter = (OrFilter) filter;
-                        childs = orFilter.getChildren();
+                        for(Filter f : andFilter.getChildren()) {
+                            childs.add(f);
+                        }
                         isLeafFilter = false;
                         break;
                 }
@@ -43,13 +48,14 @@ public class FilterTransformer {
             if (isLeafFilter) {
                 continue;
             }
+
             Collections.reverse(childs);
-            if (andFilter != null) {
-                S.addAll(childs);
-            } else if (orFilter != null) {
+
+            if (andFilter != null || orFilter != null) {
                 S.addAll(childs);
             }
         }
+        String tres = new String(res);
         return res;
     }
 

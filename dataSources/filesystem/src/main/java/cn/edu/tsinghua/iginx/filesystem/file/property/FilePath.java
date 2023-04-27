@@ -38,6 +38,7 @@ public final class FilePath {
     }
 
     public static String toNormalFilePath(String root, String series) {
+        if(series==null) return root;
         if (series != null) series = series.replace(WILDCARD, MYWILDCARD);
         return root + series.replace(".", MYSEPARATOR);
     }
