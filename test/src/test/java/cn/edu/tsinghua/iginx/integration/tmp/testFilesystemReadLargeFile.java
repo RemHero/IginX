@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.Collections;
 
 import cn.edu.tsinghua.iginx.session.Session;
@@ -90,11 +91,11 @@ public class testFilesystemReadLargeFile {
 //        session.openSession();
 
 //        String stmt = "select * from largefiletest.100GB where key>%s and key<%s";
-        String fileName = "10GB";
+        String fileName = "100GB";
         File file = new File("D:\\LAB\\my\\IGinX\\dataSources\\filesystem\\src\\test\\java\\cn\\edu\\tsinghua\\iginx\\tmp\\a\\"+fileName);
         long size = file.length();
         long offset = 0;
-        long batchSize = 1024*500;
+        long batchSize = 1024*1024*100;
 
         long startTime = System.currentTimeMillis();
         while (offset < size) {
@@ -113,5 +114,28 @@ public class testFilesystemReadLargeFile {
         long totalTimeSeconds = (endTime - startTime) / 1000;
         System.out.println("Function took " + totalTimeSeconds + " seconds.");
 
+    }
+
+    @Test
+    public void testBasicRead() throws IOException {
+        String fileName = "100GB";
+        File file = new File("D:\\LAB\\my\\IGinX\\dataSources\\filesystem\\src\\test\\java\\cn\\edu\\tsinghua\\iginx\\tmp\\a\\"+fileName);
+
+        long startTime = System.currentTimeMillis();
+
+        for(int i=0;i<102;i++){
+//            System.gc();
+            byte[] buffer = new byte[1024 * 1024 * 100]; // 一次读取1MB
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+
+            // Move the file pointer to the starting position
+            raf.seek(i*1024*100);
+            // Read the specified range of bytes from the file
+            int len = raf.read(buffer);
+        }
+
+        long endTime = System.currentTimeMillis();
+        long totalTimeSeconds = (endTime - startTime);
+        System.out.println("Function took " + totalTimeSeconds + " Millis.");
     }
 }

@@ -22,7 +22,8 @@ import org.slf4j.LoggerFactory;
 
 public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
-    private int BUFFERSIZE = 1024 * 100;
+    private int BUFFERSIZE = 1024 * 1024*10;
+    private RandomAccessFile raf=null;
 
     @Override
     public List<Record> normalFileReader(File file, long begin, long end, Charset charset)
@@ -57,7 +58,10 @@ public class DefaultFileOperator implements IFileOperator {
             end = file.length();
         }
 
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+        if(raf==null)
+            raf= new RandomAccessFile(file, "r");
+
+//        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             long readPos = begin;
             while (readPos < end) {
                 int batchSize = BUFFERSIZE;
@@ -73,7 +77,7 @@ public class DefaultFileOperator implements IFileOperator {
                 } else res.add(buffer);
                 readPos += len;
             }
-        }
+//        }
         return res;
     }
 
