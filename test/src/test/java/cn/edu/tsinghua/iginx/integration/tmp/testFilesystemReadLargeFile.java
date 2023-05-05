@@ -11,8 +11,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import cn.edu.tsinghua.iginx.session.Session;
 
@@ -116,22 +121,80 @@ public class testFilesystemReadLargeFile {
 
     }
 
+    private int BUFFERSIZE = 1024 * 1024*10;
+
+    public class MyFileReader implements Runnable {
+        private List<byte[]> res;
+        private int index;
+        private RandomAccessFile raf;
+        private long readPos;
+
+        public MyFileReader(RandomAccessFile raf, long readPos, List<byte[]> res, int index) {
+            this.raf=raf;
+            this.readPos = readPos;
+            this.res = res;
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            int batchSize = BUFFERSIZE;
+            byte[] buffer = new byte[batchSize]; // 一次读取1MB
+            int len = 0;
+            // Move the file pointer to the starting position
+            try {
+                raf.seek(readPos);
+                // Read the specified range of bytes from the file
+                len = raf.read(buffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (len != batchSize) {
+                byte[] subBuffer = new byte[len];
+                subBuffer = Arrays.copyOf(buffer, len);
+                res.set(index,subBuffer);
+            } else res.set(index,buffer);
+        }
+    }
+
     @Test
-    public void testBasicRead() throws IOException {
+    public void testBasicRead() throws IOException, InterruptedException {
         String fileName = "100GB";
         File file = new File("D:\\LAB\\my\\IGinX\\dataSources\\filesystem\\src\\test\\java\\cn\\edu\\tsinghua\\iginx\\tmp\\a\\"+fileName);
 
         long startTime = System.currentTimeMillis();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        List<byte[]> res = new ArrayList<>();
+        for( int i=0;i<1024*100;i++)
+            res.add(new byte[0]);
 
-        for(int i=0;i<102;i++){
+        for(int i=0;i<1024*10;i++){
 //            System.gc();
-            byte[] buffer = new byte[1024 * 1024 * 100]; // 一次读取1MB
+
             RandomAccessFile raf = new RandomAccessFile(file, "r");
 
             // Move the file pointer to the starting position
-            raf.seek(i*1024*100);
+            raf.seek(i*1024);
             // Read the specified range of bytes from the file
-            int len = raf.read(buffer);
+            int finalI = i;
+//            executorService.execute(() -> {
+                try {
+                    long startTime1 = System.currentTimeMillis();
+                    byte[] buffer = new byte[1024 * 1024]; // 一次读取1MB
+                    raf.read(buffer);
+                    res.set(finalI%50,buffer);
+
+                    long endTime1 = System.currentTimeMillis();
+                    long totalTimeSeconds1 = (endTime1 - startTime1);
+//                    System.out.println("Every thread Function took " + totalTimeSeconds1 + " Millis.");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+//            });
+        }
+        executorService.shutdown();
+        if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+            executorService.shutdownNow();
         }
 
         long endTime = System.currentTimeMillis();

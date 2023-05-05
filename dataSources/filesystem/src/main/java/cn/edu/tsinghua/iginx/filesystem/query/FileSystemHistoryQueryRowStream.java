@@ -17,7 +17,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
     private final int[][] indices;
     private final int[] round;
     private int hasMoreRecords = 0;
-    private int batch=1024*1024*10;
+    private int batch=1024*100;
 
     public FileSystemHistoryQueryRowStream() {
         Field time = Field.KEY;
@@ -54,7 +54,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
         this.round = new int[this.rowData.size()];
         this.header = new Header(time, fields);
         for (int i = 0; i < this.rowData.size(); i++) {
-            if (this.rowData.get(i).getVal().size() != 0) hasMoreRecords++;
+//            if (this.rowData.get(i).getVal().size() != 0) hasMoreRecords++;
         }
     }
 
@@ -75,40 +75,41 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
 
     @Override
     public Row next() throws PhysicalException {
-        long timestamp = Long.MAX_VALUE;
-        for (int i = 0; i < this.rowData.size(); i++) {
-            int index = round[i];
-            List<Record> records = this.rowData.get(i).getVal();
-            if (index == records.size()) { // 数据已经消费完毕了
-                continue;
-            }
-            timestamp = Math.min(indices[i][index]/batch, timestamp);
-        }
-        if (timestamp == Long.MAX_VALUE) {
-            return null;
-        }
-        Object[] values = new Object[rowData.size()];
-        for (int i = 0; i < this.rowData.size(); i++) {
-            int index = round[i];
-            List<Record> records = this.rowData.get(i).getVal();
-            if (index == records.size()) { // 数据已经消费完毕了
-                continue;
-            }
-            byte[] val = (byte[]) records.get(index).getRawData();
-            if (indices[i][index]/batch == timestamp) {
-                int len = Math.min(batch,val.length-indices[i][index]);
-//                byte[] newVal = new byte[len];
-//                System.arraycopy(val,indices[i][index],newVal,0,len);
-//                newVal[] = val[indices[i][index]];
-                Object value = val;
-                values[i] = value;
-                indices[i][index]+=batch;
-                if (indices[i][index] >= val.length) {
-                    round[i]++;
-                    if (round[i] == records.size()) hasMoreRecords--;
-                }
-            }
-        }
-        return new Row(header, timestamp, values);
+//        long timestamp = Long.MAX_VALUE;
+//        for (int i = 0; i < this.rowData.size(); i++) {
+//            int index = round[i];
+//            List<Record> records = this.rowData.get(i).getVal();
+//            if (index == records.size()) { // 数据已经消费完毕了
+//                continue;
+//            }
+//            timestamp = Math.min(indices[i][index]/batch, timestamp);
+//        }
+//        if (timestamp == Long.MAX_VALUE) {
+//            return null;
+//        }
+//        Object[] values = new Object[rowData.size()];
+//        for (int i = 0; i < this.rowData.size(); i++) {
+//            int index = round[i];
+//            List<Record> records = this.rowData.get(i).getVal();
+//            if (index == records.size()) { // 数据已经消费完毕了
+//                continue;
+//            }
+//            byte[] val = (byte[]) records.get(index).getRawData();
+//            if (indices[i][index]/batch == timestamp) {
+//                int len = Math.min(batch,val.length-indices[i][index]);
+////                byte[] newVal = new byte[len];
+////                System.arraycopy(val,indices[i][index],newVal,0,len);
+////                newVal[] = val[indices[i][index]];
+//                Object value = val;
+//                values[i] = value;
+//                indices[i][index]+=batch;
+//                if (indices[i][index] >= val.length) {
+//                    round[i]++;
+//                    if (round[i] == records.size()) hasMoreRecords--;
+//                }
+//            }
+//        }
+//        return new Row(header, timestamp, values);
+        return null;
     }
 }

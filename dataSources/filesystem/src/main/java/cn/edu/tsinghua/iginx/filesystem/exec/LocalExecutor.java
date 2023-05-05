@@ -94,6 +94,7 @@ public class LocalExecutor implements Executor {
 
     private TaskExecuteResult executeDummyProjectTask(List<String> series, Filter filter) {
         try {
+            long startTime = System.currentTimeMillis();
             List<FSResultTable> result = new ArrayList<>();
             FileSystemImpl fileSystem = new FileSystemImpl();
             logger.info("[Query] execute query file: " + series);
@@ -102,7 +103,14 @@ public class LocalExecutor implements Executor {
                         fileSystem.readFile(
                                 new File(FilePath.toNormalFilePath(root, path)), filter));
             }
+            long endTime = System.currentTimeMillis();
+            long totalTimeSeconds = (endTime - startTime);
+            System.out.println("Step 1 Function took " + totalTimeSeconds + " Millis.");
+
             RowStream rowStream = new FileSystemHistoryQueryRowStream(result, root);
+            endTime = System.currentTimeMillis();
+            totalTimeSeconds = (endTime - startTime);
+            System.out.println("Step 2 Function took " + totalTimeSeconds + " Millis.");
             return new TaskExecuteResult(rowStream);
         } catch (Exception e) {
             logger.error(e.getMessage());

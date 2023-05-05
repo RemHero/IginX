@@ -17,13 +17,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
-    private int BUFFERSIZE = 1024 * 1024*10;
-    private RandomAccessFile raf=null;
+    private int BUFFERSIZE = 1024 * 100;
 
     @Override
     public List<Record> normalFileReader(File file, long begin, long end, Charset charset)
@@ -37,6 +42,44 @@ public class DefaultFileOperator implements IFileOperator {
         return res;
     }
 
+    public class MyFileReader implements Runnable {
+        private List<byte[]> res;
+        private int index;
+        private File file;
+        private long readPos;
+
+        public MyFileReader(File file, long readPos, List<byte[]> res, int index) {
+            this.file=file;
+            this.readPos = readPos;
+            this.res = res;
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            int batchSize = BUFFERSIZE;
+            byte[] buffer = new byte[batchSize]; // 一次读取1MB
+            int len = 0;
+                    // Move the file pointer to the starting position
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                try {
+                    raf.seek(readPos);
+                    // Read the specified range of bytes from the file
+                    len = raf.read(buffer);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (len != batchSize) {
+                    byte[] subBuffer = new byte[len];
+                    subBuffer = Arrays.copyOf(buffer, len);
+                    res.set(index, subBuffer);
+                } else res.set(index, buffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     /**
      * Reads a range of bytes from a large file efficiently.
      *
@@ -47,6 +90,7 @@ public class DefaultFileOperator implements IFileOperator {
      * @throws IOException If there is an error reading the file.
      */
     public List<byte[]> normalFileReadByByte(File file, long begin, long end) throws IOException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
         List<byte[]> res = new ArrayList<>();
         if (file == null || !file.exists() || !file.isFile()) {
             throw new IllegalArgumentException("Invalid file.");
@@ -55,29 +99,62 @@ public class DefaultFileOperator implements IFileOperator {
             throw new IllegalArgumentException("Invalid byte range.");
         }
         if (end > file.length()) {
-            end = file.length();
+            end = file.length()-1;
+        }
+        int round = (int)(end%BUFFERSIZE==0?end/BUFFERSIZE:end/BUFFERSIZE+1);
+        for(int i=0;i<round;i++) {
+            res.add(new byte[0]);
+        }
+        AtomicLong readPos = new AtomicLong(begin);
+        AtomicInteger index = new AtomicInteger();
+        int batchSize = BUFFERSIZE;
+
+        // Move the file pointer to the starting position
+        long startTime = System.currentTimeMillis();
+
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            while (readPos.get() < end) {
+                long finalReadPos = readPos.get();
+                int finalIndex = index.get();
+                executorService.execute(() -> {
+                    try {
+//                        long startTime1 = System.currentTimeMillis();
+
+                        byte[] buffer = new byte[batchSize]; // 一次读取1MB
+                        raf.seek(finalReadPos);
+                        // Read the specified range of bytes from the file
+                        int len = raf.read(buffer);
+                        if(len<0){
+                            logger.error("reach the end of the file with len {}",len);
+                            return;
+                        }
+                        if (len != batchSize) {
+                            byte[] subBuffer;
+                            subBuffer = Arrays.copyOf(buffer, len);
+                            res.set(finalIndex, subBuffer);
+                        } else res.set(finalIndex, buffer);
+
+//                        long endTime1 = System.currentTimeMillis();
+//                        long totalTimeSeconds1 = (endTime1 - startTime1);
+//                        System.out.println("Every thread Function took " + totalTimeSeconds1 + " Millis.");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                index.getAndIncrement();
+                readPos.addAndGet(BUFFERSIZE);
+            }
+            executorService.shutdown();
+            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        if(raf==null)
-            raf= new RandomAccessFile(file, "r");
-
-//        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            long readPos = begin;
-            while (readPos < end) {
-                int batchSize = BUFFERSIZE;
-                byte[] buffer = new byte[batchSize]; // 一次读取1MB
-                // Move the file pointer to the starting position
-                raf.seek(begin);
-                // Read the specified range of bytes from the file
-                int len = raf.read(buffer);
-                if (len != batchSize) {
-                    byte[] subBuffer = new byte[len];
-                    subBuffer = Arrays.copyOf(buffer, len);
-                    res.add(subBuffer);
-                } else res.add(buffer);
-                readPos += len;
-            }
-//        }
+        long endTime = System.currentTimeMillis();
+        long totalTimeSeconds = (endTime - startTime);
+        System.out.println("Function took " + totalTimeSeconds + " Millis.  with times "+(end-begin)/batchSize);
         return res;
     }
 
