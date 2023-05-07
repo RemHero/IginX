@@ -5,6 +5,7 @@ import static cn.edu.tsinghua.iginx.thrift.DataType.BINARY;
 import cn.edu.tsinghua.iginx.filesystem.file.IFileOperator;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FileMeta;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FileType;
+import cn.edu.tsinghua.iginx.filesystem.tools.MemoryPool;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.DataTypeUtils;
@@ -28,7 +29,11 @@ import org.slf4j.LoggerFactory;
 
 public class DefaultFileOperator implements IFileOperator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
-    private int BUFFERSIZE = 1024 * 100;
+    private final int bufferSize = 1024 * 100;
+
+    public DefaultFileOperator() {
+        MemoryPool.initMemoryPool(bufferSize*1024,bufferSize);
+    }
 
     @Override
     public List<Record> normalFileReader(File file, long begin, long end, Charset charset)
@@ -57,7 +62,7 @@ public class DefaultFileOperator implements IFileOperator {
 
         @Override
         public void run() {
-            int batchSize = BUFFERSIZE;
+            int batchSize = bufferSize;
             byte[] buffer = new byte[batchSize]; // 一次读取1MB
             int len = 0;
                     // Move the file pointer to the starting position
@@ -101,13 +106,13 @@ public class DefaultFileOperator implements IFileOperator {
         if (end > file.length()) {
             end = file.length()-1;
         }
-        int round = (int)(end%BUFFERSIZE==0?end/BUFFERSIZE:end/BUFFERSIZE+1);
+        int round = (int)(end% bufferSize ==0?end/ bufferSize :end/ bufferSize +1);
         for(int i=0;i<round;i++) {
             res.add(new byte[0]);
         }
         AtomicLong readPos = new AtomicLong(begin);
         AtomicInteger index = new AtomicInteger();
-        int batchSize = BUFFERSIZE;
+        int batchSize = bufferSize;
 
         // Move the file pointer to the starting position
         long startTime = System.currentTimeMillis();
@@ -120,7 +125,7 @@ public class DefaultFileOperator implements IFileOperator {
                     try {
 //                        long startTime1 = System.currentTimeMillis();
 
-                        byte[] buffer = new byte[batchSize]; // 一次读取1MB
+                        byte[] buffer = MemoryPool.allocate(batchSize);// 一次读取1MB
                         raf.seek(finalReadPos);
                         // Read the specified range of bytes from the file
                         int len = raf.read(buffer);
@@ -142,7 +147,7 @@ public class DefaultFileOperator implements IFileOperator {
                     }
                 });
                 index.getAndIncrement();
-                readPos.addAndGet(BUFFERSIZE);
+                readPos.addAndGet(bufferSize);
             }
             executorService.shutdown();
             if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
