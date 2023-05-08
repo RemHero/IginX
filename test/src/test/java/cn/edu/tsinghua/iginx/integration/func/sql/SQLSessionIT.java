@@ -3982,6 +3982,7 @@ public class SQLSessionIT {
 
     @Test
     public void testConcurrentDeleteSinglePath() {
+        if (!isAbleToClearData) return;
         String deleteFormat = "DELETE FROM us.d1.s1 WHERE key >= %d AND key < %d;";
         int start = 1000, range = 50;
 
@@ -4025,6 +4026,7 @@ public class SQLSessionIT {
 
     @Test
     public void testConcurrentDeleteSinglePathWithOverlap() {
+        if (!isAbleToClearData) return;
         String deleteFormat = "DELETE FROM * WHERE key >= %d AND key < %d;";
         int start = 1000, range = 70;
 
@@ -4049,6 +4051,7 @@ public class SQLSessionIT {
 
     @Test
     public void testConcurrentDeleteMultiPath() {
+        if (!isAbleToClearData) return;
         String deleteFormat = "DELETE FROM * WHERE key >= %d AND key < %d;";
         int start = 1000, range = 50;
 
@@ -4073,6 +4076,7 @@ public class SQLSessionIT {
 
     @Test
     public void testConcurrentDeleteMultiPathWithOverlap() {
+        if (!isAbleToClearData) return;
         String deleteFormat = "DELETE FROM * WHERE key >= %d AND key < %d;";
         int start = 1000, range = 70;
 
