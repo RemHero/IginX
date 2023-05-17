@@ -754,11 +754,16 @@ public class SessionIT extends BaseSessionIT {
                 session.queryData(dataTypePaths, START_TIME, END_TIME + 1);
         int dtQueryLen = dtQueryDataSet.getKeys().length;
         List<String> dataTypeResPaths = dtQueryDataSet.getPaths();
+        logger.info("queryData for test 1");
         assertEquals(6, dataTypeResPaths.size());
+        logger.info("queryData for test 2");
         assertEquals(TIME_PERIOD, dtQueryLen);
+        logger.info("queryData for test 3");
         assertEquals(TIME_PERIOD, dtQueryDataSet.getValues().size());
+        logger.info("queryData for test 4");
         for (int i = 0; i < dtQueryLen; i++) {
             long timestamp = dtQueryDataSet.getKeys()[i];
+            logger.info("queryData for test " + i);
             assertEquals(i + START_TIME, timestamp);
             List<Object> result = dtQueryDataSet.getValues().get(i);
             for (int j = 0; j < 6; j++) {
