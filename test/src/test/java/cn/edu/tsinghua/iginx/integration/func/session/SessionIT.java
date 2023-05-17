@@ -204,6 +204,7 @@ public class SessionIT extends BaseSessionIT {
         // Simple Test(Including query,valueFilter,aggr:max/min/first/last/count/sum/avg)
         insertTestsByFourInterfaces();
         insertNumRecords(paths);
+        logger.info("query for test");
         // query
         SessionQueryDataSet simpleQueryDataSet = session.queryData(paths, START_TIME, END_TIME + 1);
         int simpleResLen = simpleQueryDataSet.getKeys().length;
@@ -221,6 +222,7 @@ public class SessionIT extends BaseSessionIT {
                 assertEquals(timestamp + pathNum, queryResult.get(j));
             }
         }
+        logger.info("aggrMax for test");
         // aggrMax
         SessionAggregateQueryDataSet maxDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.MAX);
@@ -235,6 +237,7 @@ public class SessionIT extends BaseSessionIT {
             assertNotEquals(pathNum, -1);
             assertEquals(END_TIME + pathNum, maxResult[i]);
         }
+        logger.info("aggrMin for test");
         // aggrMin
         SessionAggregateQueryDataSet minDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.MIN);
@@ -249,6 +252,7 @@ public class SessionIT extends BaseSessionIT {
             assertNotEquals(pathNum, -1);
             assertEquals(START_TIME + pathNum, minResult[i]);
         }
+        logger.info("aggrFirst for test");
         // aggrFirst
         SessionAggregateQueryDataSet firstDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.FIRST_VALUE);
@@ -262,6 +266,7 @@ public class SessionIT extends BaseSessionIT {
             assertNotEquals(pathNum, -1);
             assertEquals(START_TIME + pathNum, firstResult[i]);
         }
+        logger.info("aggrLast for test");
         // aggrLast
         SessionAggregateQueryDataSet lastDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.LAST_VALUE);
@@ -275,6 +280,7 @@ public class SessionIT extends BaseSessionIT {
             assertNotEquals(pathNum, -1);
             assertEquals(END_TIME + pathNum, lastResult[i]);
         }
+        logger.info("aggrCount for test");
         // aggrCount
         SessionAggregateQueryDataSet countDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.COUNT);
@@ -286,6 +292,7 @@ public class SessionIT extends BaseSessionIT {
         for (int i = 0; i < simpleLen; i++) {
             assertEquals(TIME_PERIOD, countResult[i]);
         }
+        logger.info("aggrSum for test");
         // aggrSum
         SessionAggregateQueryDataSet sumDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.SUM);
@@ -301,6 +308,7 @@ public class SessionIT extends BaseSessionIT {
             assertEquals(sum + pathNum * TIME_PERIOD, changeResultToDouble(sumResult[i]), delta);
         }
 
+        logger.info("aggrAvg for test");
         // aggrAvg
         SessionAggregateQueryDataSet avgDataSet =
                 session.aggregateQuery(paths, START_TIME, END_TIME + 1, AggregateType.AVG);
@@ -740,6 +748,7 @@ public class SessionIT extends BaseSessionIT {
         List<String> dataTypePaths = getPaths(currPath, dataTypeLen);
         insertDataTypeRecords(dataTypePaths, currPath);
 
+        logger.info("queryData for test");
         // queryData
         SessionQueryDataSet dtQueryDataSet =
                 session.queryData(dataTypePaths, START_TIME, END_TIME + 1);
@@ -790,6 +799,7 @@ public class SessionIT extends BaseSessionIT {
 
         // aggregateData max & avg
         List<String> dTAggrPaths = getPaths(currPath + 1, 4);
+        logger.info("max for test");
         // max
         SessionAggregateQueryDataSet dtMaxDataSet =
                 session.aggregateQuery(dTAggrPaths, START_TIME, END_TIME + 1, AggregateType.MAX);
@@ -824,6 +834,7 @@ public class SessionIT extends BaseSessionIT {
             }
         }
 
+        logger.info("avg for test");
         // avg
         SessionAggregateQueryDataSet dtAvgDataSet =
                 session.aggregateQuery(dTAggrPaths, START_TIME, END_TIME + 1, AggregateType.AVG);
