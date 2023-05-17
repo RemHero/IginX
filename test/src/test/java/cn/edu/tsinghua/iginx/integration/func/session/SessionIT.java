@@ -813,6 +813,7 @@ public class SessionIT extends BaseSessionIT {
         assertEquals(4, dtMaxPaths.size());
         assertEquals(4, dtMaxResult.length);
         for (int i = 0; i < 4; i++) {
+            logger.info("max for test " + i);
             int currPathPos = getPathNum(dtMaxPaths.get(i)) - currPath;
             switch (currPathPos) {
                 case 1:
@@ -848,6 +849,7 @@ public class SessionIT extends BaseSessionIT {
         assertEquals(4, dtAvgPaths.size());
         assertEquals(4, dtAvgResult.length);
         for (int i = 0; i < 4; i++) {
+            logger.info("avg for test " + i);
             int currPathPos = getPathNum(dtAvgPaths.get(i)) - currPath;
             switch (currPathPos) {
                 case 1:
