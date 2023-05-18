@@ -34,7 +34,7 @@ jobs:
               if: always()
               shell: bash
               run: |
-               touch ./github/server_log
+               touch "${GITHUB_WORKSPACE}/.github/server_log"
             - name: Run DB
               uses: ./.github/actions/dbRunner
               with:
