@@ -15,10 +15,10 @@ runs:
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/influxdb.sh"
-                "${GITHUB_WORKSPACE}/.github/influxdb.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/influxdb.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/influxdb_macos.sh" > server_log 2>&1
               else
                 echo "$RUNNER_OS is not supported"
                 exit 1
@@ -30,10 +30,10 @@ runs:
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/iotdb12.sh"
-                "${GITHUB_WORKSPACE}/.github/iotdb12.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/iotdb12.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/iotdb12_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/iotdb12_macos.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/iotdb12_macos.sh" > server_log 2>&1
               else
                 echo "$RUNNER_OS is not supported"
                 exit 1
@@ -45,10 +45,10 @@ runs:
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/parquet.sh "
-                "${GITHUB_WORKSPACE}/.github/parquet.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/parquet.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/parquet_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/parquet_macos.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/parquet_macos.sh" > server_log 2>&1
               else
                 echo "$RUNNER_OS is not supported"
                 exit 1
@@ -60,10 +60,10 @@ runs:
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/mongodb.sh"
-                "${GITHUB_WORKSPACE}/.github/mongodb.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/mongodb.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/mongodb_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/mongodb_macos.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/mongodb_macos.sh" > server_log 2>&1
               else
                 echo "$RUNNER_OS is not supported"
                 exit 1
@@ -75,10 +75,10 @@ runs:
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/redis.sh"
-                "${GITHUB_WORKSPACE}/.github/redis.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/redis.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/redis_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/redis_macos.sh > ${GITHUB_WORKSPACE}/.github/server_log 2>&1"
+                "${GITHUB_WORKSPACE}/.github/redis_macos.sh" > server_log 2>&1
               else
                 echo "$RUNNER_OS is not supported"
                 exit 1

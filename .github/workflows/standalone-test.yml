@@ -76,4 +76,4 @@ jobs:
               if: always()
               shell: bash
               run: |
-                  cat ${GITHUB_WORKSPACE}/.github/server_log 
+                  cat server_log 
