@@ -44,7 +44,7 @@ runs:
           shell: bash
           run: |
               if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/parquet.sh "
+                chmod +x "${GITHUB_WORKSPACE}/.github/parquet.sh"
                 "${GITHUB_WORKSPACE}/.github/parquet.sh" > server_log 2>&1
               elif [ "$RUNNER_OS" == "macOS" ]; then
                 chmod +x "${GITHUB_WORKSPACE}/.github/parquet_macos.sh"
