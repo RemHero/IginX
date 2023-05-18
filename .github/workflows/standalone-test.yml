@@ -30,6 +30,11 @@ jobs:
                   java: ${{ matrix.java }}
             - name: Run ZooKeeper
               uses: ./.github/actions/zookeeperRunner
+            - name: Create the log file
+              if: always()
+              shell: bash
+              run: |
+               touch ./github/server_log
             - name: Run DB
               uses: ./.github/actions/dbRunner
               with:
