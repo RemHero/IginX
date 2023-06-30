@@ -317,6 +317,8 @@ public abstract class BaseCapacityExpansionIT {
   private void testAddAndRemoveStorageEngineWithPrefix() {
     addStorageEngine(expPort, true, true, "mn", "p1");
     addStorageEngine(expPort, true, true, "mn", "p2");
+    addStorageEngine(expPort, true, true, "mn",null);
+    addStorageEngine(expPort, true, true, null,"p3");
 
     String statement = "select * from p1.mn";
     List<String> pathList = Arrays.asList("p1.mn.wf03.wt01.status", "p1.mn.wf03.wt01.temperature");
@@ -326,6 +328,14 @@ public abstract class BaseCapacityExpansionIT {
 
     statement = "select * from p2.mn";
     pathList = Arrays.asList("p2.mn.wf03.wt01.status", "p2.mn.wf03.wt01.temperature");
+    SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
+
+    statement = "select * from mn";
+    pathList = Arrays.asList("mn.wf03.wt01.status", "mn.wf03.wt01.temperature");
+    SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
+
+    statement = "select * from p3.mn";
+    pathList = Arrays.asList("p3.mn.wf03.wt01.status", "p3.mn.wf03.wt01.temperature");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     List<RemovedStorageEngineInfo> removedStorageEngineList = new ArrayList<>();
