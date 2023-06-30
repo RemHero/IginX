@@ -364,8 +364,8 @@ public abstract class BaseCapacityExpansionIT {
     expect = "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     SQLTestTools.executeAndCompare(session, statement, expect);
 
-    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "p3", null));
-    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, null, "mn"));
+    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "p3", ""));
+    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "", "mn"));
     try {
       session.removeHistoryDataSource(removedStorageEngineList);
     } catch (ExecutionException | SessionException e) {
