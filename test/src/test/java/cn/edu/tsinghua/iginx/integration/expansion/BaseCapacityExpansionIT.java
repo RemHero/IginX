@@ -370,7 +370,7 @@ public abstract class BaseCapacityExpansionIT {
         "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     SQLTestTools.executeAndCompare(session, statement, expect);
     // 移除节点 dataPrefix = null && schemaPrefix = p3 后再查询
-    statement = "select * from p3";
+    statement = "select * from p3.mn.wf03";
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     // 通过 sql 语句测试移除节点
