@@ -19,6 +19,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +68,8 @@ public class DefaultFileOperator implements IFileOperator {
     for (int i = 0; i < round; i++) {
       res.add(new byte[0]);
     }
-    long readPos = begin;
-    int index = 0;
+    AtomicLong readPos = new AtomicLong(begin);
+    AtomicInteger index = new AtomicInteger();
     int batchSize = BUFFER_SIZE;
     boolean ifNeedMultithread = file.length() / (BUFFER_SIZE) > 5;
     if (ifNeedMultithread) {
@@ -75,21 +78,22 @@ public class DefaultFileOperator implements IFileOperator {
 
     // Move the file pointer to the starting position
     try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      while (readPos < end) {
-        long finalReadPos = readPos;
-        int finalIndex = index;
+      while (readPos.get() < end) {
+        long finalReadPos = readPos.get();
+        int finalIndex = index.get();
         if (ifNeedMultithread) {
-          futures.add(
+//          futures.add(
               executorService.submit(
                   () -> {
                     readBatch(raf, batchSize, finalReadPos, finalIndex, res);
                     return null;
-                  }));
+                  });
+//          );
         } else {
           readBatch(raf, batchSize, finalReadPos, finalIndex, res);
         }
-        index++;
-        readPos += BUFFER_SIZE;
+        index.getAndIncrement();
+        readPos.addAndGet(BUFFER_SIZE);
       }
     } finally {
       if (executorService != null) {
@@ -97,14 +101,14 @@ public class DefaultFileOperator implements IFileOperator {
       }
     }
 
-    for (Future<Void> future : futures) {
-      try {
-        future.get();
-      } catch (InterruptedException | ExecutionException e) {
-        logger.error("Exception thrown by task: " + e.getMessage());
-        throw new RuntimeException(e);
-      }
-    }
+//    for (Future<Void> future : futures) {
+//      try {
+//        future.get();
+//      } catch (InterruptedException | ExecutionException e) {
+//        logger.error("Exception thrown by task: " + e.getMessage());
+//        throw new RuntimeException(e);
+//      }
+//    }
     return res;
   }
 
