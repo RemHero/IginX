@@ -14,8 +14,8 @@ public class MemoryPool {
   private static int maxNumberOfBlocks;
 
   static {
-    poolSize = 1024 * 1024 * 100;
-    blockSize = 1024*10;
+    poolSize = 1024 * 1024 * 10;
+    blockSize = 1024;
     maxNumberOfBlocks = poolSize / blockSize;
     numberOfBlocks = new AtomicInteger(poolSize / blockSize);
     freeBlocks = new ConcurrentLinkedQueue<>();

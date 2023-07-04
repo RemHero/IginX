@@ -96,7 +96,7 @@ public class testFilesystemReadLargeFile {
 //        session.openSession();
 
 //        String stmt = "select * from largefiletest.100GB where key>%s and key<%s";
-        String fileName = "50GB";
+        String fileName = "10GB";
         File file = new File("D:\\LAB\\my\\IGinX\\dataSources\\filesystem\\src\\test\\java\\cn\\edu\\tsinghua\\iginx\\tmp\\a\\"+fileName);
         long size = file.length();
         long offset = 0;
