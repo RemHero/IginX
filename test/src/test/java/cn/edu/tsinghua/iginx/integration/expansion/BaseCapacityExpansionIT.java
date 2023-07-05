@@ -1,5 +1,6 @@
 package cn.edu.tsinghua.iginx.integration.expansion;
 
+import static cn.edu.tsinghua.iginx.integration.expansion.BaseHistoryDataGenerator.EXP_VALUES_LIST2;
 import static org.junit.Assert.fail;
 
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
@@ -321,7 +322,16 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   private void testAddAndRemoveStorageEngineWithPrefix() {
+    // 先移除最开始扩展的节点
+    try {
+      session.executeSql(
+          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"\", \"\")");
+    } catch (ExecutionException | SessionException e) {
+      logger.error("remove history data source through sql error: {}", e.getMessage());
+    }
+
     addStorageEngine(expPort, true, true, "mn", "p1");
+    // 添加不同schemaprefix，相同dataPrefix
     addStorageEngine(expPort, true, true, "mn", "p2");
     addStorageEngine(expPort, true, true, "mn", null);
 
@@ -333,28 +343,29 @@ public abstract class BaseCapacityExpansionIT {
     addStorageEngine(expPort, true, true, "mn", "p3");
     // 这里是之后待测试的点，如果添加包含关系的，应当报错。
 //    res = addStorageEngine(expPort, true, true, "mn.wf03", "p3");
-    addStorageEngine(expPort, true, true, "nkt", "p3");
+    // 添加相同schemaPrefix，但是不同dataPrefix的节点
+    addStorageEngine(expPort, true, true, "nt", "p3");
 
-    List<List<Object>> valuesList = BaseHistoryDataGenerator.EXP_VALUES_LIST;
+    List<List<Object>> valuesList = BaseHistoryDataGenerator.EXP_VALUES_LIST1;
 
     // 添加节点 dataPrefix = mn && schemaPrefix = p1 后查询
     String statement = "select * from p1.mn";
-    List<String> pathList = Arrays.asList("p1.mn.wf03.wt01.status", "p1.mn.wf03.wt01.temperature");
+    List<String> pathList = Arrays.asList("p1.mn.wf03.wt01.status");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     // 添加节点 dataPrefix = mn && schemaPrefix = p2 后查询
     statement = "select * from p2.mn";
-    pathList = Arrays.asList("p2.mn.wf03.wt01.status", "p2.mn.wf03.wt01.temperature");
+    pathList = Arrays.asList("p2.mn.wf03.wt01.status");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     // 添加节点 dataPrefix = mn && schemaPrefix = null 后查询
     statement = "select * from mn";
-    pathList = Arrays.asList("mn.wf03.wt01.status", "mn.wf03.wt01.temperature");
+    pathList = Arrays.asList("mn.wf03.wt01.status");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     // 添加节点 dataPrefix = null && schemaPrefix = p3 后查询
     statement = "select * from p3.mn";
-    pathList = Arrays.asList("p3.mn.wf03.wt01.status", "p3.mn.wf03.wt01.temperature");
+    pathList = Arrays.asList("p3.mn.wf03.wt01.status");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     // 通过 session 接口测试移除节点
@@ -372,21 +383,15 @@ public abstract class BaseCapacityExpansionIT {
         "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     SQLTestTools.executeAndCompare(session, statement, expect);
     // 移除节点 dataPrefix = mn && schemaPrefix = p3 后再查询，测试重点是移除相同schemaPrefix不同dataPrefix
-    statement = "select * from p3.nkt";
+    statement = "select * from p3.nt";
     List<String> pathListAns = new ArrayList<>();
-    pathListAns.add("nkt.wf01.wt01.temperature");
-    List<List<Object>> expectedValuesList = new ArrayList<>();
-    List<Object> expectedValues = new ArrayList<>();
-    expectedValues.add(88.75);
-    expectedValues.add(88.76);
-    expectedValues.add(88.98);
-    expectedValuesList.add(expectedValues);
-    SQLTestTools.executeAndCompare(session, statement, pathListAns, expectedValuesList);
+    pathListAns.add("nt.wf01.wt01.temperature");
+    SQLTestTools.executeAndCompare(session, statement, pathListAns, EXP_VALUES_LIST2);
 
     // 通过 sql 语句测试移除节点
     try {
       session.executeSql(
-          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p3\", \"nkt\")");
+          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p3\", \"nt\")");
       session.executeSql(
           "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p1\", \"mn\")");
       session.executeSql(
