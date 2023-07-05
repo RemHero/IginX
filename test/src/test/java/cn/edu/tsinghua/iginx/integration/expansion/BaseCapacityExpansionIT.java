@@ -330,8 +330,10 @@ public abstract class BaseCapacityExpansionIT {
     if (!res.contains("unexpected repeated add")) {
       fail();
     }
-    addStorageEngine(expPort, true, true, null, "p3");
-    addStorageEngine(expPort, true, true, "mn.wf03", "p3");
+    addStorageEngine(expPort, true, true, "mn", "p3");
+    // 这里是之后待测试的点，如果添加包含关系的，应当报错。
+//    res = addStorageEngine(expPort, true, true, "mn.wf03", "p3");
+    addStorageEngine(expPort, true, true, "nkt", "p3");
 
     List<List<Object>> valuesList = BaseHistoryDataGenerator.EXP_VALUES_LIST;
 
@@ -358,7 +360,7 @@ public abstract class BaseCapacityExpansionIT {
     // 通过 session 接口测试移除节点
     List<RemovedStorageEngineInfo> removedStorageEngineList = new ArrayList<>();
     removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "p2", "mn"));
-    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "p3", ""));
+    removedStorageEngineList.add(new RemovedStorageEngineInfo("127.0.0.1", expPort, "p3", "mn"));
     try {
       session.removeHistoryDataSource(removedStorageEngineList);
     } catch (ExecutionException | SessionException e) {
@@ -369,14 +371,22 @@ public abstract class BaseCapacityExpansionIT {
     String expect =
         "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     SQLTestTools.executeAndCompare(session, statement, expect);
-    // 移除节点 dataPrefix = null && schemaPrefix = p3 后再查询
-    statement = "select * from p3.mn.wf03";
-    SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
+    // 移除节点 dataPrefix = mn && schemaPrefix = p3 后再查询，测试重点是移除相同schemaPrefix不同dataPrefix
+    statement = "select * from p3.nkt";
+    List<String> pathListAns = new ArrayList<>();
+    pathListAns.add("nkt.wf01.wt01.temperature");
+    List<List<Object>> expectedValuesList = new ArrayList<>();
+    List<Object> expectedValues = new ArrayList<>();
+    expectedValues.add(88.75);
+    expectedValues.add(88.76);
+    expectedValues.add(88.98);
+    expectedValuesList.add(expectedValues);
+    SQLTestTools.executeAndCompare(session, statement, pathListAns, expectedValuesList);
 
     // 通过 sql 语句测试移除节点
     try {
       session.executeSql(
-          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p3\", \"mn.wf03\")");
+          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p3\", \"nkt\")");
       session.executeSql(
           "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"p1\", \"mn\")");
       session.executeSql(
