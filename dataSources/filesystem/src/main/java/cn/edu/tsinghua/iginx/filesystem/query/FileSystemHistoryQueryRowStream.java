@@ -16,8 +16,8 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
   private final Header header;
   private final List<FSResultTable> rowData;
   private final int[][] indices;
-  private final int[] round;
-  private int batch = 10;
+  private final int[] round;// round[i]表示第i个表读取到了第几列
+  private int batch = 10;// 每次复制多少个出去，暂时不用
   private int hasMoreRecords = 0;
 
   public FileSystemHistoryQueryRowStream() {
@@ -50,7 +50,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
       fields.add(field);
     }
 
-    this.indices = new int[this.rowData.size()][1024 * 10];
+    this.indices = new int[this.rowData.size()][1024 * 100];
     this.round = new int[this.rowData.size()];
     this.header = new Header(time, fields);
     for (int i = 0; i < this.rowData.size(); i++) {
@@ -105,7 +105,7 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
 //        int len = Math.min(batch, val.length - indices[i][index]);
         Object value = val;
         values[i] = value;
-        indices[i][index] += batch;
+        indices[i][index] += val.length;
         if (indices[i][index] >= val.length) {
           round[i]++;
           if (round[i] == records.size()) hasMoreRecords--;

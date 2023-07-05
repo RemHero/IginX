@@ -52,6 +52,7 @@ public class DefaultFileOperator implements IFileOperator {
    * @throws IOException If there is an error reading the file.
    */
   public List<byte[]> readNormalFileByByte(File file, long begin, long end) throws IOException {
+    logger.info("fuck what the num 1");
     if (file == null || !file.exists() || !file.isFile()) {
       throw new IllegalArgumentException("Invalid file.");
     }
@@ -62,12 +63,15 @@ public class DefaultFileOperator implements IFileOperator {
       end = file.length() - 1;
     }
     ExecutorService executorService = null;
+    logger.info("fuck what the num 2");
     List<Future<Void>> futures = new ArrayList<>();
     List<byte[]> res = new ArrayList<>();
-    int round = (int) (end % BUFFER_SIZE == 0 ? end / BUFFER_SIZE : end / BUFFER_SIZE + 1);
+    long size = end-begin;
+    int round = (int) (size % BUFFER_SIZE == 0 ? size / BUFFER_SIZE : size / BUFFER_SIZE + 1);
     for (int i = 0; i < round; i++) {
       res.add(new byte[0]);
     }
+    logger.info("fuck what the num 3");
     AtomicLong readPos = new AtomicLong(begin);
     AtomicInteger index = new AtomicInteger();
     int batchSize = BUFFER_SIZE;
@@ -75,7 +79,7 @@ public class DefaultFileOperator implements IFileOperator {
     if (ifNeedMultithread) {
       executorService = Executors.newCachedThreadPool();
     }
-
+    logger.info("fuck what the num 3.1");
     // Move the file pointer to the starting position
     try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
       while (readPos.get() < end) {
@@ -100,6 +104,7 @@ public class DefaultFileOperator implements IFileOperator {
         executorService.shutdown();
       }
     }
+    logger.info("fuck what the num 4");
 
 //    for (Future<Void> future : futures) {
 //      try {
@@ -523,7 +528,7 @@ public class DefaultFileOperator implements IFileOperator {
         writer.write(String.valueOf(fileMeta.getDataType().getValue()));
         writer.write("\n");
         writer.write(
-            fileMeta.getTag() == null ? "{}" : new String(JsonUtils.toJson(fileMeta.getTag())));
+            fileMeta.getTag() == null ? "{}" : new String(JsonUtils.toJsonWithoutClassName(fileMeta.getTag())));
         writer.write("\n");
         for (int i = 0; i < FileMeta.iginxFileMetaIndex - 3; i++) {
           writer.write("\n");
@@ -565,7 +570,8 @@ public class DefaultFileOperator implements IFileOperator {
               fileMeta.setDir(Boolean.parseBoolean(line));
               break;
             case FileMeta.tagKVIndex:
-              fileMeta.setTag(JsonUtils.transformToSS(line));
+              Map<String, String> tags = JsonUtils.fromJson(line.getBytes(), HashMap.class);
+              fileMeta.setTag(tags);
               break;
             case FileMeta.dataTypeIndex:
               fileMeta.setDataType(DataType.findByValue(Integer.parseInt(line)));

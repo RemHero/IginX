@@ -5,16 +5,16 @@ import cn.edu.tsinghua.iginx.exceptions.SessionException;
 import cn.edu.tsinghua.iginx.pool.SessionPool;
 import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
 import cn.edu.tsinghua.iginx.thrift.TimePrecision;
+import cn.edu.tsinghua.iginx.utils.JsonUtils;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson2.JSON;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +96,7 @@ public class testFilesystemReadLargeFile {
 //        session.openSession();
 
 //        String stmt = "select * from largefiletest.100GB where key>%s and key<%s";
-        String fileName = "10GB";
+        String fileName = "1GB";
         File file = new File("D:\\LAB\\my\\IGinX\\dataSources\\filesystem\\src\\test\\java\\cn\\edu\\tsinghua\\iginx\\tmp\\a\\"+fileName);
         long size = file.length();
         long offset = 0;
@@ -199,5 +199,15 @@ public class testFilesystemReadLargeFile {
         long endTime = System.currentTimeMillis();
         long totalTimeSeconds = (endTime - startTime);
         System.out.println("Function took " + totalTimeSeconds + " Millis.");
+    }
+
+    @Test
+    public void testHashMap() {
+        Map<String,String> map = new HashMap<>();
+        map.put("123","123");
+        map.put("12343","123");
+        String s = new String(JsonUtils.toJson(map));
+        Map<String,String> map2 = JsonUtils.fromJson(s.getBytes(),Map.class);
+        map2.size();
     }
 }
