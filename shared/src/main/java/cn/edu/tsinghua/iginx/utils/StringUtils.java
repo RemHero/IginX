@@ -126,8 +126,8 @@ public class StringUtils {
       return false;
     }
     String[] regEx = {"[", "]", "(", ")", "|", "+", "?", "*"};
-    for (int i = 0; i < regEx.length; i++) {
-      if (str.contains(regEx[i])) {
+    for (String ex : regEx) {
+      if (str.contains(ex)) {
         return true;
       }
     }
