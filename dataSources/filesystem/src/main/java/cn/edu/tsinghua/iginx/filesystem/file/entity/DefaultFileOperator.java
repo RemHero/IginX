@@ -570,7 +570,7 @@ public class DefaultFileOperator implements IFileOperator {
               fileMeta.setDir(Boolean.parseBoolean(line));
               break;
             case FileMeta.tagKVIndex:
-              Map<String, String> tags = JsonUtils.fromJson(line.getBytes(), HashMap.class);
+              Map<String, String> tags = JsonUtils.transformToSS(line);
               fileMeta.setTag(tags);
               break;
             case FileMeta.dataTypeIndex:
