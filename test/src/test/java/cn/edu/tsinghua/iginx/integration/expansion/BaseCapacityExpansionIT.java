@@ -329,8 +329,7 @@ public abstract class BaseCapacityExpansionIT {
   private void testAddAndRemoveStorageEngineWithPrefix() {
     // 先移除最开始扩展的节点
     try {
-      session.executeSql(
-          "remove historydataresource (\"127.0.0.1\", " + expPort + ", \"\", \"\")");
+      session.executeSql("remove historydataresource (\"127.0.0.1\", " + expPort + ", \"\", \"\")");
     } catch (ExecutionException | SessionException e) {
       logger.error("remove history data source through sql error: {}", e.getMessage());
     }
@@ -347,7 +346,7 @@ public abstract class BaseCapacityExpansionIT {
     }
     addStorageEngine(expPort, true, true, "mn", "p3");
     // 这里是之后待测试的点，如果添加包含关系的，应当报错。
-//    res = addStorageEngine(expPort, true, true, "mn.wf03", "p3");
+    //    res = addStorageEngine(expPort, true, true, "mn.wf03", "p3");
     // 添加相同schemaPrefix，但是不同dataPrefix的节点
     addStorageEngine(expPort, true, true, "nt", "p3");
 
