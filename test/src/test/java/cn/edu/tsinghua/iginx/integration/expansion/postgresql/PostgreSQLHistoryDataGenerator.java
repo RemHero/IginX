@@ -130,6 +130,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
       logger.info("write data to 127.0.0.1:{} success!", port);
     } catch (RuntimeException | SQLException e) {
       logger.error("write data to 127.0.0.1:{} failure: {}", port, e.getMessage());
+      e.printStackTrace();
     }
   }
 
