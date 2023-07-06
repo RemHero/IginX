@@ -36,10 +36,10 @@ public abstract class BaseHistoryDataGenerator {
       Arrays.asList(Arrays.asList(true, 66.23), Arrays.asList(false, 77.71));
 
   public static final List<List<Object>> EXP_VALUES_LIST1 =
-      Arrays.asList(Arrays.asList(true, false));
+      Arrays.asList(Arrays.asList(true), Arrays.asList(false));
 
   public static final List<List<Object>> EXP_VALUES_LIST2 =
-      Arrays.asList(Arrays.asList(66.23, 77.71));
+      Arrays.asList(Arrays.asList(66.23), Arrays.asList(77.71));
 
   public int readOnlyPort;
 
