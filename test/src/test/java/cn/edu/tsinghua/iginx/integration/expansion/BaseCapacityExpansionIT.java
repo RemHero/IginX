@@ -390,7 +390,7 @@ public abstract class BaseCapacityExpansionIT {
     // 移除节点 dataPrefix = mn && schemaPrefix = p3 后再查询，测试重点是移除相同schemaPrefix不同dataPrefix
     statement = "select * from p3.nt";
     List<String> pathListAns = new ArrayList<>();
-    pathListAns.add("nt.wf01.wt01.temperature");
+    pathListAns.add("p3.nt.wf01.wt01.temperature");
     SQLTestTools.executeAndCompare(session, statement, pathListAns, EXP_VALUES_LIST2);
 
     // 通过 sql 语句测试移除节点
