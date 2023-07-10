@@ -52,7 +52,7 @@ public interface ColumnsRange extends Comparable<ColumnsRange> {
   }
 
   public default String getColumn() {
-    logger.warn("TimeSeriesInterval Normal can't not use the getTimeSeries func");
+//    logger.warn("TimeSeriesInterval Normal can't not use the getTimeSeries func");
     return null;
   }
 

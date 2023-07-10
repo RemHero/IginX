@@ -8,11 +8,15 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.filesystem.file.property.FilePath;
 import cn.edu.tsinghua.iginx.filesystem.tools.MemoryPool;
 import cn.edu.tsinghua.iginx.filesystem.wrapper.Record;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileSystemHistoryQueryRowStream implements RowStream {
+  private static final Logger logger = LoggerFactory.getLogger(FileSystemHistoryQueryRowStream.class);
   private final Header header;
   private final List<FSResultTable> rowData;
   private final int[][] indices;
@@ -72,6 +76,9 @@ public class FileSystemHistoryQueryRowStream implements RowStream {
         MemoryPool.release((byte[]) val.getRawData());
       }
     }
+//    if (MemoryPool.getFreeBlocksNumber() != MemoryPool.getMaxNumberOfBlocks()) {
+//      logger.error("not enough memory pool with size {} ", MemoryPool.getFreeBlocksNumber());
+//    }
   }
 
   @Override

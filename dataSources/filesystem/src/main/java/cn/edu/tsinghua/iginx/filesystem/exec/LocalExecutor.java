@@ -73,7 +73,7 @@ public class LocalExecutor implements Executor {
       String storageUnit, List<String> series, TagFilter tagFilter, FSFilter filter) {
     try {
       List<FSResultTable> result = new ArrayList<>();
-      logger.info("[Query] execute query file: " + series);
+      logger.debug("[Query] execute query file: " + series);
       for (String path : series) {
         File file = new File(FilePath.toIginxPath(root, storageUnit, path));
         result.addAll(
@@ -95,7 +95,7 @@ public class LocalExecutor implements Executor {
   private TaskExecuteResult executeDummyProjectTask(List<String> series, FSFilter filter) {
     try {
       List<FSResultTable> result = new ArrayList<>();
-      logger.info("[Query] execute query file: " + series);
+      logger.debug("[Query] execute query file: " + series);
       for (String path : series) {
         result.addAll(
             FileSystemService.readFile(new File(FilePath.toNormalFilePath(root, path)), filter));

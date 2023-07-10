@@ -12,6 +12,7 @@ import cn.edu.tsinghua.iginx.utils.DataTypeUtils;
 import cn.edu.tsinghua.iginx.utils.JsonUtils;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +55,7 @@ public class DefaultFileOperator implements IFileOperator {
    * @throws IOException If there is an error reading the file.
    */
   public List<byte[]> readNormalFileByByte(File file, long begin, long end) throws IOException {
-    logger.info("fuck what the num 1");
+//    logger.info("fuck what the num 1");
     if (file == null || !file.exists() || !file.isFile()) {
       throw new IllegalArgumentException("Invalid file.");
     }
@@ -63,7 +66,7 @@ public class DefaultFileOperator implements IFileOperator {
       end = file.length() - 1;
     }
     ExecutorService executorService = null;
-    logger.info("fuck what the num 2");
+//    logger.info("fuck what the num 2");
     List<Future<Void>> futures = new ArrayList<>();
     List<byte[]> res = new ArrayList<>();
     long size = end-begin;
@@ -71,7 +74,7 @@ public class DefaultFileOperator implements IFileOperator {
     for (int i = 0; i < round; i++) {
       res.add(new byte[0]);
     }
-    logger.info("fuck what the num 3");
+//    logger.info("fuck what the num 3");
     AtomicLong readPos = new AtomicLong(begin);
     AtomicInteger index = new AtomicInteger();
     int batchSize = BUFFER_SIZE;
@@ -79,32 +82,46 @@ public class DefaultFileOperator implements IFileOperator {
     if (ifNeedMultithread) {
       executorService = Executors.newCachedThreadPool();
     }
-    logger.info("fuck what the num 3.1");
+//    logger.info("fuck what the num 3.1");
     // Move the file pointer to the starting position
-    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      while (readPos.get() < end) {
-        long finalReadPos = readPos.get();
-        int finalIndex = index.get();
-        if (ifNeedMultithread) {
+    long startTime = System.currentTimeMillis();
+    try {
+    Path filePath = Paths.get(file.getAbsolutePath());
+//      try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+//      try (SeekableByteChannel raf = Files.newByteChannel(filePath, StandardOpenOption.READ)) {
+        while (readPos.get() < end) {
+          long finalReadPos = readPos.get();
+          int finalIndex = index.get();
+          if (ifNeedMultithread) {
+//          logger.info("Info finalIndex:{}  finalReadPos:{}", finalIndex, finalReadPos);
 //          futures.add(
-              executorService.submit(
-                  () -> {
-                    readBatch(raf, batchSize, finalReadPos, finalIndex, res);
-                    return null;
-                  });
+            executorService.submit(
+                    () -> {
+                      readBatch(file, batchSize, finalReadPos, finalIndex, res);
+                      return null;
+                    });
 //          );
-        } else {
-          readBatch(raf, batchSize, finalReadPos, finalIndex, res);
+          } else {
+            readBatch(file, batchSize, finalReadPos, finalIndex, res);
+          }
+          index.getAndIncrement();
+          readPos.addAndGet(BUFFER_SIZE);
         }
-        index.getAndIncrement();
-        readPos.addAndGet(BUFFER_SIZE);
-      }
-    } finally {
+        executorService.shutdown();
+        if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+          executorService.shutdownNow();
+        }
+      }catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      } finally {
       if (executorService != null) {
         executorService.shutdown();
       }
     }
-    logger.info("fuck what the num 4");
+    long endTime = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime - startTime);
+    logger.info(" time "+ totalTimeSeconds + " seconds.");
+//
 
 //    for (Future<Void> future : futures) {
 //      try {
@@ -118,27 +135,47 @@ public class DefaultFileOperator implements IFileOperator {
   }
 
   public final void readBatch(
-      RandomAccessFile raf, int batchSize, long readPos, int index, List<byte[]> res)
+//          RandomAccessFile
+//                  SeekableByteChannel
+                  File file, int batchSize, long readPos, int index, List<byte[]> res)
       throws IOException {
-    try {
+//      try {
+    long startTime = System.currentTimeMillis();
+    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+//      logger.info("readBatch readPos:{} index:{}", readPos, index);
       byte[] buffer = MemoryPool.allocate(batchSize); // 一次读取1MB
+//      raf.position(readPos);
       raf.seek(readPos);
-      // Read the specified range of bytes from the file
+//        int len = raf.read(ByteBuffer.wrap(buffer));
       int len = raf.read(buffer);
+//      if (len==894244 || len==0) {
+//        logger.error("wrong len");
+//      }
+//      logger.info("readBatch 2");
       if (len < 0) {
-        logger.error("reach the end of the file with len {}", len);
+        logger.info("reach the end of the file with len {}", len);
         return;
       }
       if (len != batchSize) {
         byte[] subBuffer;
         subBuffer = Arrays.copyOf(buffer, len);
-        res.set(index, subBuffer);
+//        lock.lock();
+//        try {
+          res.set(index, subBuffer);
+//        } finally {
+//          lock.unlock(); // 解锁
+//        }
       } else {
         res.set(index, buffer);
       }
+//      logger.info("readBatch 3");
     } catch (IOException e) {
+      logger.error("readBatch fail because {} with readPos:{} and index:{}", e.getMessage(), readPos, index);
       throw new IOException(e);
     }
+    long endTime = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime - startTime);
+    logger.info("disk time "+ totalTimeSeconds + " seconds.");
   }
 
   private Map<String, String> readIginxMetaInfo(File file) throws IOException {
