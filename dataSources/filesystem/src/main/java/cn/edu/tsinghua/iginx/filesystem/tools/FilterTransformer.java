@@ -120,7 +120,7 @@ public class FilterTransformer {
       case G:
         return Op.G;
       default:
-        return Op.UNKNOW;
+        return Op.UNKNOWN;
     }
   }
 
