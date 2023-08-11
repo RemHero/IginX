@@ -780,9 +780,17 @@ public class Session {
     req.setTimePrecision(timePrecision);
 
     Reference<QueryDataResp> ref = new Reference<>();
+    long startTime1 = System.currentTimeMillis();
     executeWithCheck(() -> (ref.resp = client.queryData(req)).status);
-
-    return new SessionQueryDataSet(ref.resp);
+    long endTime1 = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime1 - startTime1);
+    System.out.println("client session time "+ totalTimeSeconds + " seconds.");
+    startTime1 = System.currentTimeMillis();
+    SessionQueryDataSet sessionQueryDataSet = new SessionQueryDataSet(ref.resp);
+    endTime1 = System.currentTimeMillis();
+    totalTimeSeconds = (endTime1 - startTime1);
+    System.out.println("session data operator time "+ totalTimeSeconds + " seconds.");
+    return sessionQueryDataSet;
   }
 
   public SessionAggregateQueryDataSet aggregateQuery(

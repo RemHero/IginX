@@ -183,10 +183,14 @@ public class StoragePhysicalTaskExecutor {
                                           new NonExecutablePhysicalTaskException(
                                               "unsupported physical task"));
                               }
+                              long endTime = System.currentTimeMillis();
+                              long totalTimeSeconds = (endTime - startTime);
+                              logger.error(op.getType() + " time "+ totalTimeSeconds + " ms.");
                             } catch (Exception e) {
                               logger.error("execute task error: " + e);
                               result = new TaskExecuteResult(new PhysicalException(e));
                             }
+
                             try {
                               HotSpotMonitor.getInstance()
                                   .recordAfter(

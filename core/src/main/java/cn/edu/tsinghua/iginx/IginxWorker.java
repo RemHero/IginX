@@ -177,7 +177,12 @@ public class IginxWorker implements IService.Iface {
       return new QueryDataResp(RpcUtils.ACCESS_DENY);
     }
     RequestContext ctx = contextBuilder.build(req);
+    long startTime = System.currentTimeMillis();
     executor.execute(ctx);
+    long endTime = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime - startTime);
+    logger.error("iginx time "+ totalTimeSeconds + " ms.");
+
     return ctx.getResult().getQueryDataResp();
   }
 
