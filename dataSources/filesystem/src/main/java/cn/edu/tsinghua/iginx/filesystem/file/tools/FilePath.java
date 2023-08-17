@@ -48,20 +48,24 @@ public final class FilePath {
   public static String convertAbsolutePathToPath(
       String root, String filePath, String fileName, String storageUnit) {
     String tmp;
-    if (storageUnit != null) {
-      if (storageUnit.equals(WILDCARD)) {
-        tmp =
-            filePath.substring(
-                filePath.indexOf(SEPARATOR, filePath.indexOf(root) + root.length() + 1) + 1);
-      } else {
-        tmp = filePath.substring(filePath.indexOf(storageUnit) + storageUnit.length() + 1);
-      }
-    } else tmp = filePath.substring(filePath.indexOf(root) + root.length());
-    if (tmp.isEmpty()) return SEPARATOR;
-    if (tmp.contains(".iginx")) {
-      tmp = tmp.substring(0, tmp.lastIndexOf(".iginx"));
-    }
 
+    // 对iginx文件操作
+    if (filePath.contains(".iginx")) {
+      tmp = filePath.substring(0, filePath.lastIndexOf(".iginx"));
+        if (storageUnit != null) {
+            if (storageUnit.equals(WILDCARD)) {
+            tmp =
+                tmp.substring(
+                    tmp.indexOf(SEPARATOR, tmp.indexOf(root) + root.length() +1) + 1);
+            } else {
+            tmp = tmp.substring(tmp.indexOf(storageUnit) + storageUnit.length() + 1);
+            }
+        } else tmp = tmp.substring(tmp.indexOf(root) + root.length());
+    } else {
+        tmp = filePath.substring(
+            filePath.indexOf(root) + root.length());
+    }
+    if (tmp.isEmpty()) return SEPARATOR;
     return tmp.replace(SEPARATOR, ".");
   }
 

@@ -19,10 +19,8 @@ public enum FileType {
     }
     if (fileName.contains(".iginx") && ifMatchMagicNumber(file)) {
       return IGINX_FILE;
-    } else if (fileName.endsWith(".txt")) {
-      return NORMAL_FILE;
     } else {
-      return UNKNOWN_FILE;
+      return NORMAL_FILE;
     }
   }
 
