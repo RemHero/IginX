@@ -290,7 +290,7 @@ public class LocalExecutor implements Executor {
     Pair<File, File> files = Controller.getBoundaryFiles(directory);
 
     if (files == null) {
-      throw new PhysicalTaskExecuteFailureException("no data!");
+      throw new PhysicalTaskExecuteFailureException(directory.getAbsolutePath() + " has no data!");
     }
 
     File minPathFile = files.getK();
