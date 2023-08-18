@@ -64,14 +64,13 @@ public class Constant {
     byte[] expValue = generateRandomValue(2);
     byte[] readOnlyValue = generateRandomValue(3);
     oriValuesList =
-        Arrays.asList(Collections.singletonList(oriValue), Collections.singletonList(oriValue));
+        Arrays.asList(Arrays.asList(oriValue, oriValue));
     expValuesList =
-        Arrays.asList(Collections.singletonList(expValue), Collections.singletonList(expValue));
+        Arrays.asList(Arrays.asList(expValue, expValue));
     expValuesList1 = Collections.singletonList(Collections.singletonList(expValue));
     expValuesList2 = Collections.singletonList(Collections.singletonList(expValue));
     readOnlyValuesList =
-        Arrays.asList(
-            Collections.singletonList(readOnlyValue), Collections.singletonList(readOnlyValue));
+        Arrays.asList(Arrays.asList(readOnlyValue, readOnlyValue));
   }
 
   private static byte[] generateRandomValue(int seed) {
