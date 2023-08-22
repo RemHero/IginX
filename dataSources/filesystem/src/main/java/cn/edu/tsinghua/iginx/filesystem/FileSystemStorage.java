@@ -18,8 +18,6 @@
  */
 package cn.edu.tsinghua.iginx.filesystem;
 
-import static cn.edu.tsinghua.iginx.filesystem.constant.Constant.SEPARATOR;
-
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.StorageInitializationException;
 import cn.edu.tsinghua.iginx.engine.physical.storage.IStorage;
@@ -32,6 +30,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
 import cn.edu.tsinghua.iginx.filesystem.exec.Executor;
+import cn.edu.tsinghua.iginx.filesystem.exec.FileSystemManager;
 import cn.edu.tsinghua.iginx.filesystem.exec.LocalExecutor;
 import cn.edu.tsinghua.iginx.filesystem.exec.RemoteExecutor;
 import cn.edu.tsinghua.iginx.filesystem.server.FileSystemServer;
@@ -51,6 +50,8 @@ import java.util.concurrent.Executors;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static cn.edu.tsinghua.iginx.filesystem.shared.Constant.WILDCARD;
 
 public class FileSystemStorage implements IStorage {
   private static final String STORAGE_ENGINE = "filesystem";
@@ -90,14 +91,7 @@ public class FileSystemStorage implements IStorage {
   }
 
   private void initLocalExecutor(StorageEngineMeta meta) {
-    String path = meta.getExtraParams().getOrDefault("dir", "/path/to/your/filesystem");
-    File file = new File(path);
-    if (file.isFile()) {
-      logger.error("invalid directory: {}", file.getAbsolutePath());
-      return;
-    }
-    String root = file.getAbsolutePath() + SEPARATOR;
-    executor = new LocalExecutor(root, meta.isHasData());
+    executor = new LocalExecutor(meta.isHasData(), meta.getExtraParams());
     executorService.submit(new Thread(new FileSystemServer(meta.getPort(), executor)));
   }
 
@@ -174,7 +168,7 @@ public class FileSystemStorage implements IStorage {
 
   @Override
   public List<Column> getColumns() throws PhysicalException {
-    return executor.getColumnsOfStorageUnit("*");
+    return executor.getColumnsOfStorageUnit(WILDCARD);
   }
 
   @Override

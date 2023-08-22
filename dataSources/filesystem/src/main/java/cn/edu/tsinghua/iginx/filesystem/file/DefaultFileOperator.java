@@ -1,156 +1,59 @@
 package cn.edu.tsinghua.iginx.filesystem.file;
 
-import static cn.edu.tsinghua.iginx.filesystem.constant.Constant.*;
-import static cn.edu.tsinghua.iginx.utils.DataTypeUtils.transformObjectToStringByDataType;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
 import cn.edu.tsinghua.iginx.filesystem.file.entity.FileMeta;
 import cn.edu.tsinghua.iginx.filesystem.query.entity.Record;
-import cn.edu.tsinghua.iginx.filesystem.tools.MemoryPool;
+import cn.edu.tsinghua.iginx.filesystem.shared.FileType;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.DataTypeUtils;
 import cn.edu.tsinghua.iginx.utils.JsonUtils;
+import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static cn.edu.tsinghua.iginx.filesystem.shared.Constant.*;
+import static cn.edu.tsinghua.iginx.filesystem.shared.FileType.*;
+import static cn.edu.tsinghua.iginx.utils.DataTypeUtils.transformObjectToStringByDataType;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class DefaultFileOperator implements IFileOperator {
 
   private static final Logger logger = LoggerFactory.getLogger(DefaultFileOperator.class);
 
-  private static DefaultFileOperator INSTANCE = null;
-
-  public static DefaultFileOperator getInstance() {
-    if (INSTANCE == null) {
-      synchronized (DefaultFileOperator.class) {
-        if (INSTANCE == null) {
-          INSTANCE = new DefaultFileOperator();
-        }
-      }
-    }
-    return INSTANCE;
-  }
-
-  @Override
-  public List<Record> readNormalFile(File file, long startKey, long endKey, Charset charset)
-      throws IOException {
-    List<Record> records = new ArrayList<>();
-    long key = startKey;
-    for (byte[] record : readNormalFileByByte(file, startKey, endKey)) {
-      records.add(new Record(key, record));
-      key += record.length;
-    }
-    return records;
-  }
+  public DefaultFileOperator() {}
 
   /**
    * Reads a range of bytes from a large file efficiently.
    *
    * @param file The file to read from.
-   * @param startKey The starting byte position.
-   * @param endKey The ending byte position.
+   * @param readPos The starting byte position.
    * @return An array of bytes containing the read data.
    * @throws IOException If there is an error when reading the file.
    */
-  private List<byte[]> readNormalFileByByte(File file, long startKey, long endKey)
-      throws IOException {
-    if (file == null || !file.exists() || !file.isFile()) {
-      throw new IllegalArgumentException("Invalid file.");
-    }
-    if (startKey < 0 || endKey < startKey) {
-      throw new IllegalArgumentException("Invalid byte range.");
-    }
-    if (endKey > file.length()) {
-      endKey = file.length() - 1;
-    }
-    ExecutorService executorService = null;
-    List<Future<Void>> futures = new ArrayList<>();
-    List<byte[]> res = new ArrayList<>();
-    long size = endKey - startKey;
-    int round = (int) (size % BLOCK_SIZE == 0 ? size / BLOCK_SIZE : size / BLOCK_SIZE + 1);
-    for (int i = 0; i < round; i++) {
-      res.add(new byte[0]);
-    }
-    AtomicLong readPos = new AtomicLong(startKey);
-    AtomicInteger index = new AtomicInteger();
-    // TODO 为什么是5？？？
-    boolean ifNeedMultithread = size / (BLOCK_SIZE) > 5;
-    if (ifNeedMultithread) {
-      executorService = Executors.newCachedThreadPool();
-    }
-    // Move the file pointer to the starting position
-    try {
-      while (readPos.get() < endKey) {
-        long finalReadPos = readPos.get();
-        int finalIndex = index.get();
-        if (ifNeedMultithread) {
-          futures.add(
-              executorService.submit(
-                  () -> {
-                    readBatch(file, finalReadPos, finalIndex, res);
-                    return null;
-                  }));
-        } else {
-          readBatch(file, finalReadPos, finalIndex, res);
-        }
-        index.getAndIncrement();
-        readPos.addAndGet(BLOCK_SIZE);
-      }
-      if (executorService != null) {
-        executorService.shutdown();
-        if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-          executorService.shutdownNow();
-        }
-      }
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    } finally {
-      if (executorService != null) {
-        executorService.shutdown();
-      }
-    }
-
-    // 判断是否在读取文件时出错
-    for (Future<Void> future : futures) {
-      try {
-        future.get();
-      } catch (InterruptedException | ExecutionException e) {
-        logger.error("Exception thrown by task: " + e.getMessage());
-        throw new RuntimeException(e);
-      }
-    }
-    return res;
-  }
-
-  // readPos是开始读取的位置，index是该结果应该放在res中的第几个位置上
-  private void readBatch(File file, long readPos, int index, List<byte[]> res) throws IOException {
+  @Override
+  public byte[] readNormalFile(File file, long readPos, byte[] buffer) throws IOException {
     try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      byte[] buffer = MemoryPool.getInstance().allocate(); // 一次读取1MB
       raf.seek(readPos);
       int len = raf.read(buffer);
       if (len < 0) {
         logger.info("reach the end of the file with len {}", len);
-        return;
+        return null;
       }
-      if (len != BLOCK_SIZE) {
+      if (len != buffer.length) {
         byte[] subBuffer;
         subBuffer = Arrays.copyOf(buffer, len);
-        res.set(index, subBuffer);
-      } else {
-        res.set(index, buffer);
+        return subBuffer;
       }
+      return buffer;
     } catch (IOException e) {
       logger.error(
-          "readBatch fail because {} with readPos:{} and index:{}", e.getMessage(), readPos, index);
+          "readBatch fail because {} with readPos:{} ", e.getMessage(), readPos);
       throw new IOException(e);
     }
   }
@@ -485,6 +388,22 @@ public class DefaultFileOperator implements IFileOperator {
       throw new IOException("Cannot get file meta : " + file.getAbsolutePath());
     }
     return fileMeta;
+  }
+
+  @Override
+  public FileType getFileType(File file) throws IOException {
+    if (file.isDirectory()) {
+      return DIR;
+    }
+    if (ifMatchMagicNumber(file)) {
+      return IGINX_FILE;
+    }
+    return NORMAL_FILE;
+  }
+
+  private boolean ifMatchMagicNumber(File file) throws IOException {
+    FileMeta fileMeta = getFileMeta(file);
+    return Arrays.equals(fileMeta.getMagicNumber(), MAGIC_NUMBER);
   }
 
   @Override
