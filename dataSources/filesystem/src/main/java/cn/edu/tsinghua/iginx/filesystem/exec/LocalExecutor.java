@@ -56,14 +56,14 @@ public class LocalExecutor implements Executor {
 
     if (hasData) {
       if (dummyPath == null) {
-        logger.error("No dummy directory declared!");
-        throw new IllegalArgumentException("No dummy directory declared!");
+        logger.error("No dummy directory declared with params: {}!", extraParams);
+        throw new IllegalArgumentException("No dummy directory declared with params " + extraParams);
       }
 
       if (!isReadOnly) {
         if (path == null) {
-          logger.error("No directory declared!");
-          throw new IllegalArgumentException("No directory declared!");
+          logger.error("No directory declared with params: {}!", extraParams);
+          throw new IllegalArgumentException("No directory declared with params " + extraParams);
         }
 
         if (path.equals(dummyPath)) {
@@ -73,8 +73,8 @@ public class LocalExecutor implements Executor {
       }
     } else {
       if (path == null) {
-        logger.error("No directory declared!");
-        throw new IllegalArgumentException("No directory declared!");
+        logger.error("No directory declared with params: {}!", extraParams);
+        throw new IllegalArgumentException("No directory declared with params " + extraParams);
       }
     }
 
