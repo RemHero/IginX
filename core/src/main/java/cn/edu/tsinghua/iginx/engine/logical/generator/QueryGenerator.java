@@ -808,10 +808,12 @@ public class QueryGenerator extends AbstractGenerator {
         continue;
       }
       if (schemaPrefix != null) {
-        if (!path.startsWith(schemaPrefix)) {
+        if (!path.startsWith(schemaPrefix) && !path.startsWith("*")) {
           continue;
         }
-        pathWithoutPrefix = path.substring(schemaPrefix.length() + 1);
+        if (path.startsWith(schemaPrefix)) {
+          pathWithoutPrefix = path.substring(schemaPrefix.length() + 1);
+        }
       }
       if (columnsInterval.isContain(path)) {
         ans.add(pathWithoutPrefix);
