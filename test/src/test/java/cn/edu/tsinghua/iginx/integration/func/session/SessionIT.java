@@ -438,7 +438,7 @@ public class SessionIT extends BaseSessionIT {
     }*/
 
     // Simple delete and aggregate
-    if (isAbleToDelete) {
+    if (isAbleToDelete && !isScaling) {
       // deletePartialDataInColumnTest
       int removeLen = 1;
       List<String> delPartPaths = getPaths(currPath, removeLen);

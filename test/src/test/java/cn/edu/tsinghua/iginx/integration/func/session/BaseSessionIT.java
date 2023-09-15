@@ -34,6 +34,8 @@ public abstract class BaseSessionIT {
 
   protected boolean isAbleToDelete;
 
+  protected boolean isScaling = false;
+
   protected static final double delta = 1e-7;
   protected static final long KEY_PERIOD = 100000L;
   protected static final long START_KEY = 1000L;
@@ -53,6 +55,7 @@ public abstract class BaseSessionIT {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     DBConf dbConf = conf.loadDBConf(conf.getStorageType());
     this.isAbleToDelete = dbConf.getEnumValue(DBConf.DBConfType.isAbleToDelete);
+    this.isScaling = conf.isScaling();
   }
 
   @Before
