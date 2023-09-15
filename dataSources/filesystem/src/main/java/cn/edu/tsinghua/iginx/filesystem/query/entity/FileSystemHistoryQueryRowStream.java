@@ -11,6 +11,7 @@ import cn.edu.tsinghua.iginx.filesystem.tools.FilePathUtils;
 import cn.edu.tsinghua.iginx.filesystem.tools.MemoryPool;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class FileSystemHistoryQueryRowStream implements RowStream {
