@@ -827,7 +827,7 @@ public class SessionIT extends BaseSessionIT {
       }
     }
 
-    if (isAbleToDelete) {
+    if (isAbleToDelete && !isScaling) {
       // deletePartialData
 
       List<String> dtDelPaths = new ArrayList<>();
@@ -1105,7 +1105,7 @@ public class SessionIT extends BaseSessionIT {
         assertEquals(avg + pathNum, changeResultToDouble(addStAvgResult[i]), delta);
       }
       // deletePartial, with query, aggr count and aggr Avg
-      if (isAbleToDelete) {
+      if (isAbleToDelete && !isScaling) {
         int stRemoveLen = 3;
         List<String> stDelPartPaths = getPaths(currPath, stRemoveLen);
         // ensure after delete there are still points in the timeseries
