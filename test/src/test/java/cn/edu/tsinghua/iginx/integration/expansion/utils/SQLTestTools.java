@@ -118,6 +118,7 @@ public class SQLTestTools {
             System.arraycopy(args, 0, command, 2, args.length);
 
             // 创建进程并执行命令
+            logger.info("exe shell : {}", Arrays.toString(command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
 
