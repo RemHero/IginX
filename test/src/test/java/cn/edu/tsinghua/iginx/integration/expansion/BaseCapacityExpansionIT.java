@@ -609,7 +609,7 @@ public abstract class BaseCapacityExpansionIT {
         fail("change config file fail");
     }
 
-    res = executeShellScript("../.github/scripts/iginx/iginx.sh", String.valueOf(iginxPort), String.valueOf(restPort));
+    res = executeShellScript(".github/scripts/iginx/iginx.sh", String.valueOf(iginxPort), String.valueOf(restPort));
     if(res != 0) {
       fail("start iginx fail");
     }

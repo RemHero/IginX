@@ -111,27 +111,6 @@ public class SQLTestTools {
 
     public static int executeShellScript(String scriptPath, String... args) {
         try {
-
-            // 创建进程构建器
-            ProcessBuilder processBuilder1 = new ProcessBuilder("ls", "-l");
-
-            // 设置工作目录（可选）
-            processBuilder1.directory(new File("./"));
-
-            // 启动进程
-            Process process1 = processBuilder1.start();
-
-            // 读取进程的输出
-            BufferedReader reader1 = new BufferedReader(new InputStreamReader(process1.getInputStream()));
-            String line1;
-            while ((line1 = reader1.readLine()) != null) {
-                System.out.println(line1);
-            }
-
-            // 等待进程执行完毕
-            int exitCode1 = process1.waitFor();
-            System.out.println("Exit code: " + exitCode1);
-
             // 构建shell命令
             String[] command = new String[args.length + 2];
             command[0] = "sh";
