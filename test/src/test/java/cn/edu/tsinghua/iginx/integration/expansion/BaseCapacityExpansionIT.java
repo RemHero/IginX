@@ -132,6 +132,8 @@ public abstract class BaseCapacityExpansionIT {
     queryNewData();
     // 再次写入并查询所有新数据
     testWriteAndQueryNewDataAfterCE();
+    // 测试插入和dummy路径相同的数据
+    testWriteAndQueryWithSameDummyPathInExp();
   }
 
   @Test
@@ -166,6 +168,8 @@ public abstract class BaseCapacityExpansionIT {
     testWriteAndQueryNewDataAfterCE();
     // 测试带前缀的添加和移除存储引擎操作
     testAddAndRemoveStorageEngineWithPrefix();
+    // 测试插入和dummy路径相同的数据
+    testWriteAndQueryWithSameDummyPathInExp();
   }
 
   @Test
@@ -290,10 +294,27 @@ public abstract class BaseCapacityExpansionIT {
     SQLTestTools.executeAndCompare(session, statement, expect);
   }
 
+  private void testWriteAndQueryWithSameDummyPathInExp() {
+    try {
+      // 插入和扩容路径相同的数据
+      session.executeSql("insert into nt.wf04.wt01 (key, temperature) values (1600, 123.123);");
+      String statement = "select temperature from nt.wf04.wt01";
+      List<String> pathList = Collections.singletonList("nt.wf04.wt01.temperature");
+      List<List<Object>> valuesList = expValuesList2;
+      valuesList.add(Collections.singletonList(123.123));
+      SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
+    } catch (ExecutionException | SessionException e) {
+      logger.error("insert new data after capacity expansion error: {}", e.getMessage());
+    }
+  }
+
   private void testWriteAndQueryNewDataAfterCE() {
     try {
       session.executeSql("insert into ln.wf02 (key, version) values (1600, \"v48\");");
       queryAllNewData();
+      // 插入和扩容路径相同的数据，再次查询
+      session.executeSql("insert into mn.wf01.wt01 (key, temperature) values (1600, 123.123);");
+
     } catch (ExecutionException | SessionException e) {
       logger.error("insert new data after capacity expansion error: {}", e.getMessage());
     }
