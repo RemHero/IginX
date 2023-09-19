@@ -123,7 +123,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   @Test
-  public void oriHasDataExpHasData() {
+  public void oriHasDataExpHasData() throws InterruptedException, SessionException, ExecutionException {
     // 查询原始节点的历史数据，结果不为空
     testQueryHistoryDataOriHasData();
     // 写入并查询新数据
@@ -131,14 +131,13 @@ public abstract class BaseCapacityExpansionIT {
     // 扩容
     if (IS_PARQUET_OR_FILE_SYSTEM) {
       startStorageEngineWithIginx( this, expPort, true, false);
-      try {
-        Thread.sleep(2000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+      Thread.sleep(2000);
     } else {
       addStorageEngine(expPort, true, false, null, null);
     }
+
+    String statement = "show cluster info";
+    System.out.println(session.executeSql(statement));
 
     // 查询扩容节点的历史数据，结果不为空
     testQueryHistoryDataExpHasData();
