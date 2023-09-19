@@ -2,6 +2,7 @@ package cn.edu.tsinghua.iginx.integration.tool;
 
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
+import cn.edu.tsinghua.iginx.filesystem.thrift.TagFilterType;
 import cn.edu.tsinghua.iginx.pool.SessionPool;
 import cn.edu.tsinghua.iginx.session.Session;
 import cn.edu.tsinghua.iginx.session.SessionAggregateQueryDataSet;
@@ -10,10 +11,18 @@ import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
 import cn.edu.tsinghua.iginx.thrift.AggregateType;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Map;
 
+import static cn.edu.tsinghua.iginx.integration.controller.Controller.*;
+import static org.junit.Assert.fail;
+
 public class MultiConnection {
+
+  private static final Logger logger = LoggerFactory.getLogger(MultiConnection.class);
 
   private static Session session = null;
 
@@ -118,10 +127,19 @@ public class MultiConnection {
   }
 
   public void deleteColumns(List<String> paths) throws SessionException, ExecutionException {
-    if (session != null) {
-      session.deleteColumns(paths);
-    } else if (sessionPool != null) {
-      sessionPool.deleteColumns(paths);
+    try {
+      if (session != null) {
+        session.deleteColumns(paths);
+      } else if (sessionPool != null) {
+        sessionPool.deleteColumns(paths);
+      }
+    } catch (SessionException | ExecutionException e) {
+      if (e.toString().trim().equals(CLEAR_DATA_EXCEPTION)) {
+        logger.warn(CLEAR_DATA_WARNING);
+      } else {
+        logger.error(CLEAR_DATA_ERROR, CLEAR_DATA, e.getMessage());
+        fail();
+      }
     }
   }
 
@@ -183,10 +201,19 @@ public class MultiConnection {
 
   public void deleteDataInColumns(List<String> paths, long startKey, long endKey)
       throws SessionException, ExecutionException {
-    if (session != null) {
-      session.deleteDataInColumns(paths, startKey, endKey);
-    } else if (sessionPool != null) {
-      sessionPool.deleteDataInColumns(paths, startKey, endKey);
+    try {
+      if (session != null) {
+        session.deleteDataInColumns(paths, startKey, endKey);
+      } else if (sessionPool != null) {
+        sessionPool.deleteDataInColumns(paths, startKey, endKey);
+      }
+    } catch (SessionException | ExecutionException e) {
+      if (e.toString().trim().equals(CLEAR_DATA_EXCEPTION)) {
+        logger.warn(CLEAR_DATA_WARNING);
+      } else {
+        logger.error(CLEAR_DATA_ERROR, CLEAR_DATA, e.getMessage());
+        fail();
+      }
     }
   }
 }
