@@ -120,10 +120,11 @@ public class SQLTestTools {
             // 创建进程并执行命令
             logger.info("exe shell : {}", Arrays.toString(command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            Process process = processBuilder.start();
 
             // 设置工作目录（可选）
             processBuilder.directory(new File("../"));
+
+            Process process = processBuilder.start();
 
             // 读取脚本输出
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
