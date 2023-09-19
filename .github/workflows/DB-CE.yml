@@ -122,6 +122,7 @@ jobs:
               if: always()
               shell: bash
               run: |
+                  ls
                   cat iginx-*.log
 
             - uses: codecov/codecov-action@v1

@@ -131,6 +131,11 @@ public abstract class BaseCapacityExpansionIT {
     // 扩容
     if (IS_PARQUET_OR_FILE_SYSTEM) {
       startStorageEngineWithIginx( this, expPort, true, false);
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     } else {
       addStorageEngine(expPort, true, false, null, null);
     }
