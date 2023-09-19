@@ -267,7 +267,7 @@ public class SessionExecuteSqlResult {
     return builder.toString();
   }
 
-  private String buildShowClusterInfoResult() {
+  public String buildShowClusterInfoResult() {
     StringBuilder builder = new StringBuilder();
 
     if (iginxInfos != null && !iginxInfos.isEmpty()) {
