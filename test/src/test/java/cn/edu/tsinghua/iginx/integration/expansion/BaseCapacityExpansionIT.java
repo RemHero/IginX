@@ -300,7 +300,7 @@ public abstract class BaseCapacityExpansionIT {
       session.executeSql("insert into nt.wf04.wt01 (key, temperature) values (1600, 123.123);");
       String statement = "select temperature from nt.wf04.wt01";
       List<String> pathList = Collections.singletonList("nt.wf04.wt01.temperature");
-      List<List<Object>> valuesList = expValuesList2;
+      List<List<Object>> valuesList = new ArrayList<>(expValuesList2);
       valuesList.add(Collections.singletonList(123.123));
       SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
     } catch (ExecutionException | SessionException e) {
