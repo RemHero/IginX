@@ -550,11 +550,12 @@ public abstract class BaseCapacityExpansionIT {
 
   protected void startStorageEngineWithIginx(
       BaseCapacityExpansionIT it, int port, boolean hasData, boolean isReadOnly) {
-    String scriptPath;
+    String scriptPath, iginxPath = ".github/scripts/iginx/iginx.sh";
     String os = System.getProperty("os.name").toLowerCase();
     boolean isOnMac = false;
     if (os.contains("mac")) {
       isOnMac = true;
+      iginxPath = ".github/scripts/iginx/iginx_macos.sh";
     }
 
     if (this instanceof FileSystemCapacityExpansionIT) {
@@ -614,7 +615,7 @@ public abstract class BaseCapacityExpansionIT {
         fail("change config file fail");
     }
 
-    res = executeShellScript(".github/scripts/iginx/iginx.sh", String.valueOf(iginxPort), String.valueOf(restPort));
+    res = executeShellScript(iginxPath, String.valueOf(iginxPort), String.valueOf(restPort));
     if(res != 0) {
       fail("start iginx fail");
     }
