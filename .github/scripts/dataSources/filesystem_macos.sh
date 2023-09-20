@@ -2,6 +2,8 @@
 
 set -e
 
+cp -f conf/config.properties core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
+
 sed -i "" "s/storageEngineList=127.0.0.1#6667#iotdb12/#storageEngineList=127.0.0.1#6667#iotdb12/" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
 
 sed -i "" "s/#storageEngineList=127.0.0.1#6667#filesystem/storageEngineList=127.0.0.1#$1#filesystem/" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
