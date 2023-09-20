@@ -131,7 +131,6 @@ public abstract class BaseCapacityExpansionIT {
     // 扩容
     if (IS_PARQUET_OR_FILE_SYSTEM) {
       startStorageEngineWithIginx( this, expPort, true, false);
-      Thread.sleep(2000);
     } else {
       addStorageEngine(expPort, true, false, null, null);
     }
@@ -148,7 +147,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   @Test
-  public void oriHasDataExpNoData() {
+  public void oriHasDataExpNoData() throws InterruptedException {
     // 查询原始节点的历史数据，结果不为空
     testQueryHistoryDataOriHasData();
     // 写入并查询新数据
@@ -168,7 +167,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   @Test
-  public void oriNoDataExpHasData() {
+  public void oriNoDataExpHasData() throws InterruptedException {
     // 查询原始节点的历史数据，结果为空
     testQueryHistoryDataOriNoData();
     // 写入并查询新数据
@@ -190,7 +189,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   @Test
-  public void oriNoDataExpNoData() {
+  public void oriNoDataExpNoData() throws InterruptedException {
     // 查询原始节点的历史数据，结果为空
     testQueryHistoryDataOriNoData();
     // 写入并查询新数据
@@ -210,7 +209,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   @Test
-  public void testReadOnly() {
+  public void testReadOnly() throws InterruptedException {
     // 查询原始只读节点的历史数据，结果不为空
     testQueryHistoryDataOriHasData();
     // 扩容只读节点
@@ -548,7 +547,7 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   protected void startStorageEngineWithIginx(
-      BaseCapacityExpansionIT it, int port, boolean hasData, boolean isReadOnly) {
+      BaseCapacityExpansionIT it, int port, boolean hasData, boolean isReadOnly) throws InterruptedException {
     String scriptPath, iginxPath = ".github/scripts/iginx/iginx.sh";
     String os = System.getProperty("os.name").toLowerCase();
     boolean isOnMac = false;
@@ -618,5 +617,7 @@ public abstract class BaseCapacityExpansionIT {
     if(res != 0) {
       fail("start iginx fail");
     }
+
+    Thread.sleep(2000);
   }
 }
