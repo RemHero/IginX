@@ -558,7 +558,7 @@ public class MetricsResource {
         logger.warn("cant delete the READ_ONLY data and go on.");
       } else {
         logger.error("Error occurred during executing", e);
-        logger.error(e.toString().trim());
+        logger.error("Error {}", e.getMessage().trim());
         throw e;
       }
     }
