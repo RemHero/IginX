@@ -162,6 +162,8 @@ public class RestSession {
       }
     } while (checkRedirect(status));
     if (status.code == StatusCode.SESSION_ERROR.getStatusCode()) {
+      logger.warn("warning");
+      logger.warn(status.message);
       if (status.message.contains(CLEAR_DATA_EXCEPTION)) {
         logger.warn(status.message);
         return;
