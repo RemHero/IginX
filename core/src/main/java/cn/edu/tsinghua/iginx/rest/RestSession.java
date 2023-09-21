@@ -161,6 +161,10 @@ public class RestSession {
         lock.readLock().unlock();
       }
     } while (checkRedirect(status));
+    logger.warn("warning");
+    logger.warn(status.message);
+    logger.warn(String.valueOf(status.code));
+    logger.warn(String.valueOf(StatusCode.SESSION_ERROR.getStatusCode()));
     if (status.code == StatusCode.SESSION_ERROR.getStatusCode()) {
       logger.warn("warning");
       logger.warn(status.message);
