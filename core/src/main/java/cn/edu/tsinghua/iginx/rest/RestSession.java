@@ -18,6 +18,7 @@
  */
 package cn.edu.tsinghua.iginx.rest;
 
+import static cn.edu.tsinghua.iginx.rest.MetricsResource.CLEAR_DATA_EXCEPTION;
 import static cn.edu.tsinghua.iginx.utils.ByteUtils.getByteArrayFromLongArray;
 
 import cn.edu.tsinghua.iginx.IginxWorker;
@@ -26,6 +27,7 @@ import cn.edu.tsinghua.iginx.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iginx.conf.Constants;
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
+import cn.edu.tsinghua.iginx.exceptions.StatusCode;
 import cn.edu.tsinghua.iginx.session.SessionAggregateQueryDataSet;
 import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
 import cn.edu.tsinghua.iginx.thrift.*;
@@ -159,6 +161,12 @@ public class RestSession {
         lock.readLock().unlock();
       }
     } while (checkRedirect(status));
+    if (status.code == StatusCode.SESSION_ERROR.getStatusCode()) {
+      if (status.message.contains(CLEAR_DATA_EXCEPTION)) {
+        logger.warn(status.message);
+        return;
+      }
+    }
     RpcUtils.verifySuccess(status);
   }
 
