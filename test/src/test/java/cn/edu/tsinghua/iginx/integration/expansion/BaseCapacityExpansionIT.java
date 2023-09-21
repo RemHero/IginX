@@ -365,20 +365,20 @@ public abstract class BaseCapacityExpansionIT {
     String schemaPrefix = IS_PARQUET_OR_FILE_SYSTEM ? "nt" : "";
 
     // 添加不同 schemaPrefix，相同 dataPrefix
-    addStorageEngine(expPort, true, true, dataPrefix1, "p1");
-    addStorageEngine(expPort, true, true, dataPrefix1, "p2");
-    addStorageEngine(expPort, true, true, dataPrefix1, null);
+    addStorageEngine(oriPort, true, true, dataPrefix1, "p1");
+    addStorageEngine(oriPort, true, true, dataPrefix1, "p2");
+    addStorageEngine(oriPort, true, true, dataPrefix1, null);
 
     // 如果是重复添加，则报错
-    String res = addStorageEngine(expPort, true, true, dataPrefix1, null);
+    String res = addStorageEngine(oriPort, true, true, dataPrefix1, null);
     if (res != null && !res.contains("unexpected repeated add") || (IS_PARQUET_OR_FILE_SYSTEM && res!=null)) {
       fail();
     }
-    addStorageEngine(expPort, true, true, dataPrefix1, "p3");
+    addStorageEngine(oriPort, true, true, dataPrefix1, "p3");
     // 这里是之后待测试的点，如果添加包含关系的，应当报错。
     //    res = addStorageEngine(expPort, true, true, "nt.wf03.wt01", "p3");
     // 添加相同 schemaPrefix，不同 dataPrefix
-    addStorageEngine(expPort, true, true, dataPrefix2, "p3");
+    addStorageEngine(oriPort, true, true, dataPrefix2, "p3");
 
     List<List<Object>> valuesList = expValuesList1;
 
@@ -405,9 +405,9 @@ public abstract class BaseCapacityExpansionIT {
     // 通过 session 接口测试移除节点
     List<RemovedStorageEngineInfo> removedStorageEngineList = new ArrayList<>();
     removedStorageEngineList.add(
-        new RemovedStorageEngineInfo("127.0.0.1", expPort, "p2" + schemaPrefixSuffix, dataPrefix1));
+        new RemovedStorageEngineInfo("127.0.0.1", oriPort, "p2" + schemaPrefixSuffix, dataPrefix1));
     removedStorageEngineList.add(
-        new RemovedStorageEngineInfo("127.0.0.1", expPort, "p3" + schemaPrefixSuffix, dataPrefix1));
+        new RemovedStorageEngineInfo("127.0.0.1", oriPort, "p3" + schemaPrefixSuffix, dataPrefix1));
     try {
       session.removeHistoryDataSource(removedStorageEngineList);
     } catch (ExecutionException | SessionException e) {
@@ -429,10 +429,10 @@ public abstract class BaseCapacityExpansionIT {
     String removeStatement = "remove historydataresource (\"127.0.0.1\", %d, \"%s\", \"%s\")";
     try {
       session.executeSql(
-          String.format(removeStatement, expPort, "p1" + schemaPrefixSuffix, dataPrefix1));
+          String.format(removeStatement, oriPort, "p1" + schemaPrefixSuffix, dataPrefix1));
       session.executeSql(
-          String.format(removeStatement, expPort, "p3" + schemaPrefixSuffix, dataPrefix2));
-      session.executeSql(String.format(removeStatement, expPort, schemaPrefix, dataPrefix1));
+          String.format(removeStatement, oriPort, "p3" + schemaPrefixSuffix, dataPrefix2));
+      session.executeSql(String.format(removeStatement, oriPort, schemaPrefix, dataPrefix1));
     } catch (ExecutionException | SessionException e) {
       logger.error("remove history data source through sql error: {}", e.getMessage());
     }
@@ -443,7 +443,7 @@ public abstract class BaseCapacityExpansionIT {
 
     try {
       session.executeSql(
-          String.format(removeStatement, expPort, "p1" + schemaPrefixSuffix, dataPrefix1));
+          String.format(removeStatement, oriPort, "p1" + schemaPrefixSuffix, dataPrefix1));
     } catch (ExecutionException | SessionException e) {
       if (!e.getMessage().contains("dummy storage engine does not exist.")) {
         logger.error(
