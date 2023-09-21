@@ -165,10 +165,10 @@ public class RestSession {
     logger.warn(status.message);
     logger.warn(String.valueOf(status.code));
     logger.warn(String.valueOf(StatusCode.SESSION_ERROR.getStatusCode()));
-    if (status.code == StatusCode.SESSION_ERROR.getStatusCode()) {
+    if (status.code == 401) {
       logger.warn("warning");
       logger.warn(status.message);
-      if (status.message.contains(CLEAR_DATA_EXCEPTION)) {
+      if (status.message.contains("Caution: can not clear the data of read-only node.")) {
         logger.warn(status.message);
         return;
       }
