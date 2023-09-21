@@ -552,13 +552,13 @@ public class MetricsResource {
     try {
       executorData.deleteMetric();
     } catch (ExecutionException e) {
-      if (e.getMessage().trim().equals(CLEAR_DATA_EXCEPTION)) {
+      if (e.toString().trim().equals(CLEAR_DATA_EXCEPTION)) {
         exception = e;
         cautionDuringDelete = true;
         logger.warn("cant delete the READ_ONLY data and go on.");
       } else {
         logger.error("Error occurred during executing", e);
-        logger.error("test err {}", e.getMessage().trim());
+        logger.error("test err {}", e.toString().trim());
         throw e;
       }
     }
