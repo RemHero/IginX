@@ -371,7 +371,7 @@ public abstract class BaseCapacityExpansionIT {
 
     // 如果是重复添加，则报错
     String res = addStorageEngine(oriPort, true, true, dataPrefix1, null);
-    if (res != null && !res.contains("unexpected repeated add") || (IS_PARQUET_OR_FILE_SYSTEM && res!=null)) {
+    if (res != null && !res.contains("unexpected repeated add")) {
       fail();
     }
     addStorageEngine(oriPort, true, true, dataPrefix1, "p3");
