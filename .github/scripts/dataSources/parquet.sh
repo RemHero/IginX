@@ -14,7 +14,7 @@ sed -i "s/enablePushDown=true/enablePushDown=false/g" core/target/iginx-core-0.6
 
 sed -i "s#dummy_dir=/path/to/your/data#dummy_dir=$3#g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
 
-sed -i "s#dir=/path/to/your/filesystem#dir=$4#g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
+sed -i "s#dir=/path/to/your/parquet#dir=$4#g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
 
 sed -i "s/#has_data=false#/#has_data=$5#/g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
 
