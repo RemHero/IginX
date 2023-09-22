@@ -130,6 +130,9 @@ public class LocalExecutor implements Executor {
                 keyRanges,
                 false));
       }
+      for (FileSystemResultTable table : result) {
+        logger.info("read normal file {} ", table.toString());
+      }
       RowStream rowStream = new FileSystemQueryRowStream(result, storageUnit, root, filter);
       return new TaskExecuteResult(rowStream);
     } catch (Exception e) {
@@ -153,6 +156,9 @@ public class LocalExecutor implements Executor {
         result.addAll(
             fileSystemManager.readFile(
                 new File(FilePathUtils.toNormalFilePath(dummyRoot, path)), null, keyRanges, true));
+      }
+      for (FileSystemResultTable table : result) {
+        logger.info("read dummy file {} ", table.toString());
       }
       RowStream rowStream =
           new FileSystemHistoryQueryRowStream(

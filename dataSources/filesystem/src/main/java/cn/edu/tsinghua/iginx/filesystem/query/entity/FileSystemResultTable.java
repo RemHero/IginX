@@ -54,4 +54,13 @@ public class FileSystemResultTable {
   public void setFile(File file) {
     this.file = file;
   }
+
+  public String toString() {
+    return "FileSystemResultTable{" +
+        "file=" + file +
+        ", records=" + records +
+        ", dataType=" + dataType +
+        ", tags=" + tags +
+        '}';
+  }
 }

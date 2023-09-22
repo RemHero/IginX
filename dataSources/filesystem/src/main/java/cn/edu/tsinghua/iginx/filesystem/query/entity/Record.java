@@ -30,4 +30,12 @@ public class Record {
   public DataType getDataType() {
     return value.getDataType();
   }
+
+  @Override
+  public String toString() {
+    return "Record{" +
+        "key=" + key +
+        ", value=" + value +
+        '}';
+  }
 }
