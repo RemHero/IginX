@@ -35,7 +35,7 @@ public class Record {
   public String toString() {
     return "Record{" +
         "key=" + key +
-        ", value=" + value +
+        ", value=" + value.getAsString() +
         '}';
   }
 }
