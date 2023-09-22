@@ -56,9 +56,14 @@ public class FileSystemResultTable {
   }
 
   public String toString() {
+    StringBuilder res = new StringBuilder();
+    for (Record record : records) {
+      res.append(record.toString());
+      res.append("\n");
+    }
     return "FileSystemResultTable{" +
         "file=" + file +
-        ", records=" + records +
+        ", records=" + res.toString() +
         ", dataType=" + dataType +
         ", tags=" + tags +
         '}';
