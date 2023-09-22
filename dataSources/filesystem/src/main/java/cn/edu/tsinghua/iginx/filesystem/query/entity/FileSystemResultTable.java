@@ -57,9 +57,12 @@ public class FileSystemResultTable {
 
   public String toString() {
     StringBuilder res = new StringBuilder();
+    int i=10;
     for (Record record : records) {
       res.append(record.toString());
       res.append("\n");
+      i--;
+      if (i<0) break;
     }
     return "FileSystemResultTable{" +
         "file=" + file +
