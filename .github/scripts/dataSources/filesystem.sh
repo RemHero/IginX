@@ -20,4 +20,4 @@ sed -i "s/#has_data=false#/#has_data=$5#/g" core/target/iginx-core-0.6.0-SNAPSHO
 
 sed -i "s/#is_read_only=false/#is_read_only=$6/g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
 
-sed -i "s#chunk_size_in_bytes=1048576#chunk_size_in_bytes=8#g" conf/config.properties
+sed -i "s#chunk_size_in_bytes=1048576#chunk_size_in_bytes=8#g" core/target/iginx-core-0.6.0-SNAPSHOT/conf/config.properties
