@@ -67,6 +67,7 @@ public abstract class BaseCapacityExpansionIT {
       if (extraParams != null) {
         if (IS_PARQUET_OR_FILE_SYSTEM) {
           extraParams = "iginx_port:" +oriPortIginx;
+          extraParams += ", chunk_size_in_bytes:8";
         }
         statement.append(", ");
         statement.append(extraParams);
