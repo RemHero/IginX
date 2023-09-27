@@ -622,6 +622,6 @@ public abstract class BaseCapacityExpansionIT {
       fail("start iginx fail");
     }
 
-    Thread.sleep(2000);
+    Thread.sleep(4000);
   }
 }
