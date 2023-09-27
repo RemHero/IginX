@@ -435,7 +435,7 @@ public abstract class BaseCapacityExpansionIT {
 
   // 在dataPrefix的基础上添加数据，并查找
   private void addHistoryDataTest() {
-    String currentClassName = Thread.currentThread().getStackTrace()[1].getClassName();
+    String currentClassName = this.getClass().getName();
     System.out.println(currentClassName);
     String className = generateHistoryDataGeneratorClassName(extractDatabaseName(currentClassName));
     System.out.println(className);
