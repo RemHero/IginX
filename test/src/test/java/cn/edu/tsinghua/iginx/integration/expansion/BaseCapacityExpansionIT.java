@@ -137,6 +137,9 @@ public abstract class BaseCapacityExpansionIT {
       addStorageEngine(expPort, true, false, null, null);
     }
 
+    String statement = "show cluster info";
+    System.out.println(session.executeSql(statement).buildShowClusterInfoResult());
+
     // 查询扩容节点的历史数据，结果不为空
     testQueryHistoryDataExpHasData();
     // 再次查询新数据
