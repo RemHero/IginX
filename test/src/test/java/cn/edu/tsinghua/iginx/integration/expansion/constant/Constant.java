@@ -62,7 +62,7 @@ public class Constant {
       Arrays.asList(Arrays.asList(55555555L, 10012.01), Arrays.asList(66666666L, 99123.99));
 
   public static List<List<Object>> EXP_MIDDLE_VALUES_LIST =
-      Arrays.asList(Arrays.asList(33333333L), Arrays.asList(44444444L));
+      Arrays.asList(Arrays.asList(33333333L, 44444444L));
 
   // for file system
   public static final Map<Integer, String> PORT_TO_ROOT =
