@@ -7,13 +7,18 @@ import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
 import cn.edu.tsinghua.iginx.integration.controller.Controller;
 import cn.edu.tsinghua.iginx.integration.expansion.filesystem.FileSystemCapacityExpansionIT;
+import cn.edu.tsinghua.iginx.integration.expansion.filesystem.FileSystemHistoryDataGenerator;
 import cn.edu.tsinghua.iginx.integration.expansion.influxdb.InfluxDBCapacityExpansionIT;
 import cn.edu.tsinghua.iginx.integration.expansion.parquet.ParquetCapacityExpansionIT;
 import cn.edu.tsinghua.iginx.integration.expansion.utils.SQLTestTools;
 import cn.edu.tsinghua.iginx.session.Session;
+import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.thrift.RemovedStorageEngineInfo;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.*;
@@ -33,6 +38,10 @@ public abstract class BaseCapacityExpansionIT {
 
   private final boolean IS_PARQUET_OR_FILE_SYSTEM =
       this instanceof FileSystemCapacityExpansionIT || this instanceof ParquetCapacityExpansionIT;
+
+  private static final String IT_EXTENSION = "CapacityExpansionIT";
+
+  private static final String DATA_GEN_EXTENSION = "HistoryDataGenerator";
 
   public BaseCapacityExpansionIT(StorageEngineType type, String extraParams) {
     this.type = type;
@@ -370,6 +379,9 @@ public abstract class BaseCapacityExpansionIT {
     pathList = Collections.singletonList("p3.nt.wf03.wt01.status");
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
+    // 测试数据库在datdaPrefix的基础上添加数据，并查找
+    addHistoryDataTest();
+
     // 通过 session 接口测试移除节点
     List<RemovedStorageEngineInfo> removedStorageEngineList = new ArrayList<>();
     removedStorageEngineList.add(
@@ -418,6 +430,26 @@ public abstract class BaseCapacityExpansionIT {
             "'remove history data source should throw error when removing the node that does not exist");
         fail();
       }
+    }
+  }
+
+  // 在dataPrefix的基础上添加数据，并查找
+  private void addHistoryDataTest() {
+    String currentClassName = Thread.currentThread().getStackTrace()[1].getClassName();
+    String className = generateHistoryDataGeneratorClassName(extractDatabaseName(currentClassName));
+
+    try {
+      Class<?> generatedClass = Class.forName(className);
+      Object generatedObject = generatedClass.getDeclaredConstructor().newInstance();
+      FileSystemHistoryDataGenerator generator = (FileSystemHistoryDataGenerator) generatedObject;
+      generator.writeHistoryData(expPort, EXP_MIDDLE_PATH_LIST, EXP_MIDDLE_DATA_TYPE_LIST, EXP_MIDDLE_VALUES_LIST);
+
+      // 添加节点 dataPrefix = null && schemaPrefix = p3 后查询
+      String statement = "select 0000,zzzz from nt.wf03";
+      SQLTestTools.executeAndCompare(session, statement, EXP_MIDDLE_PATH_LIST, EXP_MIDDLE_VALUES_LIST);
+    } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException |
+             NoSuchMethodException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -512,5 +544,20 @@ public abstract class BaseCapacityExpansionIT {
             + "+-------------+--------+\n"
             + "Total line number = 3\n";
     SQLTestTools.executeAndCompare(session, statement, expected);
+  }
+
+  public static String extractDatabaseName(String className) {
+    int startIndex = className.indexOf(IT_EXTENSION);
+    if (startIndex != -1) {
+      return className.substring(0, startIndex);
+    }
+    return null;
+  }
+
+  public static String generateHistoryDataGeneratorClassName(String databaseName) {
+    if (databaseName != null) {
+      return databaseName + DATA_GEN_EXTENSION;
+    }
+    return null;
   }
 }

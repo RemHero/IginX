@@ -32,10 +32,15 @@ public class Constant {
   public static final List<String> READ_ONLY_PATH_LIST =
       Arrays.asList("tm.wf05.wt01.status", "tm.wf05.wt01.temperature");
 
+  public static final List<String> EXP_MIDDLE_PATH_LIST =
+      Arrays.asList("nt.wf03.0000", "nt.wf03.zzzz");
+
   // data type
   public static List<DataType> ORI_DATA_TYPE_LIST = Arrays.asList(DataType.LONG, DataType.DOUBLE);
 
   public static List<DataType> EXP_DATA_TYPE_LIST = Arrays.asList(DataType.LONG, DataType.DOUBLE);
+
+  public static List<DataType> EXP_MIDDLE_DATA_TYPE_LIST = Arrays.asList(DataType.LONG, DataType.LONG);
 
   public static List<DataType> READ_ONLY_DATA_TYPE_LIST =
       Arrays.asList(DataType.LONG, DataType.DOUBLE);
@@ -55,6 +60,9 @@ public class Constant {
 
   public static List<List<Object>> READ_ONLY_VALUES_LIST =
       Arrays.asList(Arrays.asList(55555555L, 10012.01), Arrays.asList(66666666L, 99123.99));
+
+  public static List<List<Object>> EXP_MIDDLE_VALUES_LIST =
+      Arrays.asList(Arrays.asList(33333333L), Arrays.asList(44444444L));
 
   // for file system
   public static final Map<Integer, String> PORT_TO_ROOT =
