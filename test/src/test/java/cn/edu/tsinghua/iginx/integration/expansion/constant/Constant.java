@@ -33,7 +33,7 @@ public class Constant {
       Arrays.asList("tm.wf05.wt01.status", "tm.wf05.wt01.temperature");
 
   public static final List<String> EXP_MIDDLE_PATH_LIST =
-      Arrays.asList("nt.wf03.0000", "nt.wf03.zzzz");
+      Arrays.asList("nt.wf03.zzzz", "nt.wf03.0000");
 
   // data type
   public static List<DataType> ORI_DATA_TYPE_LIST = Arrays.asList(DataType.LONG, DataType.DOUBLE);
