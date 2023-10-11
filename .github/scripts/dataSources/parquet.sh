@@ -4,6 +4,8 @@ set -e
 
 cp -f conf/config.properties.bak $7
 
+cat $7
+
 sed -i "s/storageEngineList=127.0.0.1#6667#iotdb12/#storageEngineList=127.0.0.1#6667#iotdb12/g" $7
 
 sed -i "s/#storageEngineList=127.0.0.1#6667#parquet/storageEngineList=127.0.0.1#$1#parquet/g" $7
