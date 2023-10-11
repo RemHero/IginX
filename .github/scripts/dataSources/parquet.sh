@@ -2,9 +2,9 @@
 
 set -e
 
-cp -f conf/config.properties.bak $7
-
 cat conf/config.properties.bak
+
+cp -f conf/config.properties.bak $7
 
 cat $7
 
