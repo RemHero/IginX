@@ -574,7 +574,7 @@ public abstract class BaseCapacityExpansionIT {
     }
 
     // change the conf path in start_iginx.sh
-    res = executeShellScript(".github/scripts/test/tools/change_iginx_conf_path.sh", "../../../conf/config.properties");
+    res = executeShellScript(".github/scripts/test/tools/change_iginx_conf_path.sh", "/../../../conf/config.properties");
     if (res != 0) {
       fail("change the start_iginx.sh fail");
     }
