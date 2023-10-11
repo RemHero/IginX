@@ -11,3 +11,5 @@ sed -i "s/restPort=[0-9]\+/restPort=$2/g" core/target/iginx-core-*-SNAPSHOT/conf
 sh -c "chmod +x core/target/iginx-core-*-SNAPSHOT/sbin/start_iginx.sh"
 
 sh -c "nohup core/target/iginx-core-*-SNAPSHOT/sbin/start_iginx.sh > iginx-$1.log 2>&1 &"
+
+cat core/target/iginx-core-*-SNAPSHOT/conf/config.properties
