@@ -30,6 +30,9 @@ runs:
           uses: ./.github/actions/dbRunner
           with:
               DB-name: ${{ matrix.DB-name }}
+
+        - if: inputs.DB-name=='FileSystem' || inputs.DB-name=='Parquet'
+          name: save config for FileSystem and Parquet
           shell: bash
           run: |
               cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/core/target/iginx-core-*-SNAPSHOT/conf/config.properties"
