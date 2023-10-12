@@ -21,6 +21,10 @@ inputs:
         description: "make the IGinX push down filter"
         required: false
         default: "false"
+    version:
+      description: "iginx runner version"
+      required: false
+      default: 0.6.0-SNAPSHOT
 
 runs:
     using: "composite" # Mandatory parameter
@@ -35,7 +39,7 @@ runs:
           name: save config for FileSystem and Parquet
           shell: bash
           run: |
-              cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/core/target/iginx-core-*-SNAPSHOT/conf/config.properties"
+              cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/core/target/iginx-core-${VERSION}/conf/config.properties"
 
         - name: Set if-CapExp
           shell: bash
