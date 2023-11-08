@@ -204,29 +204,8 @@ public class SQLSessionIT {
     executor.execute(clearData);
   }
 
-  public void showClusterInfo(String stmt) {
-//    String statement = "show cluster info;";
-//    String actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    statement = "show columns;";
-//    actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    statement = "select count(*) from *;";
-//    actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    if (stmt != null) {
-//      statement = "explain "+stmt;
-//      actualOutput = executor.execute(statement);
-//      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//    }
-  }
-
   @Test
   public void testCountPath() {
-    showClusterInfo(null);
     String statement = "SELECT COUNT(*) FROM us.d1;";
     String expected =
         "ResultSets:\n"
@@ -236,7 +215,6 @@ public class SQLSessionIT {
             + "|          15000|          15000|          15000|          15000|\n"
             + "+---------------+---------------+---------------+---------------+\n"
             + "Total line number = 1\n";
-    showClusterInfo(statement);
     executor.executeAndCompare(statement, expected);
   }
 
@@ -1048,8 +1026,6 @@ public class SQLSessionIT {
             + "Total line number = 1\n";
     executor.executeAndCompare(statement, expected);
 
-    showClusterInfo(statement);
-
     statement = "SELECT LAST(s2) FROM us.d1 WHERE key > 0;";
     expected =
         "ResultSets:\n"
@@ -1060,8 +1036,6 @@ public class SQLSessionIT {
             + "+-----+--------+-----+\n"
             + "Total line number = 1\n";
     executor.executeAndCompare(statement, expected);
-
-    showClusterInfo(statement);
 
     statement = "SELECT FIRST(s4) FROM us.d1 WHERE key > 0;";
     expected =
