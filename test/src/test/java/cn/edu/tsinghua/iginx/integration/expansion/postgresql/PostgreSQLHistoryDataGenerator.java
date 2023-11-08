@@ -85,6 +85,12 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
         try {
           logger.info("create database with stmt: {}!", String.format(CREATE_DATABASE_STATEMENT, databaseName));
           stmt.execute(String.format(CREATE_DATABASE_STATEMENT, databaseName));
+
+          ResultSet databaseSet = stmt.executeQuery(QUERY_DATABASES_STATEMENT);
+
+          while (databaseSet.next()) {
+            logger.info("database {} ", databaseSet.getString("DATNAME"));
+          }
         } catch (SQLException e) {
           logger.info("database {} exists!", databaseName);
         }
