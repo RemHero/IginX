@@ -83,6 +83,19 @@ public class Controller {
         }
       };
 
+  public static final Map<String, Boolean> NEED_DIVIDE_DATA =
+      new HashMap<String, Boolean>() {
+        {
+          put("FileSystem", true);
+          put("IoTDB12", true);
+          put("InfluxDB", true);
+          put("PostgreSQL", true);
+          put("Redis", true);
+          put("MongoDB", true);
+          put("Parquet", false);
+        }
+      };
+
   public static void clearAllData(Session session) {
     clearAllData(new MultiConnection(session));
   }
@@ -150,8 +163,10 @@ public class Controller {
     if (!conf.isScaling()) {
       logger.info("Not the DBCE test, skip the write history data step.");
       medium = pathList.size();
-    } else {
+    } else if (NEED_DIVIDE_DATA.get(conf.getStorageType())){
       medium = tagsList == null || tagsList.isEmpty() ? pathList.size() / 3 : pathList.size();
+    } else {
+      medium = pathList.size();
     }
 
     for (int i = 0; i < pathList.size(); i++) {
@@ -206,8 +221,10 @@ public class Controller {
     if (!conf.isScaling()) {
       logger.info("Not the DBCE test, skip the write history data step.");
       medium = keyList.size();
+    } else if (NEED_DIVIDE_DATA.get(conf.getStorageType())){
+      medium = tagsList == null || tagsList.isEmpty() ? pathList.size() / 3 : pathList.size();
     } else {
-      medium = tagsList == null || tagsList.isEmpty() ? keyList.size() / 3 : keyList.size();
+      medium = pathList.size();
     }
 
     // divide the data
