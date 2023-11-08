@@ -6,7 +6,7 @@ on:
             - main
 env:
     VERSION: 0.6.0-SNAPSHOT
-    FUNCTEST: NewSessionIT,SQLCompareIT,TagIT,RestIT,UDFIT,RestAnnotationIT,SQLSessionIT,SessionV2IT,SessionIT,SessionPoolIT,CompactionIT,TimePrecisionIT
+    FUNCTEST: NewSessionIT,SQLCompareIT,TagIT,RestIT,UDFIT,RestAnnotationIT,SQLSessionIT,SessionV2IT,TransformIT,SessionIT,SessionPoolIT,CompactionIT,TimePrecisionIT
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
@@ -22,8 +22,8 @@ jobs:
                 os: [ubuntu-latest, macos-latest]
                 DB-name:
                     [
-#                        "FileSystem",
-#                        "IoTDB12",
+                        "FileSystem",
+                        "IoTDB12",
 #                        "InfluxDB",
                         "PostgreSQL",
 #                        "Redis",
