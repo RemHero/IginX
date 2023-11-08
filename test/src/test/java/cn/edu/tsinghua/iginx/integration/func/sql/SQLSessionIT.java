@@ -74,7 +74,7 @@ public class SQLSessionIT {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     DBConf dbConf = conf.loadDBConf(conf.getStorageType());
     this.isScaling = conf.isScaling();
-    if (!SUPPORT_KEY.get(conf.getStorageType()) && this.isScaling) {
+    if (!SUPPORT_KEY.get(conf.getStorageType().toLowerCase()) && this.isScaling) {
       needCompareResult = false;
       executor.setNeedCompareResult(needCompareResult);
     }

@@ -46,7 +46,7 @@ public class SessionV2IT {
     if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == influxdb) {
       isInfluxdb = true;
     }
-    if (!SUPPORT_KEY.get(conf.getStorageType()) && conf.isScaling()) {
+    if (!SUPPORT_KEY.get(conf.getStorageType().toLowerCase()) && conf.isScaling()) {
       needCompareResult = false;
     }
     iginXClient = IginXClientFactory.create("127.0.0.1", 6888);

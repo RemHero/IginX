@@ -120,7 +120,7 @@ public class NewSessionIT {
     if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == influxdb) {
       isInfluxdb = true;
     }
-    if (!SUPPORT_KEY.get(conf.getStorageType()) && conf.isScaling()) {
+    if (!SUPPORT_KEY.get(conf.getStorageType().toLowerCase()) && conf.isScaling()) {
       needCompareResult = false;
     }
     DBConf dbConf = conf.loadDBConf(conf.getStorageType());

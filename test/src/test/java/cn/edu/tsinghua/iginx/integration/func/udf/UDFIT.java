@@ -62,7 +62,7 @@ public class UDFIT {
   @BeforeClass
   public static void setUp() throws SessionException {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
-    if (!SUPPORT_KEY.get(conf.getStorageType()) && conf.isScaling()) {
+    if (!SUPPORT_KEY.get(conf.getStorageType().toLowerCase()) && conf.isScaling()) {
       needCompareResult = false;
     }
     session = new Session("127.0.0.1", 6888, "root", "root");
