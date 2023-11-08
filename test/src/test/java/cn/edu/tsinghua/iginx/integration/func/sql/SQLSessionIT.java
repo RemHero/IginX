@@ -5756,7 +5756,7 @@ public class SQLSessionIT {
     try {
       session.openSession();
       String queryOptimizer =
-          session.executeSql("SHOW CONFIG \"queryOptimizer\";").getResultInString(false, "");
+          session.executeSql("SHOW CONFIG \"queryOptimizer\"").getResultInString(false, "");
       if (!queryOptimizer.contains("filter_push_down")) {
         logger.info(
             "Skip SQLSessionIT.testFilterPushDownExplain because filter_push_down optimizer is not open");
