@@ -6015,7 +6015,7 @@ public class SQLSessionIT {
     try {
       session.openSession();
       String queryOptimizer =
-          session.executeSql("SHOW CONFIG \"queryOptimizer\"").getResultInString(false, "");
+          session.executeSql("SHOW CONFIG \"queryOptimizer\";").getResultInString(false, "");
       if (!queryOptimizer.equals("remove_not,filter_fragment")) {
         logger.info(
             "Skip SQLSessionIT.ttestFilterFragmentOptimizer because optimizer is not remove_not,filter_fragment");
