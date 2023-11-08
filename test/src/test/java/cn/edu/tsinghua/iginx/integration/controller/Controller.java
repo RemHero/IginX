@@ -163,12 +163,9 @@ public class Controller {
     if (!conf.isScaling()) {
       logger.info("Not the DBCE test, skip writing history data step.");
       medium = pathList.size();
-    } else if (NEED_DIVIDE_DATA.get(conf.getStorageType())){
+    } else {
       logger.info("DBCE test, write history data.");
       medium = tagsList == null || tagsList.isEmpty() ? pathList.size() / 3 : pathList.size();
-    } else {
-      logger.info("DBCE test, don't need to write history data.");
-      medium = pathList.size();
     }
 
     for (int i = 0; i < pathList.size(); i++) {
@@ -223,12 +220,9 @@ public class Controller {
     if (!conf.isScaling()) {
       logger.info("Not the DBCE test, skip the write history data step.");
       medium = keyList.size();
-    } else if (NEED_DIVIDE_DATA.get(conf.getStorageType())){
+    } else {
       logger.info("DBCE test, write history data.");
       medium = tagsList == null || tagsList.isEmpty() ? pathList.size() / 3 : pathList.size();
-    } else {
-      logger.info("DBCE test, don't need to write history data.");
-      medium = pathList.size();
     }
 
     // divide the data
