@@ -78,6 +78,7 @@ public class SQLSessionIT {
       needCompareResult = false;
       executor.setNeedCompareResult(needCompareResult);
     }
+    dummyNoData = true;
     this.isAbleToClearData = dbConf.getEnumValue(DBConf.DBConfType.isAbleToClearData);
     this.isAbleToDelete = dbConf.getEnumValue(DBConf.DBConfType.isAbleToDelete);
     this.isAbleToShowColumns = dbConf.getEnumValue(DBConf.DBConfType.isAbleToShowColumns);
@@ -89,6 +90,7 @@ public class SQLSessionIT {
 
   @BeforeClass
   public static void setUp() throws SessionException {
+    dummyNoData = true;
     if (isForSession) {
       session =
           new MultiConnection(
