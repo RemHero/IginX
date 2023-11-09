@@ -246,10 +246,31 @@ public abstract class BaseCapacityExpansionIT {
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
   }
 
+  public void showClusterInfo(String stmt) {
+    String statement = "show cluster info;";
+    String actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "show columns;";
+    actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "select count(*) from *;";
+    actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    if (stmt != null) {
+      statement = "explain "+stmt;
+      actualOutput = SQLTestTools.execute(session, statement);
+      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+    }
+  }
+
   private void testQueryHistoryDataExpHasData() {
     String statement = "select wt01.status2 from nt.wf03;";
     List<String> pathList = EXP_PATH_LIST1;
     List<List<Object>> valuesList = EXP_VALUES_LIST1;
+    showClusterInfo(statement);
     SQLTestTools.executeAndCompare(session, statement, pathList, valuesList);
 
     statement = "select wt01.temperature from nt.wf04;";
