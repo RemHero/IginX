@@ -192,9 +192,6 @@ public class TransformIT {
   private void verifyJobState(long jobId)
       throws SessionException, ExecutionException, InterruptedException {
     logger.info("job is {}", jobId);
-    if (!needCompareResult) {
-      return;
-    }
     JobState jobState = JobState.JOB_CREATED;
     while (!jobState.equals(JobState.JOB_CLOSED)
         && !jobState.equals(JobState.JOB_FAILED)
@@ -203,6 +200,9 @@ public class TransformIT {
       jobState = session.queryTransformJobStatus(jobId);
     }
     logger.info("job {} state is {}", jobId, jobState.toString());
+    if (!needCompareResult) {
+      return;
+    }
     assertEquals(JobState.JOB_FINISHED, jobState);
 
     List<Long> finishedJobIds = session.showEligibleJob(JobState.JOB_FINISHED);

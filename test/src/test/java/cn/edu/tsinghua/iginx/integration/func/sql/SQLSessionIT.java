@@ -68,7 +68,7 @@ public class SQLSessionIT {
 
   protected static boolean dummyNoData = true;
 
-  private static boolean needCompareResult = true;
+  protected static boolean needCompareResult = true;
 
   public SQLSessionIT() {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
