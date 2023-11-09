@@ -83,14 +83,14 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
         String databaseName = entry.getKey();
         Statement stmt = connection.createStatement();
         try {
-          logger.info("create database with stmt: {}", String.format(CREATE_DATABASE_STATEMENT, getQuotName(databaseName)));
-          stmt.execute(String.format(CREATE_DATABASE_STATEMENT, getQuotName(databaseName)));
+          logger.info("create database with stmt: {}", String.format(CREATE_DATABASE_STATEMENT, databaseName));
+          stmt.execute(String.format(CREATE_DATABASE_STATEMENT, databaseName));
         } catch (SQLException e) {
           logger.info("database {} exists!", databaseName);
         }
         stmt.close();
 
-        Connection conn = connect(port, false, getQuotName(databaseName));
+        Connection conn = connect(port, false, databaseName);
         stmt = conn.createStatement();
         for (Map.Entry<String, List<Integer>> item : entry.getValue().entrySet()) {
           String tableName = item.getKey();
@@ -159,7 +159,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
             || databaseName.equalsIgnoreCase("postgres")) {
           continue;
         }
-        dropDatabaseStatement.addBatch(String.format(DROP_DATABASE_STATEMENT, getQuotName(databaseName)));
+        dropDatabaseStatement.addBatch(String.format(DROP_DATABASE_STATEMENT, databaseName));
       }
       dropDatabaseStatement.executeBatch();
 
