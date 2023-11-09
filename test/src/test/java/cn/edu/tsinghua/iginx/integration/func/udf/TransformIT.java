@@ -464,9 +464,11 @@ public class TransformIT {
     try {
       String[] taskList = {"RowSumTransformer", "AddOneTransformer"};
       for (String task : taskList) {
+        logger.info("PG 1 test {}", task);
         registerTask(task);
       }
 
+      logger.info("PG 2 test ");
       String yamlFileName =
           OUTPUT_DIR_PREFIX + File.separator + "TransformMultiplePythonJobsWithExportToIginx.yaml";
       String outputFileName =
@@ -475,24 +477,30 @@ public class TransformIT {
               + "export_file_multiple_python_jobs_by_yaml_with_export_to_iginx.txt";
       SessionExecuteSqlResult result =
           session.executeSql(String.format(COMMIT_SQL_FORMATTER, yamlFileName));
+      logger.info("PG 3 test ");
       long jobId = result.getJobId();
 
       verifyJobState(jobId);
+      logger.info("PG 4 test ");
 
       SessionExecuteSqlResult queryResult = session.executeSql("SELECT * FROM transform;");
       int timeIndex = queryResult.getPaths().indexOf("transform.key");
       int sumIndex = queryResult.getPaths().indexOf("transform.sum");
+      logger.info("PG 5 test ");
       assertNotEquals(-1, timeIndex);
       assertNotEquals(-1, sumIndex);
 
       BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName));
       writer.write("key,sum\n");
+      logger.info("PG 6 test ");
       for (List<Object> row : queryResult.getValues()) {
         writer.write(row.get(timeIndex) + "," + row.get(sumIndex) + "\n");
       }
       writer.close();
 
+      logger.info("PG 7 test ");
       verifyMultiplePythonJobs(outputFileName);
+      logger.info("PG 8 test ");
     } catch (SessionException | ExecutionException | InterruptedException | IOException e) {
       logger.error("Transform:  execute fail. Caused by:", e);
       fail();
