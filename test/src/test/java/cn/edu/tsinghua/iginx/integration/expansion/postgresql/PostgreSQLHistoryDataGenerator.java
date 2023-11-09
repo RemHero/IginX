@@ -41,7 +41,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
       if (useSystemDatabase) {
         url = String.format("jdbc:postgresql://127.0.0.1:%d/", port);
       } else {
-        url = String.format("jdbc:postgresql://127.0.0.1:%d/%s", port, getQuotName(databaseName));
+        url = String.format("jdbc:postgresql://127.0.0.1:%d/%s", port, databaseName);
       }
       Class.forName("org.postgresql.Driver");
       return DriverManager.getConnection(url, USERNAME, PASSWORD);
@@ -83,14 +83,14 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
         String databaseName = entry.getKey();
         Statement stmt = connection.createStatement();
         try {
-          logger.info("create database with stmt: {}", String.format(CREATE_DATABASE_STATEMENT, databaseName));
+          logger.info("create database with stmt: {}", String.format(CREATE_DATABASE_STATEMENT, getQuotName(databaseName)));
           stmt.execute(String.format(CREATE_DATABASE_STATEMENT, getQuotName(databaseName)));
         } catch (SQLException e) {
           logger.info("database {} exists!", databaseName);
         }
         stmt.close();
 
-        Connection conn = connect(port, false, databaseName);
+        Connection conn = connect(port, false, getQuotName(databaseName));
         stmt = conn.createStatement();
         for (Map.Entry<String, List<Integer>> item : entry.getValue().entrySet()) {
           String tableName = item.getKey();
