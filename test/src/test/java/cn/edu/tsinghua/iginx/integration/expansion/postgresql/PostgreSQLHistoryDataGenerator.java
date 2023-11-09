@@ -142,7 +142,9 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
       e.printStackTrace();
     } finally {
       try {
-        connection.close();
+        if (connection != null) {
+          connection.close();
+        }
       } catch (SQLException e) {
         logger.error("close connection failure: {}", e.getMessage());
       }
@@ -184,7 +186,9 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
       logger.warn("clear data on 127.0.0.1:{} failure: {}", port, e.getMessage());
     } finally {
       try {
-        conn.close();
+        if (conn != null) {
+          conn.close();
+        }
       } catch (SQLException e) {
         logger.error("close connection failure: {}", e.getMessage());
       }

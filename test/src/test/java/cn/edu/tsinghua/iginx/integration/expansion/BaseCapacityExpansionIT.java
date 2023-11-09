@@ -247,23 +247,23 @@ public abstract class BaseCapacityExpansionIT {
   }
 
   public void showClusterInfo(String stmt) {
-    String statement = "show cluster info;";
-    String actualOutput = SQLTestTools.execute(session, statement);
-    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-
-    statement = "show columns;";
-    actualOutput = SQLTestTools.execute(session, statement);
-    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-
-    statement = "select count(*) from *;";
-    actualOutput = SQLTestTools.execute(session, statement);
-    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-
-    if (stmt != null) {
-      statement = "explain "+stmt;
-      actualOutput = SQLTestTools.execute(session, statement);
-      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-    }
+//    String statement = "show cluster info;";
+//    String actualOutput = SQLTestTools.execute(session, statement);
+//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+//
+//    statement = "show columns;";
+//    actualOutput = SQLTestTools.execute(session, statement);
+//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+//
+//    statement = "select count(*) from *;";
+//    actualOutput = SQLTestTools.execute(session, statement);
+//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+//
+//    if (stmt != null) {
+//      statement = "explain "+stmt;
+//      actualOutput = SQLTestTools.execute(session, statement);
+//      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+//    }
   }
 
   private void testQueryHistoryDataExpHasData() {
