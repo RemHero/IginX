@@ -193,9 +193,11 @@ public class TransformIT {
       throws SessionException, ExecutionException, InterruptedException {
     logger.info("job is {}", jobId);
     JobState jobState = JobState.JOB_CREATED;
+    int times = 100;
     while (!jobState.equals(JobState.JOB_CLOSED)
         && !jobState.equals(JobState.JOB_FAILED)
-        && !jobState.equals(JobState.JOB_FINISHED)) {
+        && !jobState.equals(JobState.JOB_FINISHED)
+        && times-- > 0) {
       Thread.sleep(500);
       jobState = session.queryTransformJobStatus(jobId);
     }
