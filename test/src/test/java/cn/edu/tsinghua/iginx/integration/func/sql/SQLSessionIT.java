@@ -205,23 +205,23 @@ public class SQLSessionIT {
   }
 
   public void showClusterInfo(String stmt) {
-//    String statement = "show cluster info;";
-//    String actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    statement = "show columns;";
-//    actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    statement = "select count(*) from *;";
-//    actualOutput = executor.execute(statement);
-//    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//
-//    if (stmt != null) {
-//      statement = "explain "+stmt;
-//      actualOutput = executor.execute(statement);
-//      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
-//    }
+    String statement = "show cluster info;";
+    String actualOutput = executor.execute(statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "show columns;";
+    actualOutput = executor.execute(statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "select count(*) from *;";
+    actualOutput = executor.execute(statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    if (stmt != null) {
+      statement = "explain "+stmt;
+      actualOutput = executor.execute(statement);
+      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+    }
   }
 
   @Test
