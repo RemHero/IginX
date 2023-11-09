@@ -17,13 +17,13 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
 
   private static final String QUERY_DATABASES_STATEMENT = "SELECT datname FROM pg_database;";
 
-  private static final String CREATE_DATABASE_STATEMENT = "CREATE DATABASE \"%s\";";
+  private static final String CREATE_DATABASE_STATEMENT = "CREATE DATABASE %s;";
 
   private static final String CREATE_TABLE_STATEMENT = "CREATE TABLE %s (%s);";
 
   private static final String INSERT_STATEMENT = "INSERT INTO %s VALUES %s;";
 
-  private static final String DROP_DATABASE_STATEMENT = "DROP DATABASE \"%s\";";
+  private static final String DROP_DATABASE_STATEMENT = "DROP DATABASE %s;";
 
   private static final String USERNAME = "postgres";
 
@@ -41,7 +41,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
       if (useSystemDatabase) {
         url = String.format("jdbc:postgresql://127.0.0.1:%d/", port);
       } else {
-        url = String.format("jdbc:postgresql://127.0.0.1:%d/%s", port, databaseName);
+        url = String.format("jdbc:postgresql://127.0.0.1:%d/%s", port, getQuotName(databaseName));
       }
       Class.forName("org.postgresql.Driver");
       return DriverManager.getConnection(url, USERNAME, PASSWORD);
@@ -84,7 +84,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
         Statement stmt = connection.createStatement();
         try {
           logger.info("create database with stmt: {}", String.format(CREATE_DATABASE_STATEMENT, databaseName));
-          stmt.execute(String.format(CREATE_DATABASE_STATEMENT, databaseName));
+          stmt.execute(String.format(CREATE_DATABASE_STATEMENT, getQuotName(databaseName)));
         } catch (SQLException e) {
           logger.info("database {} exists!", databaseName);
         }
@@ -159,7 +159,7 @@ public class PostgreSQLHistoryDataGenerator extends BaseHistoryDataGenerator {
             || databaseName.equalsIgnoreCase("postgres")) {
           continue;
         }
-        dropDatabaseStatement.addBatch(String.format(DROP_DATABASE_STATEMENT, databaseName));
+        dropDatabaseStatement.addBatch(String.format(DROP_DATABASE_STATEMENT, getQuotName(databaseName)));
       }
       dropDatabaseStatement.executeBatch();
 
