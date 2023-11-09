@@ -66,7 +66,7 @@ public class SQLSessionIT {
 
   private static MultiConnection session;
 
-  private static boolean dummyNoData = true;
+  protected static boolean dummyNoData = true;
 
   private static boolean needCompareResult = true;
 
