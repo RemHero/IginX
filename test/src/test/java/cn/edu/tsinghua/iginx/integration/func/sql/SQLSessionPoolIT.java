@@ -19,6 +19,5 @@ public class SQLSessionPoolIT extends SQLSessionIT {
     isForSessionPool = true;
     isForSession = false;
     MaxMultiThreadTaskNum = 10;
-    dummyNoData = true;
   }
 }
