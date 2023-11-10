@@ -203,15 +203,11 @@ public class TransformIT {
     int times = 100;
     while (!jobState.equals(JobState.JOB_CLOSED)
         && !jobState.equals(JobState.JOB_FAILED)
-        && !jobState.equals(JobState.JOB_FINISHED)
-        && times-- > 0) {
+        && !jobState.equals(JobState.JOB_FINISHED)) {
       Thread.sleep(500);
       jobState = session.queryTransformJobStatus(jobId);
     }
     logger.info("job {} state is {}", jobId, jobState.toString());
-    if (!needCompareResult) {
-      return;
-    }
     assertEquals(JobState.JOB_FINISHED, jobState);
 
     List<Long> finishedJobIds = session.showEligibleJob(JobState.JOB_FINISHED);
