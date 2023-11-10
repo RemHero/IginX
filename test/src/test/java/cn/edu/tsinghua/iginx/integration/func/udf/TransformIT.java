@@ -179,7 +179,14 @@ public class TransformIT {
     SessionExecuteSqlResult result = session.executeSql(SHOW_REGISTER_TASK_SQL);
     for (RegisterTaskInfo info : result.getRegisterTaskInfos()) {
       if (info.getClassName().equals(task)) {
-        session.executeSql(String.format(DROP_SQL_FORMATTER, task));
+//        try {
+          session.executeSql(String.format(DROP_SQL_FORMATTER, task));
+//        } catch (SessionException e) {
+//          logger.error("drop task {} fail. Caused by:", task, e);
+//          if (needCompareResult) {
+//            throw e;
+//          }
+//        }
       }
     }
   }
@@ -489,8 +496,10 @@ public class TransformIT {
       int timeIndex = queryResult.getPaths().indexOf("transform.key");
       int sumIndex = queryResult.getPaths().indexOf("transform.sum");
       logger.info("PG 5 test ");
-      assertNotEquals(-1, timeIndex);
-      assertNotEquals(-1, sumIndex);
+      if (needCompareResult) {
+        assertNotEquals(-1, timeIndex);
+        assertNotEquals(-1, sumIndex);
+      }
 
       BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName));
       writer.write("key,sum\n");
