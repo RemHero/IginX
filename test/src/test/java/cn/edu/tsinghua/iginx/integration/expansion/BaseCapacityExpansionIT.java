@@ -50,6 +50,26 @@ public abstract class BaseCapacityExpansionIT {
     this.extraParams = extraParams;
   }
 
+  public void showClusterInfo(String stmt) {
+    String statement = "show cluster info;";
+    String actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "show columns;";
+    actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "select count(*) from *;";
+    actualOutput = SQLTestTools.execute(session, statement);
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    if (stmt != null) {
+      statement = "explain "+stmt;
+      actualOutput = SQLTestTools.execute(session, statement);
+      logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+    }
+  }
+
   protected String addStorageEngine(
       int port, boolean hasData, boolean isReadOnly, String dataPrefix, String schemaPrefix) {
     try {
@@ -147,9 +167,11 @@ public abstract class BaseCapacityExpansionIT {
     testQueryHistoryDataOriHasData();
     // 写入并查询新数据
     testWriteAndQueryNewData();
+    showClusterInfo(null);
     // 扩容
     addStorageEngineInProgress(expPort, true, false, null, EXP_SCHEMA_PREFIX);
 
+    showClusterInfo(null);
     // 查询扩容节点的历史数据，结果不为空
     testQueryHistoryDataExpHasData();
     // 再次查询新数据
