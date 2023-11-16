@@ -26,7 +26,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
   private static final char PARQUET_SEPARATOR = '$';
 
   public static final String IT_DATA_DIR = "IT_data";
-  public static final String IT_DATA_FILENAME = "data.parqut";
+  public static final String IT_DATA_FILENAME = "data.parquet";
 
   public ParquetHistoryDataGenerator() {}
 
@@ -107,7 +107,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       StringBuilder typeListStr = new StringBuilder();
       StringBuilder insertStr;
       for (Pair<String, String> p : columnList) {
-        typeListStr.append(p.k).append(" ").append(p.v).append(", ");
+        typeListStr.append(p.k).append(" ").append(toParquetDataType(p.v)).append(", ");
       }
 
       stmt.execute(
@@ -200,6 +200,24 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       Files.walkFileTree(parquetPath, new DeleteFileVisitor());
     } catch (IOException e) {
       logger.error("delete {} error: {}.", dir, e.getMessage());
+    }
+  }
+
+  public static String toParquetDataType(String dataType) {
+    switch (dataType) {
+      case "BOOLEAN":
+        return "BOOLEAN";
+      case "INTEGER":
+        return "INTEGER";
+      case "LONG":
+        return "BIGINT";
+      case "FLOAT":
+        return "FLOAT";
+      case "DOUBLE":
+        return "DOUBLE";
+      case "BINARY":
+      default:
+        return "VARCHAR";
     }
   }
 

@@ -45,7 +45,7 @@ public class Controller {
 
   private static final String MVN_RUN_TEST = "../.github/scripts/test/test_union.sh";
 
-  private static final String ADD_STORAGE_ENGINE_PARQUET = "ADD STORAGEENGINE (\"127.0.0.1\", 6668, \"parquet\", \"has_data:true, is_read_only:true, dir:test/parquet, dummy_dir:%s/%s, iginx_port:6888, data_prefix:%s\");";
+  private static final String ADD_STORAGE_ENGINE_PARQUET = "ADD STORAGEENGINE (\"127.0.0.1\", 6668, \"parquet\", \"has_data:true, is_read_only:true, dir:test/parquet, dummy_dir:%s, iginx_port:6888, data_prefix:%s\");";
 
   private static final Map<String, String> NAME_TO_INSTANCE =
       new HashMap<String, String>() {
@@ -190,7 +190,8 @@ public class Controller {
         if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == parquet) {
           ParquetHistoryDataGenerator parquetGenerator = (ParquetHistoryDataGenerator) generator;
           String path = pathList.get(i);
-          String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + path.substring(0, path.indexOf("."));
+          String tableName = path.substring(0, path.indexOf("."));
+          String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + System.getProperty("file.separator") + tableName;
           parquetGenerator.writeHistoryData(
               expPort,
               dir,
@@ -199,6 +200,12 @@ public class Controller {
               Collections.singletonList(dataTypeList.get(i)),
               keyList.get(i),
               rowValues);
+          try {
+            addEmbeddedStorageEngine(session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
+          } catch (SessionException | ExecutionException e) {
+            logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+            fail();
+          }
         } else {
           generator.writeHistoryData(
               expPort,
@@ -278,16 +285,33 @@ public class Controller {
       if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == parquet) {
         ParquetHistoryDataGenerator parquetGenerator = (ParquetHistoryDataGenerator) generator;
         String path = pathList.get(0);
-        String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + path.substring(0, path.indexOf("."));
+        String tableName = path.substring(0, path.indexOf("."));
+        String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + System.getProperty("file.separator") + tableName;
         parquetGenerator.writeHistoryData(
             expPort,
             dir,
             ParquetHistoryDataGenerator.IT_DATA_FILENAME,
             pathList, dataTypeList, lowerKeyList, lowerValuesList);
+        try {
+          addEmbeddedStorageEngine(session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
+        } catch (SessionException | ExecutionException e) {
+          logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+          fail();
+        }
       } else {
         generator.writeHistoryData(expPort, pathList, dataTypeList, lowerKeyList, lowerValuesList);
       }
     }
+  }
+
+  private static <T> void addEmbeddedStorageEngine(T session,String stmt) throws SessionException, ExecutionException {
+    MultiConnection multiConnection = null;
+    if (session instanceof MultiConnection) {
+      multiConnection = ((MultiConnection) session);
+    } else if (session instanceof Session) {
+      multiConnection = new MultiConnection(((Session) session));
+    }
+    multiConnection.executeSql(stmt);
   }
 
   private static <T> void writeDataWithSession(
