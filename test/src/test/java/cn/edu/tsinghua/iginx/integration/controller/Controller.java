@@ -1,11 +1,14 @@
 package cn.edu.tsinghua.iginx.integration.controller;
 
 import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.expPort;
+import static cn.edu.tsinghua.iginx.thrift.StorageEngineType.influxdb;
+import static cn.edu.tsinghua.iginx.thrift.StorageEngineType.parquet;
 import static org.junit.Assert.fail;
 
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
 import cn.edu.tsinghua.iginx.exceptions.SessionException;
 import cn.edu.tsinghua.iginx.integration.expansion.BaseHistoryDataGenerator;
+import cn.edu.tsinghua.iginx.integration.expansion.parquet.ParquetHistoryDataGenerator;
 import cn.edu.tsinghua.iginx.integration.func.session.InsertAPIType;
 import cn.edu.tsinghua.iginx.integration.tool.ConfLoader;
 import cn.edu.tsinghua.iginx.integration.tool.MultiConnection;
@@ -41,6 +44,8 @@ public class Controller {
   private static final String TEST_TASK_FILE = "./src/test/resources/testTask.txt";
 
   private static final String MVN_RUN_TEST = "../.github/scripts/test/test_union.sh";
+
+  private static final String ADD_STORAGE_ENGINE_PARQUET = "ADD STORAGEENGINE (\"127.0.0.1\", 6668, \"parquet\", \"has_data:true, is_read_only:true, dir:test/parquet, dummy_dir:%s/%s, iginx_port:6888, data_prefix:%s\");";
 
   private static final Map<String, String> NAME_TO_INSTANCE =
       new HashMap<String, String>() {
@@ -79,19 +84,6 @@ public class Controller {
           put("Redis", false);
           put("MongoDB", false);
           put("Parquet", true);
-        }
-      };
-
-  public static final Map<String, Boolean> NEED_DIVIDE_DATA =
-      new HashMap<String, Boolean>() {
-        {
-          put("FileSystem", true);
-          put("IoTDB12", true);
-          put("InfluxDB", true);
-          put("PostgreSQL", true);
-          put("Redis", true);
-          put("MongoDB", true);
-          put("Parquet", false);
         }
       };
 
@@ -159,7 +151,7 @@ public class Controller {
       boolean needWriteHistoryData) {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     int medium = 0;
-    if (!conf.isScaling() || !NEED_DIVIDE_DATA.get(conf.getStorageType())) {
+    if (!conf.isScaling()) {
       logger.info("skip the write history data step.");
       medium = pathList.size();
     } else {
@@ -195,12 +187,26 @@ public class Controller {
           logger.error("write data fail, caused by generator is null");
           return;
         }
-        generator.writeHistoryData(
-            expPort,
-            Collections.singletonList(pathList.get(i)),
-            Collections.singletonList(dataTypeList.get(i)),
-            keyList.get(i),
-            rowValues);
+        if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == parquet) {
+          ParquetHistoryDataGenerator parquetGenerator = (ParquetHistoryDataGenerator) generator;
+          String path = pathList.get(i);
+          String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + path.substring(0, path.indexOf("."));
+          parquetGenerator.writeHistoryData(
+              expPort,
+              dir,
+              ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+              Collections.singletonList(pathList.get(i)),
+              Collections.singletonList(dataTypeList.get(i)),
+              keyList.get(i),
+              rowValues);
+        } else {
+          generator.writeHistoryData(
+              expPort,
+              Collections.singletonList(pathList.get(i)),
+              Collections.singletonList(dataTypeList.get(i)),
+              keyList.get(i),
+              rowValues);
+        }
       }
     }
   }
@@ -216,7 +222,7 @@ public class Controller {
       boolean needWriteHistoryData) {
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     int medium = 0;
-    if (!conf.isScaling() || !NEED_DIVIDE_DATA.get(conf.getStorageType())) {
+    if (!conf.isScaling()) {
       logger.info("skip the write history data step.");
       medium = keyList.size();
     } else {
@@ -269,7 +275,18 @@ public class Controller {
         logger.error("write data fail, caused by generator is null");
         return;
       }
-      generator.writeHistoryData(expPort, pathList, dataTypeList, lowerKeyList, lowerValuesList);
+      if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == parquet) {
+        ParquetHistoryDataGenerator parquetGenerator = (ParquetHistoryDataGenerator) generator;
+        String path = pathList.get(0);
+        String dir = ParquetHistoryDataGenerator.IT_DATA_DIR + path.substring(0, path.indexOf("."));
+        parquetGenerator.writeHistoryData(
+            expPort,
+            dir,
+            ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+            pathList, dataTypeList, lowerKeyList, lowerValuesList);
+      } else {
+        generator.writeHistoryData(expPort, pathList, dataTypeList, lowerKeyList, lowerValuesList);
+      }
     }
   }
 
