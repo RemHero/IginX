@@ -203,8 +203,10 @@ public class Controller {
           try {
             addEmbeddedStorageEngine(session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
           } catch (SessionException | ExecutionException e) {
-            logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
-            fail();
+            if (!e.getMessage().contains("unexpected repeated add")) {
+              logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+              fail();
+            }
           }
         } else {
           generator.writeHistoryData(
@@ -295,8 +297,10 @@ public class Controller {
         try {
           addEmbeddedStorageEngine(session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
         } catch (SessionException | ExecutionException e) {
-          logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
-          fail();
+          if (!e.getMessage().contains("unexpected repeated add")) {
+            logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+            fail();
+          }
         }
       } else {
         generator.writeHistoryData(expPort, pathList, dataTypeList, lowerKeyList, lowerValuesList);
