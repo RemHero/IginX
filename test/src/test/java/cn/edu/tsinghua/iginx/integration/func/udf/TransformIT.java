@@ -178,6 +178,16 @@ public class TransformIT {
     }
   }
 
+  public void showClusterInfo() throws SessionException, ExecutionException {
+    String statement = "select * from zzzzzzzzzzzzzzzzzzzzzzzzzzzz;";
+    String actualOutput = session.executeSql(statement).getResultInString(false, "");
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+
+    statement = "select * from b;";
+    actualOutput = session.executeSql(statement).getResultInString(false, "");;
+    logger.info("===============LHZ===================show cluster info: {}", actualOutput);
+  }
+
   private static void dropTask(String task) throws SessionException, ExecutionException {
     SessionExecuteSqlResult result = session.executeSql(SHOW_REGISTER_TASK_SQL);
     for (RegisterTaskInfo info : result.getRegisterTaskInfos()) {
@@ -463,8 +473,9 @@ public class TransformIT {
   }
 
   @Test
-  public void commitMultiplePythonJobsByYamlWithExportToIginxTest() {
+  public void commitMultiplePythonJobsByYamlWithExportToIginxTest() throws SessionException, ExecutionException {
     logger.info("commitMultiplePythonJobsByYamlWithExportToIginxTest");
+    showClusterInfo();
     try {
       String[] taskList = {"RowSumTransformer", "AddOneTransformer"};
       for (String task : taskList) {
