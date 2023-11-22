@@ -63,6 +63,7 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
 
   @Override
   public TaskExecuteResult execute() {
+    logger.info("execute binary task {}", this);
     TaskExecuteResult parentResultA = parentTaskA.getResult();
     if (parentResultA == null) {
       return new TaskExecuteResult(

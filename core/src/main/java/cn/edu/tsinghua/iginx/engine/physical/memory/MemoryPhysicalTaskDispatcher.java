@@ -67,18 +67,23 @@ public class MemoryPhysicalTaskDispatcher {
                   () -> {
                     MemoryPhysicalTask currentTask = task;
                     while (currentTask != null) {
+                      logger.info("start to execute memory task: " + currentTask);
                       TaskExecuteResult result;
                       long startTime = System.currentTimeMillis();
                       try {
                         result = currentTask.execute();
+                        logger.info("execute memory task success: " + currentTask);
                       } catch (Exception e) {
                         logger.error("execute memory task failure: ", e);
                         result = new TaskExecuteResult(new PhysicalException(e));
                       }
                       long span = System.currentTimeMillis() - startTime;
+                      logger.info("memory task execute time: " + span);
                       currentTask.setSpan(span);
                       currentTask.setResult(result);
+                      logger.info("memory task execute result: " + result);
                       if (currentTask.getFollowerTask() != null) { // 链式执行可以被执行的任务
+                        logger.info("memory task has follower task: " + currentTask);
                         MemoryPhysicalTask followerTask =
                             (MemoryPhysicalTask) currentTask.getFollowerTask();
                         if (followerTask.notifyParentReady()) {
@@ -86,9 +91,11 @@ public class MemoryPhysicalTaskDispatcher {
                         } else {
                           currentTask = null;
                         }
+                        logger.info("memory task follower task: " + followerTask);
                       } else {
                         currentTask = null;
                       }
+                      logger.info("memory task execute finish: " + currentTask);
                     }
                   });
             }

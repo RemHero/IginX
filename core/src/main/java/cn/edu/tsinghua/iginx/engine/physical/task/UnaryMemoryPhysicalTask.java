@@ -38,6 +38,7 @@ public class UnaryMemoryPhysicalTask extends MemoryPhysicalTask {
 
   @Override
   public TaskExecuteResult execute() {
+    logger.info("execute unary task {}", this);
     TaskExecuteResult parentResult = parentTask.getResult();
     if (parentResult == null) {
       return new TaskExecuteResult(

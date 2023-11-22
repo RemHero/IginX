@@ -82,11 +82,13 @@ public class PhysicalEngineImpl implements PhysicalEngine {
         return result.getRowStream();
       }
     }
+    logger.info("PhysicalEngineImpl.execute: " + root);
     PhysicalTask task = optimizer.optimize(root, ctx);
     ctx.setPhysicalTree(task);
     List<PhysicalTask> bottomTasks = new ArrayList<>();
     getBottomTasks(bottomTasks, task);
     commitBottomTasks(bottomTasks);
+    logger.info("done commitBottomTasks");
     TaskExecuteResult result = task.getResult();
     if (result.getException() != null) {
       throw result.getException();

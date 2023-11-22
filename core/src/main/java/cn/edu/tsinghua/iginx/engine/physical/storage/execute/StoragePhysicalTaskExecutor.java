@@ -147,6 +147,7 @@ public class StoragePhysicalTaskExecutor {
                               DataArea dataArea =
                                   new DataArea(storageUnit, fragmentMeta.getKeyInterval());
 
+                              logger.info("[DEBUG] execute task: " + task);
                               switch (op.getType()) {
                                 case Project:
                                   boolean needSelectPushDown =
@@ -155,18 +156,22 @@ public class StoragePhysicalTaskExecutor {
                                           && operators.get(1).getType() == OperatorType.Select;
                                   if (isDummyStorageUnit) {
                                     if (needSelectPushDown) {
+                                      logger.info("executeProjectDummyWithSelect");
                                       result =
                                           pair.k.executeProjectDummyWithSelect(
                                               (Project) op, (Select) operators.get(1), dataArea);
                                     } else {
+                                      logger.info("executeProjectDummy");
                                       result = pair.k.executeProjectDummy((Project) op, dataArea);
                                     }
                                   } else {
                                     if (needSelectPushDown) {
+                                      logger.info("executeProjectWithSelect");
                                       result =
                                           pair.k.executeProjectWithSelect(
                                               (Project) op, (Select) operators.get(1), dataArea);
                                     } else {
+                                      logger.info("executeProject");
                                       result = pair.k.executeProject((Project) op, dataArea);
                                     }
                                   }
@@ -188,6 +193,7 @@ public class StoragePhysicalTaskExecutor {
                               result = new TaskExecuteResult(new PhysicalException(e));
                             }
                             try {
+                              logger.info("record after");
                               HotSpotMonitor.getInstance()
                                   .recordAfter(
                                       taskId,
@@ -195,6 +201,7 @@ public class StoragePhysicalTaskExecutor {
                                       task.getOperators().get(0).getType());
                               RequestsMonitor.getInstance()
                                   .record(task.getTargetFragment(), task.getOperators().get(0));
+                              logger.info("record after done");
                             } catch (Exception e) {
                               logger.error("Monitor catch error:", e);
                             }
@@ -203,14 +210,17 @@ public class StoragePhysicalTaskExecutor {
                             task.setResult(result);
                             if (task.getFollowerTask() != null
                                 && task.isSync()) { // 只有同步任务才会影响后续任务的执行
+                              logger.info("notify follower task ready");
                               MemoryPhysicalTask followerTask =
                                   (MemoryPhysicalTask) task.getFollowerTask();
                               boolean isFollowerTaskReady = followerTask.notifyParentReady();
                               if (isFollowerTaskReady) {
                                 memoryTaskExecutor.addMemoryTask(followerTask);
                               }
+                              logger.info("notify follower task ready done");
                             }
                             if (task.isNeedBroadcasting()) { // 需要传播
+                              logger.info("task " + task + " need broadcasting");
                               if (result.getException() != null) {
                                 logger.error(
                                     "task "
@@ -219,6 +229,7 @@ public class StoragePhysicalTaskExecutor {
                                         + result.getException());
                                 task.setResult(new TaskExecuteResult(result.getException()));
                               } else {
+                                logger.info("task " + task + " will broadcasting to replicas");
                                 StorageUnitMeta masterStorageUnit =
                                     task.getTargetFragment().getMasterStorageUnit();
                                 List<String> replicaIds =
@@ -236,6 +247,7 @@ public class StoragePhysicalTaskExecutor {
                                   logger.info("broadcasting task " + task + " to " + replicaId);
                                 }
                               }
+                              logger.info("task " + task + " broadcasting done");
                             }
                           });
                     }

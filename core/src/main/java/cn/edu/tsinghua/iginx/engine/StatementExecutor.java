@@ -271,6 +271,7 @@ public class StatementExecutor {
   }
 
   public void executeSQL(RequestContext ctx) {
+    logger.info("[DEBUG] executeSQL: " + ctx.getSql());
     try {
       before(ctx, preParseProcessors);
       builder.buildFromSQL(ctx);
@@ -348,7 +349,9 @@ public class StatementExecutor {
       before(ctx, preLogicalProcessors);
       Operator root = generator.generate(ctx);
       after(ctx, postLogicalProcessors);
+      logger.info("[DEBUG] process: " + root);
       if (root == null && !metaManager.hasWritableStorageEngines()) {
+        logger.info("Execute Error: no writable storage engine.");
         ctx.setResult(new Result(RpcUtils.SUCCESS));
         setResult(ctx, new EmptyRowStream());
         return;
@@ -362,9 +365,11 @@ public class StatementExecutor {
           }
         }
 
+        logger.info("[DEBUG] process: " + root);
         before(ctx, prePhysicalProcessors);
         RowStream stream = engine.execute(ctx, root);
         after(ctx, postPhysicalProcessors);
+        logger.info("[DEBUG] execute done.");
 
         if (type == StatementType.SELECT) {
           SelectStatement selectStatement = (SelectStatement) ctx.getStatement();
