@@ -512,6 +512,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
 
   private RowStream executeAddSchemaPrefix(AddSchemaPrefix addSchemaPrefix, Table table)
       throws PhysicalException {
+    logger.info("[DEBUG] execute add schema prefix");
     Header header = table.getHeader();
     String schemaPrefix = addSchemaPrefix.getSchemaPrefix();
 
@@ -529,6 +530,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
               }
             });
 
+    logger.info("[DEBUG] fields: " + fields);
     Header newHeader = new Header(header.getKey(), fields);
 
     List<Row> rows = new ArrayList<>();
@@ -542,6 +544,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
                 rows.add(new Row(newHeader, row.getValues()));
               }
             });
+    logger.info("[DEBUG] rows: " + rows);
 
     return new Table(newHeader, rows);
   }

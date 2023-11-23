@@ -59,6 +59,7 @@ public class UnaryMemoryPhysicalTask extends MemoryPhysicalTask {
         }
         logger.info("[DEBUG] execute unary operator: " + op.getInfo());
         stream = executor.executeUnaryOperator((UnaryOperator) op, stream, context);
+        logger.info("[DEBUG] execute unary operator success: " + op.getInfo());
       }
     } catch (PhysicalException e) {
       logger.error("encounter error when execute operator in memory: ", e);
