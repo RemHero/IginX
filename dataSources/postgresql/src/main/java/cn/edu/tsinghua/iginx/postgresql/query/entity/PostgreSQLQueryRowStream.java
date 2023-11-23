@@ -17,6 +17,7 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.postgresql.tools.DataTypeTransformer;
+import cn.edu.tsinghua.iginx.postgresql.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.postgresql.tools.PostgreSQLSchema;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.Pair;
@@ -250,7 +251,7 @@ public class PostgreSQLQueryRowStream implements RowStream {
             // 所以查询出来的KEY值一定是（我们需要的KEY值 * 表的数量），因此只需要裁剪取第一个表的key列的值即可
             String keyString = resultSet.getString(KEY_NAME);
             keyString = keyString.substring(0, keyString.length() / tableNameSet.size());
-            tempKey = testKey++;
+            tempKey = toHash(keyString);
           } else {
             logger.info("[DEBUG] cacheOneRow 11");
             tempKey = resultSet.getLong(KEY_NAME);
@@ -300,12 +301,15 @@ public class PostgreSQLQueryRowStream implements RowStream {
       cachedRow = new Row(header, key, values);
       if (isDummy && !validate(filter, cachedRow)) {
         logger.info("[DEBUG] cacheOneRow 21");
+        logger.info("[DEBUG] filter: " + FilterTransformer.toString(filter));
+        logger.info("[DEBUG] cachedRow: " + cachedRow.toString());
         cacheOneRow();
       }
     } else {
       logger.info("[DEBUG] cacheOneRow 22");
       cachedRow = null;
     }
+    logger.info("[DEBUG] cacheOneRow 22");
     hasCachedRow = true;
   }
 

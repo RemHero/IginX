@@ -208,6 +208,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
       logger.info("[DEBUG] stream.hasNext()");
       rows.add(stream.next());
     }
+    logger.info("[DEBUG] transformToTable end");
     stream.close();
     return new Table(header, rows);
   }
