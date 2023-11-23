@@ -95,6 +95,7 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
       }
       logger.info("[DEBUG] execute binary operator: " + op.getInfo());
       stream = executor.executeBinaryOperator((BinaryOperator) op, streamA, streamB, context);
+      logger.info("[DEBUG] execute binary operator result done");
       for (int i = 1; i < operators.size(); i++) {
         op = operators.get(i);
         logger.info("[DEBUG] execute unary operator: " + op.getInfo());

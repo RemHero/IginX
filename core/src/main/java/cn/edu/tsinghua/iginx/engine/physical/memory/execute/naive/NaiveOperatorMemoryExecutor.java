@@ -2201,6 +2201,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   private RowStream executePathUnion(PathUnion union, Table tableA, Table tableB)
       throws PhysicalException {
     // 检查时间是否一致
+    logger.info("[DEBUG] union: " + union.getInfo());
     Header headerA = tableA.getHeader();
     Header headerB = tableB.getHeader();
     if (headerA.hasKey() ^ headerB.hasKey()) {
@@ -2213,7 +2214,9 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     List<Field> targetFields = new ArrayList<>(targetFieldSet);
     Header targetHeader;
     List<Row> rows = new ArrayList<>();
+    logger.info("[DEBUG] beging union");
     if (!hasKey) {
+      logger.info("[DEBUG] union without key");
       targetHeader = new Header(targetFields);
       for (Row row : tableA.getRows()) {
         rows.add(RowUtils.transform(row, targetHeader));
@@ -2222,9 +2225,11 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         rows.add(RowUtils.transform(row, targetHeader));
       }
     } else {
+      logger.info("[DEBUG] union with key");
       targetHeader = new Header(Field.KEY, targetFields);
       int index1 = 0, index2 = 0;
       while (index1 < tableA.getRowSize() && index2 < tableB.getRowSize()) {
+        logger.info("[DEBUG] union with key: " + index1 + " " + index2);
         Row row1 = tableA.getRow(index1);
         Row row2 = tableB.getRow(index2);
         if (row1.getKey() <= row2.getKey()) {
@@ -2235,13 +2240,16 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
           index2++;
         }
       }
+      logger.info("[DEBUG] next: " + index1 + " " + index2);
       for (; index1 < tableA.getRowSize(); index1++) {
         rows.add(RowUtils.transform(tableA.getRow(index1), targetHeader));
       }
+      logger.info("[DEBUG] next2: " + index1 + " " + index2);
       for (; index2 < tableB.getRowSize(); index2++) {
         rows.add(RowUtils.transform(tableB.getRow(index2), targetHeader));
       }
     }
+    logger.info("[DEBUG] end union");
     return new Table(targetHeader, rows);
   }
 
