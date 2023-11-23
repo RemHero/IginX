@@ -124,6 +124,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
       UnaryOperator operator, RowStream stream, RequestContext context) throws PhysicalException {
     logger.info("[DEBUG] execute unary operator: " + operator.getType());
     Table table = transformToTable(stream);
+    logger.info("[DEBUG] table: " + table);
     table.setContext(context);
     switch (operator.getType()) {
       case Project:
@@ -196,12 +197,15 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   }
 
   private Table transformToTable(RowStream stream) throws PhysicalException {
+    logger.info("[DEBUG] transformToTable begin");
     if (stream instanceof Table) {
       return (Table) stream;
     }
+    logger.info("[DEBUG] transformToTable");
     Header header = stream.getHeader();
     List<Row> rows = new ArrayList<>();
     while (stream.hasNext()) {
+      logger.info("[DEBUG] stream.hasNext()");
       rows.add(stream.next());
     }
     stream.close();
