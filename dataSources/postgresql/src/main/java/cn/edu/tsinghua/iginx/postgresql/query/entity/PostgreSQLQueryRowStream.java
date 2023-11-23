@@ -195,119 +195,124 @@ public class PostgreSQLQueryRowStream implements RowStream {
   }
 
   private void cacheOneRow() throws SQLException, PhysicalException {
-    logger.info("[DEBUG] cacheOneRow 1");
-    boolean hasNext = false;
-    long key;
-    Object[] values = new Object[header.getFieldSize()];
+    while(true) {
+      logger.info("[DEBUG] cacheOneRow 1");
+      boolean hasNext = false;
+      long key;
+      Object[] values = new Object[header.getFieldSize()];
 
-    int startIndex = 0;
-    int endIndex = 0;
-    for (int i = 0; i < resultSets.size(); i++) {
-      logger.info("[DEBUG] cacheOneRow 2");
-      ResultSet resultSet = resultSets.get(i);
-      if (resultSetSizes[i] == 0) {
-        logger.info("[DEBUG] cacheOneRow 3");
-        continue;
-      }
-      logger.info("[DEBUG] cacheOneRow 4");
-      endIndex += resultSetSizes[i];
-      if (!gotNext[i]) {
-        logger.info("[DEBUG] cacheOneRow 5");
-        boolean tempHasNext = resultSet.next();
-        hasNext |= tempHasNext;
-        gotNext[i] = true;
-
-        if (tempHasNext) {
-          logger.info("[DEBUG] cacheOneRow 6");
-          long tempKey;
-          Object tempValue;
-
-          Set<String> tableNameSet = new HashSet<>();
-
-          for (int j = 0; j < resultSetSizes[i]; j++) {
-            logger.info("[DEBUG] cacheOneRow 7");
-            String columnName = fieldToColumnName.get(header.getField(startIndex + j));
-            PostgreSQLSchema schema =
-                new PostgreSQLSchema(header.getField(startIndex + j).getName(), isDummy);
-            String tableName = schema.getTableName();
-
-            tableNameSet.add(tableName);
-
-            Object value = getResultSetObject(resultSet, columnName, tableName);
-            if (header.getField(startIndex + j).getType() == DataType.BINARY && value != null) {
-              logger.info("[DEBUG] cacheOneRow 8");
-              tempValue = value.toString().getBytes();
-            } else {
-              logger.info("[DEBUG] cacheOneRow 9");
-              tempValue = value;
-            }
-            cachedValues[startIndex + j] = tempValue;
-          }
-
-          if (isDummy) {
-            logger.info("[DEBUG] cacheOneRow 10");
-            // 在Dummy查询的Join操作中，key列的值是由多个Join表的所有列的值拼接而成的，但实际上的Key列仅由一个表的所有列的值拼接而成
-            // 所以在这里需要将key列的值截断为一个表的所有列的值，因为能合并在一行里的不同表的数据一定是key相同的
-            // 所以查询出来的KEY值一定是（我们需要的KEY值 * 表的数量），因此只需要裁剪取第一个表的key列的值即可
-            String keyString = resultSet.getString(KEY_NAME);
-            keyString = keyString.substring(0, keyString.length() / tableNameSet.size());
-            tempKey = toHash(keyString);
-          } else {
-            logger.info("[DEBUG] cacheOneRow 11");
-            tempKey = resultSet.getLong(KEY_NAME);
-          }
-          cachedKeys[i] = tempKey;
-
-          logger.info("[DEBUG] cacheOneRow 12");
-        } else {
-          logger.info("[DEBUG] cacheOneRow 13");
-          cachedKeys[i] = Long.MAX_VALUE;
-          for (int j = startIndex; j < endIndex; j++) {
-            cachedValues[j] = null;
-          }
-        }
-      } else {
-        logger.info("[DEBUG] cacheOneRow 14");
-        hasNext = true;
-      }
-      startIndex = endIndex;
-    }
-
-    logger.info("[DEBUG] cacheOneRow 15");
-    if (hasNext) {
-      logger.info("[DEBUG] cacheOneRow 16");
-      key = Arrays.stream(cachedKeys).min().getAsLong();
-      startIndex = 0;
-      endIndex = 0;
+      int startIndex = 0;
+      int endIndex = 0;
       for (int i = 0; i < resultSets.size(); i++) {
-        logger.info("[DEBUG] cacheOneRow 17");
+        logger.info("[DEBUG] cacheOneRow 2");
+        ResultSet resultSet = resultSets.get(i);
+        if (resultSetSizes[i] == 0) {
+          logger.info("[DEBUG] cacheOneRow 3");
+          continue;
+        }
+        logger.info("[DEBUG] cacheOneRow 4");
         endIndex += resultSetSizes[i];
-        if (cachedKeys[i] == key) {
-          logger.info("[DEBUG] cacheOneRow 18");
-          for (int j = 0; j < resultSetSizes[i]; j++) {
-            values[startIndex + j] = cachedValues[startIndex + j];
-          }
-          gotNext[i] = false;
-        } else {
-          logger.info("[DEBUG] cacheOneRow 19");
-          for (int j = 0; j < resultSetSizes[i]; j++) {
-            values[startIndex + j] = null;
-          }
+        if (!gotNext[i]) {
+          logger.info("[DEBUG] cacheOneRow 5");
+          boolean tempHasNext = resultSet.next();
+          hasNext |= tempHasNext;
           gotNext[i] = true;
+
+          if (tempHasNext) {
+            logger.info("[DEBUG] cacheOneRow 6");
+            long tempKey;
+            Object tempValue;
+
+            Set<String> tableNameSet = new HashSet<>();
+
+            for (int j = 0; j < resultSetSizes[i]; j++) {
+              logger.info("[DEBUG] cacheOneRow 7");
+              String columnName = fieldToColumnName.get(header.getField(startIndex + j));
+              PostgreSQLSchema schema =
+                  new PostgreSQLSchema(header.getField(startIndex + j).getName(), isDummy);
+              String tableName = schema.getTableName();
+
+              tableNameSet.add(tableName);
+
+              Object value = getResultSetObject(resultSet, columnName, tableName);
+              if (header.getField(startIndex + j).getType() == DataType.BINARY && value != null) {
+                logger.info("[DEBUG] cacheOneRow 8");
+                tempValue = value.toString().getBytes();
+              } else {
+                logger.info("[DEBUG] cacheOneRow 9");
+                tempValue = value;
+              }
+              cachedValues[startIndex + j] = tempValue;
+            }
+
+            if (isDummy) {
+              logger.info("[DEBUG] cacheOneRow 10");
+              // 在Dummy查询的Join操作中，key列的值是由多个Join表的所有列的值拼接而成的，但实际上的Key列仅由一个表的所有列的值拼接而成
+              // 所以在这里需要将key列的值截断为一个表的所有列的值，因为能合并在一行里的不同表的数据一定是key相同的
+              // 所以查询出来的KEY值一定是（我们需要的KEY值 * 表的数量），因此只需要裁剪取第一个表的key列的值即可
+              String keyString = resultSet.getString(KEY_NAME);
+              keyString = keyString.substring(0, keyString.length() / tableNameSet.size());
+              tempKey = toHash(keyString);
+            } else {
+              logger.info("[DEBUG] cacheOneRow 11");
+              tempKey = resultSet.getLong(KEY_NAME);
+            }
+            cachedKeys[i] = tempKey;
+
+            logger.info("[DEBUG] cacheOneRow 12");
+          } else {
+            logger.info("[DEBUG] cacheOneRow 13");
+            cachedKeys[i] = Long.MAX_VALUE;
+            for (int j = startIndex; j < endIndex; j++) {
+              cachedValues[j] = null;
+            }
+          }
+        } else {
+          logger.info("[DEBUG] cacheOneRow 14");
+          hasNext = true;
         }
         startIndex = endIndex;
       }
-      logger.info("[DEBUG] cacheOneRow 20");
-      cachedRow = new Row(header, key, values);
-      if (isDummy && !validate(filter, cachedRow)) {
-        logger.info("[DEBUG] cacheOneRow 21");
-        logger.info("[DEBUG] filter: " + FilterTransformer.toString(filter));
-        logger.info("[DEBUG] cachedRow: " + cachedRow.toString());
-        cacheOneRow();
+
+      logger.info("[DEBUG] cacheOneRow 15");
+      if (hasNext) {
+        logger.info("[DEBUG] cacheOneRow 16");
+        key = Arrays.stream(cachedKeys).min().getAsLong();
+        startIndex = 0;
+        endIndex = 0;
+        for (int i = 0; i < resultSets.size(); i++) {
+          logger.info("[DEBUG] cacheOneRow 17");
+          endIndex += resultSetSizes[i];
+          if (cachedKeys[i] == key) {
+            logger.info("[DEBUG] cacheOneRow 18");
+            for (int j = 0; j < resultSetSizes[i]; j++) {
+              values[startIndex + j] = cachedValues[startIndex + j];
+            }
+            gotNext[i] = false;
+          } else {
+            logger.info("[DEBUG] cacheOneRow 19");
+            for (int j = 0; j < resultSetSizes[i]; j++) {
+              values[startIndex + j] = null;
+            }
+            gotNext[i] = true;
+          }
+          startIndex = endIndex;
+        }
+        logger.info("[DEBUG] cacheOneRow 20");
+        cachedRow = new Row(header, key, values);
+        if (isDummy && !validate(filter, cachedRow)) {
+          logger.info("[DEBUG] cacheOneRow 21");
+          logger.info("[DEBUG] cacheOneRow 21.1");
+          logger.info("[DEBUG] filter: " + filter);
+          logger.info("[DEBUG] filter: " + FilterTransformer.toString(filter));
+          logger.info("[DEBUG] cachedRow: " + cachedRow.toString());
+          continue;
+        }
+      } else {
+        logger.info("[DEBUG] cacheOneRow 22");
+        cachedRow = null;
       }
-    } else {
-      logger.info("[DEBUG] cacheOneRow 22");
-      cachedRow = null;
+      break;
     }
     logger.info("[DEBUG] cacheOneRow 22");
     hasCachedRow = true;
