@@ -52,6 +52,7 @@ public class UnaryMemoryPhysicalTask extends MemoryPhysicalTask {
     OperatorMemoryExecutor executor =
         OperatorMemoryExecutorFactory.getInstance().getMemoryExecutor();
     try {
+      logger.info("[DEBUG] operators size: " + operators.size());
       for (Operator op : operators) {
         if (!OperatorType.isUnaryOperator(op.getType())) {
           throw new UnexpectedOperatorException("unexpected operator " + op + " in unary task");

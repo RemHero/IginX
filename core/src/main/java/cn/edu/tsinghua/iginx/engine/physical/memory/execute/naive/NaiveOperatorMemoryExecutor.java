@@ -122,6 +122,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   @Override
   public RowStream executeUnaryOperator(
       UnaryOperator operator, RowStream stream, RequestContext context) throws PhysicalException {
+    logger.info("[DEBUG] execute unary operator: " + operator.getType());
     Table table = transformToTable(stream);
     table.setContext(context);
     switch (operator.getType()) {
