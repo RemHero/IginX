@@ -53,6 +53,8 @@ public class PostgreSQLQueryRowStream implements RowStream {
 
   private boolean hasCachedRow;
 
+  private long testKey = 0;
+
   private List<Boolean> resultSetHasColumnWithTheSameName;
 
   public PostgreSQLQueryRowStream(
@@ -248,7 +250,7 @@ public class PostgreSQLQueryRowStream implements RowStream {
             // 所以查询出来的KEY值一定是（我们需要的KEY值 * 表的数量），因此只需要裁剪取第一个表的key列的值即可
             String keyString = resultSet.getString(KEY_NAME);
             keyString = keyString.substring(0, keyString.length() / tableNameSet.size());
-            tempKey = toHash(keyString);
+            tempKey = testKey++;
           } else {
             logger.info("[DEBUG] cacheOneRow 11");
             tempKey = resultSet.getLong(KEY_NAME);
