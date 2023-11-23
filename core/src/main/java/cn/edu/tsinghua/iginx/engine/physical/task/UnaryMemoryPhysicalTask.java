@@ -56,6 +56,7 @@ public class UnaryMemoryPhysicalTask extends MemoryPhysicalTask {
         if (!OperatorType.isUnaryOperator(op.getType())) {
           throw new UnexpectedOperatorException("unexpected operator " + op + " in unary task");
         }
+        logger.info("[DEBUG] execute unary operator: " + op.getInfo());
         stream = executor.executeUnaryOperator((UnaryOperator) op, stream, context);
       }
     } catch (PhysicalException e) {

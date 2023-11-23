@@ -69,6 +69,7 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
       return new TaskExecuteResult(
           new PhysicalException("unexpected parent task execute result for " + this + ": null"));
     }
+    logger.info("[DEBUG] parentResultA: " + parentResultA);
     if (parentResultA.getException() != null) {
       return parentResultA;
     }
@@ -77,6 +78,7 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
       return new TaskExecuteResult(
           new PhysicalException("unexpected parent task execute result for " + this + ": null"));
     }
+    logger.info("[DEBUG] parentResultB: " + parentResultB);
     if (parentResultB.getException() != null) {
       return parentResultB;
     }
@@ -91,14 +93,17 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
       if (!OperatorType.isBinaryOperator(op.getType())) {
         throw new UnexpectedOperatorException("unexpected operator " + op + " in binary task");
       }
+      logger.info("[DEBUG] execute binary operator: " + op.getInfo());
       stream = executor.executeBinaryOperator((BinaryOperator) op, streamA, streamB, context);
       for (int i = 1; i < operators.size(); i++) {
         op = operators.get(i);
+        logger.info("[DEBUG] execute unary operator: " + op.getInfo());
         if (OperatorType.isBinaryOperator(op.getType())) {
           throw new UnexpectedOperatorException(
               "unexpected binary operator " + op + " in unary task");
         }
         stream = executor.executeUnaryOperator((UnaryOperator) op, stream, context);
+        logger.info("[DEBUG] execute unary operator result done");
       }
     } catch (PhysicalException e) {
       logger.error("encounter error when execute operator in memory: ", e);

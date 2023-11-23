@@ -83,15 +83,17 @@ public class MemoryPhysicalTaskDispatcher {
                       currentTask.setResult(result);
                       logger.info("memory task execute result: " + result);
                       if (currentTask.getFollowerTask() != null) { // 链式执行可以被执行的任务
-                        logger.info("memory task has follower task: " + currentTask);
+                        logger.info("memory task current task: " + currentTask.getInfo());
                         MemoryPhysicalTask followerTask =
                             (MemoryPhysicalTask) currentTask.getFollowerTask();
                         if (followerTask.notifyParentReady()) {
+                          logger.info("[DEBUG] has follower task: " + followerTask.getInfo());
                           currentTask = followerTask;
                         } else {
+                          logger.info("[DEBUG] no follower task: " + followerTask.getInfo());
                           currentTask = null;
                         }
-                        logger.info("memory task follower task: " + followerTask);
+                        logger.info("memory task follower task: " + followerTask.getInfo());
                       } else {
                         currentTask = null;
                       }

@@ -162,10 +162,12 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   public RowStream executeBinaryOperator(
       BinaryOperator operator, RowStream streamA, RowStream streamB, RequestContext context)
       throws PhysicalException {
+    logger.info("execute binary operator: " + operator.getType());
     Table tableA = transformToTable(streamA);
     Table tableB = transformToTable(streamB);
     tableA.setContext(context);
     tableB.setContext(context);
+    logger.info("[DEBUG] begin");
     switch (operator.getType()) {
       case Join:
         return executeJoin((Join) operator, tableA, tableB);
@@ -653,6 +655,8 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     Header headerA = tableA.getHeader();
     Header headerB = tableB.getHeader();
     // 检查 field，暂时不需要
+    logger.info("[DEBUG] headerA: " + headerA);
+    logger.info("[DEBUG] headerB: " + headerB);
     for (Field field : headerA.getFields()) {
       Field relatedField = headerB.getFieldByName(field.getFullName());
       if (relatedField != null) {
@@ -669,10 +673,12 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
       }
     }
     if (hasIntersect) {
+      logger.info("[DEBUG] has intersect");
       return executeIntersectJoin(join, tableA, tableB);
     }
     // 目前只支持使用时间戳和顺序
     if (join.getJoinBy().equals(Constants.KEY)) {
+      logger.info("[DEBUG] join by key");
       // 检查时间戳
       if (!headerA.hasKey() || !headerB.hasKey()) {
         throw new InvalidOperatorParameterException(
@@ -708,6 +714,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         }
         newRows.add(new Row(newHeader, timestamp, values));
       }
+      logger.info("[DEBUG] 11 index1: " + index1 + ", index2: " + index2);
 
       for (; index1 < tableA.getRowSize(); index1++) {
         Row rowA = tableA.getRow(index1);
@@ -715,6 +722,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         System.arraycopy(rowA.getValues(), 0, values, 0, headerA.getFieldSize());
         newRows.add(new Row(newHeader, rowA.getKey(), values));
       }
+      logger.info("[DEBUG] 22 index1: " + index1 + ", index2: " + index2);
 
       for (; index2 < tableB.getRowSize(); index2++) {
         Row rowB = tableB.getRow(index2);
@@ -723,6 +731,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
             rowB.getValues(), 0, values, headerA.getFieldSize(), headerB.getFieldSize());
         newRows.add(new Row(newHeader, rowB.getKey(), values));
       }
+      logger.info("[DEBUG] 33 index1: " + index1 + ", index2: " + index2);
       return new Table(newHeader, newRows);
     } else if (join.getJoinBy().equals(Constants.ORDINAL)) {
       if (headerA.hasKey() || headerB.hasKey()) {
