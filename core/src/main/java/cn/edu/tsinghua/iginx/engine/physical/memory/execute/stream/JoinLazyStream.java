@@ -93,7 +93,7 @@ public class JoinLazyStream extends BinaryLazyStream {
       }
     }
     List<Field> newFields = new ArrayList<>();
-    if (hasIntersect) {
+//    if (hasIntersect) {
       fieldIndices = new HashMap<>();
       for (Field field : headerA.getFields()) {
         if (fieldIndices.containsKey(field)) {
@@ -109,10 +109,10 @@ public class JoinLazyStream extends BinaryLazyStream {
         fieldIndices.put(field, newFields.size());
         newFields.add(field);
       }
-    } else {
-      newFields.addAll(headerA.getFields());
-      newFields.addAll(headerB.getFields());
-    }
+//    } else {
+//      newFields.addAll(headerA.getFields());
+//      newFields.addAll(headerB.getFields());
+//    }
 
     if (joinByTime) {
       if (!headerA.hasKey() || !headerB.hasKey()) {

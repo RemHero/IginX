@@ -20,6 +20,8 @@ package cn.edu.tsinghua.iginx.utils;
 
 import cn.edu.tsinghua.iginx.exceptions.UnsupportedDataTypeException;
 import cn.edu.tsinghua.iginx.thrift.DataType;
+
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -224,7 +226,7 @@ public class ByteUtils {
     for (long value : array) {
       buffer.putLong(value);
     }
-    buffer.flip();
+    ((Buffer)buffer).flip();
     return buffer;
   }
 
@@ -260,7 +262,7 @@ public class ByteUtils {
           throw new UnsupportedOperationException(dataType.toString());
       }
     }
-    buffer.flip();
+    ((Buffer)buffer).flip();
     return buffer;
   }
 
@@ -319,7 +321,7 @@ public class ByteUtils {
       default:
         throw new UnsupportedOperationException(dataType.toString());
     }
-    buffer.flip();
+    ((Buffer)buffer).flip();
     return buffer;
   }
 
@@ -453,7 +455,7 @@ public class ByteUtils {
       default:
         throw new UnsupportedOperationException(dataType.toString());
     }
-    buffer.flip();
+    ((Buffer)buffer).flip();
     return buffer;
   }
 
