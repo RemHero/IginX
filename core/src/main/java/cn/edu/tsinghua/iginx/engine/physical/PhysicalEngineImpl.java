@@ -85,9 +85,13 @@ public class PhysicalEngineImpl implements PhysicalEngine {
     PhysicalTask task = optimizer.optimize(root, ctx);
     ctx.setPhysicalTree(task);
     List<PhysicalTask> bottomTasks = new ArrayList<>();
+    long startTime = System.currentTimeMillis();
     getBottomTasks(bottomTasks, task);
     commitBottomTasks(bottomTasks);
     TaskExecuteResult result = task.getResult();
+    long endTime = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime - startTime);
+    System.out.println("batch exe time 1: " + totalTimeSeconds + "ms");
     if (result.getException() != null) {
       throw result.getException();
     }

@@ -748,6 +748,7 @@ public class StatementExecutor {
     List<ByteBuffer> bitmapList = new ArrayList<>();
 
     boolean hasTimestamp = stream.getHeader().hasKey();
+    long startTime = System.currentTimeMillis();
     while (stream.hasNext()) {
       Row row = stream.next();
 
@@ -766,6 +767,9 @@ public class StatementExecutor {
         timestampList.add(row.getKey());
       }
     }
+    long endTime = System.currentTimeMillis();
+    long totalTimeSeconds = (endTime - startTime);
+    System.out.println("sql exe time: " + totalTimeSeconds + "ms");
 
     if (valuesList.isEmpty()) { // empty result
       setEmptyQueryResp(ctx);

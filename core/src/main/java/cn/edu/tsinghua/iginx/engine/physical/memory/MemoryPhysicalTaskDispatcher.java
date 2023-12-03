@@ -76,6 +76,7 @@ public class MemoryPhysicalTaskDispatcher {
                         result = new TaskExecuteResult(new PhysicalException(e));
                       }
                       long span = System.currentTimeMillis() - startTime;
+                      System.out.println("operator exe time: " + span + "ms");
                       currentTask.setSpan(span);
                       currentTask.setResult(result);
                       if (currentTask.getFollowerTask() != null) { // 链式执行可以被执行的任务
