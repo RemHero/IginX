@@ -29,11 +29,12 @@ public class StorageEngineUtils {
 
     // 检查路径是否为根路径
     if (dir.equals("/") || dir.matches("[A-Za-z]:[/\\\\]")) {
+      logger.info("dir is root path");
       return false;
     }
 
     File file = new File(dir);
-    return file.exists() && file.isDirectory();
+    return file.isDirectory();
   }
 
   public static boolean checkEmbeddedStorageExtraParams(
