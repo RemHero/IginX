@@ -34,6 +34,9 @@ public class StorageEngineUtils {
     }
 
     File file = new File(dir);
+    if (file.isDirectory()) {
+      logger.info("dir is directory");
+    }
     return file.isDirectory();
   }
 

@@ -82,6 +82,11 @@ jobs:
                   DB-name: ${{ matrix.DB-name }}
                   Test-Way: oriNoDataExpNoData
 
+            - name: List dir
+              run: |
+                ls /home/runner/work/IGinX/IGinX/test/
+                mkdir /home/runner/work/IGinX/IGinX/test/nt
+
             - name: oriNoDataExpNoData IT
               run: |
                   mvn test -q -Dtest=${{ matrix.DB-name }}CapacityExpansionIT#oriNoDataExpNoData -DfailIfNoTests=false -P-format
