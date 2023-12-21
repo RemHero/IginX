@@ -23,6 +23,7 @@ public class StorageEngineUtils {
   private static boolean isDirValid(String dir) {
     // 检查路径是否为空
     if (dir == null || dir.isEmpty()) {
+      logger.info("dir is null or empty");
       return false;
     }
 
@@ -53,6 +54,7 @@ public class StorageEngineUtils {
         logger.info("3");
         // 如果hasData为true，则参数中必须配置dummy_dir
         Pair<Boolean, String> dummyDirPair = getCanonicalPath(extraParams.get("dummy_dir"));
+        logger.info("dummyDirPair: " + dummyDirPair);
         if (!dummyDirPair.k || !isDirValid(dummyDirPair.v)) {
           logger.info("4");
           return false;
