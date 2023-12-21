@@ -84,8 +84,11 @@ jobs:
 
             - name: List dir
               run: |
-                ls /home/runner/work/IGinX/IGinX/test/
+                mkdir /home/runner/work/IGinX/IGinX/test/test/nt
                 mkdir /home/runner/work/IGinX/IGinX/test/nt
+                ls /home/runner/work/IGinX/IGinX/test/
+                ls /home/runner/work/IGinX/IGinX/test/test
+                
 
             - name: oriNoDataExpNoData IT
               run: |
