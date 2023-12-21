@@ -21,24 +21,28 @@ public class StorageEngineUtils {
   }
 
   private static boolean isDirValid(String dir) {
+    logger.info("dirvalid 1");
     // 检查路径是否为空
     if (dir == null || dir.isEmpty()) {
       logger.info("dir is null or empty");
       return false;
     }
 
+    logger.info("dirvalid 2");
     // 检查路径是否为根路径
     if (dir.equals("/") || dir.matches("[A-Za-z]:[/\\\\]")) {
       logger.info("dir is root path");
       return false;
     }
 
+    logger.info("dirvalid 3");
     File file = new File(dir);
     if (file.isDirectory()) {
       logger.info("dir is directory");
     } else {
       logger.info(file.getAbsolutePath());
     }
+    logger.info("dirvalid 4");
     return file.isDirectory();
   }
 
@@ -61,6 +65,9 @@ public class StorageEngineUtils {
         // 如果hasData为true，则参数中必须配置dummy_dir
         Pair<Boolean, String> dummyDirPair = getCanonicalPath(extraParams.get("dummy_dir"));
         logger.info("dummyDirPair: " + dummyDirPair);
+        if (!dummyDirPair.k) {
+          logger.info("3.1");
+        }
         if (!dummyDirPair.k || !isDirValid(dummyDirPair.v)) {
           logger.info("4");
           return false;
