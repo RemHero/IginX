@@ -1231,8 +1231,8 @@ public class DefaultMetaManager implements IMetaManager {
       if (!checkEmbeddedStorageExtraParams(
           StorageEngineType.valueOf(storageEngine.toLowerCase()), extraParams)) {
         logger.error(
-            "missing params or providing invalid ones for {} in config file",
-            storageEngineStrings[i]);
+            "missing params or providing invalid ones for {} {} in config file",
+            storageEngineStrings[i], extraParams);
         continue;
       }
       String schemaPrefix = extraParams.get(Constants.SCHEMA_PREFIX);

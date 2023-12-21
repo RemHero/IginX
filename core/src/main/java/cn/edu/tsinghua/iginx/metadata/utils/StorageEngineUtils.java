@@ -11,8 +11,10 @@ import cn.edu.tsinghua.iginx.utils.Pair;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class StorageEngineUtils {
+  static Logger logger = Logger.getLogger(StorageEngineUtils.class.getName());
 
   public static boolean isEmbeddedStorageEngine(StorageEngineType type) {
     return type.equals(StorageEngineType.parquet) || type.equals(StorageEngineType.filesystem);
@@ -37,29 +39,36 @@ public class StorageEngineUtils {
       StorageEngineType type, Map<String, String> extraParams) {
 
     if (isEmbeddedStorageEngine(type)) {
+      logger.info("1");
       // 必须配置iginx_port参数
       String iginxPort = extraParams.get("iginx_port");
       if (iginxPort == null || iginxPort.isEmpty()) {
+        logger.info("2");
         return false;
       }
       boolean hasData = Boolean.parseBoolean(extraParams.getOrDefault(HAS_DATA, "false"));
       boolean readOnly =
           Boolean.parseBoolean(extraParams.getOrDefault(Constants.IS_READ_ONLY, "false"));
       if (hasData) {
+        logger.info("3");
         // 如果hasData为true，则参数中必须配置dummy_dir
         Pair<Boolean, String> dummyDirPair = getCanonicalPath(extraParams.get("dummy_dir"));
         if (!dummyDirPair.k || !isDirValid(dummyDirPair.v)) {
+          logger.info("4");
           return false;
         }
         String dummyDirPath = dummyDirPair.v;
         if (!readOnly) {
+          logger.info("5");
           // 如果hasData为true，且readOnly为false，则参数中必须配置dir，且不能与dummy_dir相同
           Pair<Boolean, String> dirPair = getCanonicalPathWithCreate(extraParams.get("dir"));
           if (!dirPair.k || !isDirValid(dirPair.v)) {
+            logger.info("6");
             return false;
           }
           String dirPath = dirPair.v;
           if (dummyDirPath.equals(dirPath)) {
+            logger.info("7");
             return false;
           }
         }
@@ -68,8 +77,10 @@ public class StorageEngineUtils {
         String dirPrefix = dummyDirPath.substring(dummyDirPath.lastIndexOf(separator) + 1);
         extraParams.put(EMBEDDED_PREFIX, dirPrefix);
       } else {
+        logger.info("8");
         // hasData=false readOnly=true 无意义的引擎
         if (readOnly) {
+          logger.info("9");
           return false;
         }
         // 如果hasData为false，则参数中必须配置dir
