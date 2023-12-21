@@ -36,6 +36,8 @@ public class StorageEngineUtils {
     File file = new File(dir);
     if (file.isDirectory()) {
       logger.info("dir is directory");
+    } else {
+      logger.info(file.getAbsolutePath());
     }
     return file.isDirectory();
   }
