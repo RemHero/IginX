@@ -30,7 +30,7 @@ public class FileSystemHistoryDataGenerator extends BaseHistoryDataGenerator {
       List<Long> keyList,
       List<List<Object>> valuesList) {
     // 创建并写入文件
-    createFileAndWriteValues(port, pathList, valuesList);
+    createFileAndWriteValues(pathList, valuesList);
     // 仅用于扩容文件系统后查询文件
     writeSpecificDirectoriesAndFiles();
   }
@@ -54,7 +54,7 @@ public class FileSystemHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
   }
 
-  private void createFileAndWriteValues(int port, List<String> pathList, List<List<Object>> valuesList) {
+  private void createFileAndWriteValues(List<String> pathList, List<List<Object>> valuesList) {
     String separator = System.getProperty("file.separator");
     List<List<Object>> reversedValuesList = new ArrayList<>();
     for (int i = 0; i < valuesList.get(0).size(); i++) {
@@ -66,8 +66,7 @@ public class FileSystemHistoryDataGenerator extends BaseHistoryDataGenerator {
       }
     }
     for (int i = 0; i < pathList.size(); i++) {
-      String root = PORT_TO_ROOT.get(port);
-      String realFilePath = (root + "." + pathList.get(i)).replace(".", separator);
+      String realFilePath = pathList.get(i).replace(".", separator);
       File file = new File(realFilePath);
       file.getParentFile().mkdirs();
       logger.info("create file {} success", file.getAbsolutePath());

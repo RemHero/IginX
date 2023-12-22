@@ -129,6 +129,7 @@ public abstract class BaseCapacityExpansionIT {
     Controller.clearData(session);
   }
 
+  // hasData是判定扩容数据库是否函数有数据，测试框架中都会初始化原始数据
   private void addStorageEngineInProgress(
       int port, boolean hasData, boolean isReadOnly, String dataPrefix, String schemaPrefix)
       throws InterruptedException {
@@ -166,7 +167,7 @@ public abstract class BaseCapacityExpansionIT {
     // 写入并查询新数据
     testWriteAndQueryNewData();
     // 扩容
-    addStorageEngineInProgress(expPort, true, false, null, EXP_SCHEMA_PREFIX);
+    addStorageEngineInProgress(expPort, false, false, null, EXP_SCHEMA_PREFIX);
     // 查询扩容节点的历史数据，结果为空
     testQueryHistoryDataExpNoData();
     // 再次查询新数据
@@ -200,7 +201,7 @@ public abstract class BaseCapacityExpansionIT {
     // 写入并查询新数据
     testWriteAndQueryNewData();
     // 扩容
-    addStorageEngineInProgress(expPort, true, false, null, EXP_SCHEMA_PREFIX);
+    addStorageEngineInProgress(expPort, false, false, null, EXP_SCHEMA_PREFIX);
     // 查询扩容节点的历史数据，结果为空
     testQueryHistoryDataExpNoData();
     // 再次查询新数据
@@ -623,7 +624,7 @@ public abstract class BaseCapacityExpansionIT {
             scriptPath,
             String.valueOf(port),
             String.valueOf(iginxPort),
-            "test/" + PORT_TO_ROOT.get(port),
+            hasData ? "test/" + PORT_TO_ROOT.get(port) : "test/" + INIT_PATH_LIST.get(0).replace(".", "/"),
             "test/iginx_" + PORT_TO_ROOT.get(port),
             String.valueOf(hasData),
             String.valueOf(isReadOnly),
