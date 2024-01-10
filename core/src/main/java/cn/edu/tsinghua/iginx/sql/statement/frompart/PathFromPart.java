@@ -1,15 +1,17 @@
 package cn.edu.tsinghua.iginx.sql.statement.frompart;
 
+import static cn.edu.tsinghua.iginx.engine.shared.Constants.ALL_PATH_SUFFIX;
+
 import cn.edu.tsinghua.iginx.engine.shared.Constants;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.join.JoinCondition;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PathFromPart implements FromPart {
 
-  private final FromPartType type = FromPartType.PathFromPart;
   private final String path;
-  private final boolean isJoinPart;
   private JoinCondition joinCondition;
   private final String alias;
 
@@ -19,36 +21,29 @@ public class PathFromPart implements FromPart {
 
   public PathFromPart(String path, String alias) {
     this.path = path;
-    this.isJoinPart = false;
     this.alias = alias;
   }
 
-  public PathFromPart(String path, JoinCondition joinCondition) {
-    this(path, joinCondition, "");
-  }
-
-  public PathFromPart(String path, JoinCondition joinCondition, String alias) {
-    this.path = path;
-    this.joinCondition = joinCondition;
-    this.isJoinPart = true;
-    this.alias = alias;
-  }
-
+  @Override
   public String getOriginPrefix() {
     return path;
   }
 
-  public String getAlias() {
-    return alias;
-  }
-
-  public boolean hasAlias() {
-    return alias != null && !alias.equals("");
+  @Override
+  public FromPartType getType() {
+    return FromPartType.Path;
   }
 
   @Override
-  public FromPartType getType() {
-    return type;
+  public Map<String, String> getAliasMap() {
+    Map<String, String> aliasMap = new HashMap<>();
+    aliasMap.put(path + ALL_PATH_SUFFIX, alias + ALL_PATH_SUFFIX);
+    return aliasMap;
+  }
+
+  @Override
+  public boolean hasAlias() {
+    return alias != null && !alias.isEmpty();
   }
 
   @Override
@@ -67,13 +62,13 @@ public class PathFromPart implements FromPart {
   }
 
   @Override
-  public boolean isJoinPart() {
-    return isJoinPart;
+  public JoinCondition getJoinCondition() {
+    return joinCondition;
   }
 
   @Override
-  public JoinCondition getJoinCondition() {
-    return joinCondition;
+  public void setJoinCondition(JoinCondition joinCondition) {
+    this.joinCondition = joinCondition;
   }
 
   @Override

@@ -29,7 +29,6 @@ import static cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.RowUtil
 import static cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.RowUtils.getSamePathWithSpecificPrefix;
 import static cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.RowUtils.isValueEqualRow;
 import static cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.RowUtils.removeDuplicateRows;
-import static cn.edu.tsinghua.iginx.engine.shared.Constants.ALL_PATH_SUFFIX;
 import static cn.edu.tsinghua.iginx.engine.shared.Constants.KEY;
 import static cn.edu.tsinghua.iginx.engine.shared.function.FunctionUtils.isCanUseSetQuantifierFunction;
 import static cn.edu.tsinghua.iginx.engine.shared.function.system.utils.ValueUtils.getHash;
@@ -47,6 +46,7 @@ import cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.FilterUtils;
 import cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.HeaderUtils;
 import cn.edu.tsinghua.iginx.engine.physical.memory.execute.utils.RowUtils;
 import cn.edu.tsinghua.iginx.engine.shared.Constants;
+import cn.edu.tsinghua.iginx.engine.shared.RequestContext;
 import cn.edu.tsinghua.iginx.engine.shared.data.Value;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
@@ -61,6 +61,7 @@ import cn.edu.tsinghua.iginx.engine.shared.function.system.Min;
 import cn.edu.tsinghua.iginx.engine.shared.operator.AddSchemaPrefix;
 import cn.edu.tsinghua.iginx.engine.shared.operator.BinaryOperator;
 import cn.edu.tsinghua.iginx.engine.shared.operator.CrossJoin;
+import cn.edu.tsinghua.iginx.engine.shared.operator.Distinct;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Downsample;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Except;
 import cn.edu.tsinghua.iginx.engine.shared.operator.GroupBy;
@@ -86,8 +87,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.Union;
 import cn.edu.tsinghua.iginx.engine.shared.operator.ValueToSelectedPath;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OuterJoinType;
-import cn.edu.tsinghua.iginx.engine.shared.source.Source;
-import cn.edu.tsinghua.iginx.engine.shared.source.SourceType;
+import cn.edu.tsinghua.iginx.engine.shared.source.EmptySource;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.Bitmap;
 import cn.edu.tsinghua.iginx.utils.Pair;
@@ -120,37 +120,39 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   }
 
   @Override
-  public RowStream executeUnaryOperator(UnaryOperator operator, RowStream stream)
-      throws PhysicalException {
+  public RowStream executeUnaryOperator(
+      UnaryOperator operator, RowStream stream, RequestContext context) throws PhysicalException {
+    Table table = transformToTable(stream);
+    table.setContext(context);
     switch (operator.getType()) {
       case Project:
-        return executeProject((Project) operator, transformToTable(stream));
+        return executeProject((Project) operator, table);
       case Select:
-        return executeSelect((Select) operator, transformToTable(stream));
+        return executeSelect((Select) operator, table);
       case Sort:
-        return executeSort((Sort) operator, transformToTable(stream));
+        return executeSort((Sort) operator, table);
       case Limit:
-        return executeLimit((Limit) operator, transformToTable(stream));
+        return executeLimit((Limit) operator, table);
       case Downsample:
-        return executeDownsample((Downsample) operator, transformToTable(stream));
+        return executeDownsample((Downsample) operator, table);
       case RowTransform:
-        return executeRowTransform((RowTransform) operator, transformToTable(stream));
+        return executeRowTransform((RowTransform) operator, table);
       case SetTransform:
-        return executeSetTransform((SetTransform) operator, transformToTable(stream));
+        return executeSetTransform((SetTransform) operator, table);
       case MappingTransform:
-        return executeMappingTransform((MappingTransform) operator, transformToTable(stream));
+        return executeMappingTransform((MappingTransform) operator, table);
       case Rename:
-        return executeRename((Rename) operator, transformToTable(stream));
+        return executeRename((Rename) operator, table);
       case Reorder:
-        return executeReorder((Reorder) operator, transformToTable(stream));
+        return executeReorder((Reorder) operator, table);
       case AddSchemaPrefix:
-        return executeAddSchemaPrefix((AddSchemaPrefix) operator, transformToTable(stream));
+        return executeAddSchemaPrefix((AddSchemaPrefix) operator, table);
       case GroupBy:
-        return executeGroupBy((GroupBy) operator, transformToTable(stream));
+        return executeGroupBy((GroupBy) operator, table);
       case Distinct:
-        return executeDistinct(transformToTable(stream));
+        return executeDistinct((Distinct) operator, table);
       case ValueToSelectedPath:
-        return executeValueToSelectedPath((ValueToSelectedPath) operator, transformToTable(stream));
+        return executeValueToSelectedPath((ValueToSelectedPath) operator, table);
       default:
         throw new UnexpectedOperatorException("unknown unary operator: " + operator.getType());
     }
@@ -158,36 +160,33 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
 
   @Override
   public RowStream executeBinaryOperator(
-      BinaryOperator operator, RowStream streamA, RowStream streamB) throws PhysicalException {
+      BinaryOperator operator, RowStream streamA, RowStream streamB, RequestContext context)
+      throws PhysicalException {
+    Table tableA = transformToTable(streamA);
+    Table tableB = transformToTable(streamB);
+    tableA.setContext(context);
+    tableB.setContext(context);
     switch (operator.getType()) {
       case Join:
-        return executeJoin((Join) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeJoin((Join) operator, tableA, tableB);
       case CrossJoin:
-        return executeCrossJoin(
-            (CrossJoin) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeCrossJoin((CrossJoin) operator, tableA, tableB);
       case InnerJoin:
-        return executeInnerJoin(
-            (InnerJoin) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeInnerJoin((InnerJoin) operator, tableA, tableB);
       case OuterJoin:
-        return executeOuterJoin(
-            (OuterJoin) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeOuterJoin((OuterJoin) operator, tableA, tableB);
       case SingleJoin:
-        return executeSingleJoin(
-            (SingleJoin) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeSingleJoin((SingleJoin) operator, tableA, tableB);
       case MarkJoin:
-        return executeMarkJoin(
-            (MarkJoin) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeMarkJoin((MarkJoin) operator, tableA, tableB);
       case PathUnion:
-        return executePathUnion(
-            (PathUnion) operator, transformToTable(streamA), transformToTable(streamB));
+        return executePathUnion((PathUnion) operator, tableA, tableB);
       case Union:
-        return executeUnion((Union) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeUnion((Union) operator, tableA, tableB);
       case Except:
-        return executeExcept(
-            (Except) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeExcept((Except) operator, tableA, tableB);
       case Intersect:
-        return executeIntersect(
-            (Intersect) operator, transformToTable(streamA), transformToTable(streamB));
+        return executeIntersect((Intersect) operator, tableA, tableB);
       default:
         throw new UnexpectedOperatorException("unknown binary operator: " + operator.getType());
     }
@@ -212,7 +211,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     List<Field> targetFields = new ArrayList<>();
 
     for (Field field : header.getFields()) {
-      if (field.getName().endsWith(KEY)) {
+      if (project.isRemainKey() && field.getName().endsWith(KEY)) {
         targetFields.add(field);
         continue;
       }
@@ -408,7 +407,8 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
       }
       // min和max无需去重
       if (!function.getIdentifier().equals(Max.MAX) && !function.getIdentifier().equals(Min.MIN)) {
-        table = transformToTable(executeDistinct(table));
+        Distinct distinct = new Distinct(EmptySource.EMPTY_SOURCE, params.getPaths());
+        table = transformToTable(executeDistinct(distinct, table));
       }
     }
 
@@ -449,44 +449,41 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
             field -> {
               // 如果列名在ignorePatterns中，对该列不执行rename
               for (String ignorePattern : ignorePatterns) {
-                if (ignorePattern.endsWith(ALL_PATH_SUFFIX)) {
-                  if (field
-                      .getName()
-                      .startsWith(ignorePattern.substring(0, ignorePattern.length() - 1))) {
-                    fields.add(field);
-                    return;
-                  }
-                } else {
-                  if (field.getName().equals(ignorePattern)) {
-                    fields.add(field);
-                    return;
-                  }
+                if (StringUtils.match(field.getName(), ignorePattern)) {
+                  fields.add(field);
+                  return;
                 }
               }
               String alias = "";
-              for (String oldName : aliasMap.keySet()) {
-                if (Objects.equals(oldName, "*") && aliasMap.get(oldName).endsWith(".*")) {
-                  String newPrefix = aliasMap.get(oldName).replace("*", "");
+              for (String oldPattern : aliasMap.keySet()) {
+                String newPattern = aliasMap.get(oldPattern);
+                if (oldPattern.equals("*") && newPattern.endsWith(".*")) {
+                  String newPrefix = newPattern.substring(0, newPattern.length() - 1);
                   alias = newPrefix + field.getName();
-                } else if (oldName.endsWith(".*") && aliasMap.get(oldName).endsWith(".*")) {
-                  String oldPrefix = oldName.replace(".*", "");
-                  String newPrefix = aliasMap.get(oldName).replace(".*", "");
+                } else if (oldPattern.endsWith(".*") && newPattern.endsWith(".*")) {
+                  String oldPrefix = oldPattern.substring(0, oldPattern.length() - 1);
+                  String newPrefix = newPattern.substring(0, newPattern.length() - 1);
                   if (field.getName().startsWith(oldPrefix)) {
                     alias = field.getName().replaceFirst(oldPrefix, newPrefix);
                   }
                   break;
-                } else if (oldName.equals(field.getFullName())) {
-                  alias = aliasMap.get(oldName);
+                } else if (oldPattern.equals(field.getFullName())) {
+                  alias = newPattern;
                   break;
                 } else {
-                  Pattern pattern = Pattern.compile(StringUtils.reformatColumnName(oldName) + ".*");
-                  if (pattern.matcher(field.getFullName()).matches()) {
-                    alias = aliasMap.get(oldName);
+                  if (StringUtils.match(field.getName(), oldPattern)) {
+                    if (newPattern.endsWith("." + oldPattern)) {
+                      String prefix =
+                          newPattern.substring(0, newPattern.length() - oldPattern.length());
+                      alias = prefix + field.getName();
+                    } else {
+                      alias = newPattern;
+                    }
                     break;
                   }
                 }
               }
-              if (alias.equals("")) {
+              if (alias.isEmpty()) {
                 fields.add(field);
               } else {
                 fields.add(new Field(alias, field.getType(), field.getTags()));
@@ -555,17 +552,18 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     return new Table(header, rows);
   }
 
-  private RowStream executeReorder(Reorder reorder, Table table) throws PhysicalException {
+  private RowStream executeReorder(Reorder reorder, Table table) {
     Header header = table.getHeader();
     List<Field> targetFields = new ArrayList<>();
     Map<Integer, Integer> reorderMap = new HashMap<>();
 
-    for (String pattern : reorder.getPatterns()) {
+    for (int index = 0; index < reorder.getPatterns().size(); index++) {
+      String pattern = reorder.getPatterns().get(index);
       List<Pair<Field, Integer>> matchedFields = new ArrayList<>();
       if (StringUtils.isPattern(pattern)) {
         for (int i = 0; i < header.getFields().size(); i++) {
           Field field = header.getField(i);
-          if (Pattern.matches(StringUtils.reformatColumnName(pattern), field.getName())) {
+          if (StringUtils.match(field.getName(), pattern)) {
             matchedFields.add(new Pair<>(field, i));
           }
         }
@@ -578,7 +576,10 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         }
       }
       if (!matchedFields.isEmpty()) {
-        matchedFields.sort(Comparator.comparing(pair -> pair.getK().getFullName()));
+        // 不对同一个UDF里返回的多列进行重新排序
+        if (!reorder.getIsPyUDF().get(index)) {
+          matchedFields.sort(Comparator.comparing(pair -> pair.getK().getFullName()));
+        }
         matchedFields.forEach(
             pair -> {
               reorderMap.put(targetFields.size(), pair.getV());
@@ -606,7 +607,10 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     return new Table(newHeader, rows);
   }
 
-  private RowStream executeDistinct(Table table) throws PhysicalException {
+  private RowStream executeDistinct(Distinct distinct, Table table) throws PhysicalException {
+    Project project = new Project(EmptySource.EMPTY_SOURCE, distinct.getPatterns(), null);
+    table = transformToTable(executeProject(project, table));
+
     if (table.getHeader().getFields().isEmpty()) {
       return table;
     }
@@ -619,6 +623,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
 
   private RowStream executeValueToSelectedPath(ValueToSelectedPath operator, Table table) {
     String prefix = operator.getPrefix();
+    boolean prefixIsEmpty = prefix.isEmpty();
 
     int fieldSize = table.getHeader().getFieldSize();
     Header targetHeader =
@@ -629,10 +634,13 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         .forEach(
             row -> {
               for (int i = 0; i < fieldSize; i++) {
+                String valueStr = row.getAsValue(i).getAsString();
+                if (valueStr.isEmpty()) {
+                  continue;
+                }
+                String path = prefixIsEmpty ? valueStr : prefix + DOT + valueStr;
                 Object[] value = new Object[1];
-                value[0] =
-                    (prefix + DOT + row.getAsValue(i).getAsString())
-                        .getBytes(StandardCharsets.UTF_8);
+                value[0] = path.getBytes(StandardCharsets.UTF_8);
                 targetRows.add(new Row(targetHeader, value));
               }
             });
@@ -932,7 +940,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     List<Row> transformedRows = new ArrayList<>();
     for (Row rowA : tableA.getRows()) {
       Value value = rowA.getAsValue(joinPathA);
-      if (value == null) {
+      if (value.isNull()) {
         continue;
       }
       int hash = getHash(value, needTypeCast);
@@ -1385,7 +1393,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     HashMap<Integer, List<Integer>> indexOfRowBHashMap = new HashMap<>();
     for (int indexB = 0; indexB < rowsB.size(); indexB++) {
       Value value = rowsB.get(indexB).getAsValue(joinPathB);
-      if (value == null) {
+      if (value.isNull()) {
         continue;
       }
       int hash = getHash(value, needTypeCast);
@@ -1412,7 +1420,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
 
     for (int indexA = 0; indexA < rowsA.size(); indexA++) {
       Value value = rowsA.get(indexA).getAsValue(joinPathA);
-      if (value == null) {
+      if (value.isNull()) {
         continue;
       }
       int hash = getHash(value, needTypeCast);
@@ -1893,7 +1901,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     int anotherRowSize = tableB.getHeader().getFieldSize();
     for (Row rowA : tableA.getRows()) {
       Value value = rowA.getAsValue(joinPathA);
-      if (value == null) {
+      if (value.isNull()) {
         continue;
       }
       int hash = getHash(value, needTypeCast);
@@ -2017,7 +2025,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     tableScan:
     for (Row rowA : tableA.getRows()) {
       Value value = rowA.getAsValue(joinPathA);
-      if (value == null) {
+      if (value.isNull()) {
         continue;
       }
       int hash = getHash(value, needTypeCast);
@@ -2060,6 +2068,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     Header headerB = tableB.getHeader();
     List<Field> newFields = new ArrayList<>();
     Map<Field, Integer> fieldIndices = new HashMap<>();
+    boolean containOverlappedKeys = false;
     for (Field field : headerA.getFields()) {
       if (fieldIndices.containsKey(field)) {
         continue;
@@ -2091,6 +2100,9 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         Object[] values = new Object[newHeader.getFieldSize()];
         long timestamp;
         if (rowA.getKey() == rowB.getKey()) {
+          if (!containOverlappedKeys) {
+            containOverlappedKeys = true;
+          }
           timestamp = rowA.getKey();
           writeToNewRow(values, rowA, fieldIndices);
           writeToNewRow(values, rowB, fieldIndices);
@@ -2121,7 +2133,19 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         writeToNewRow(values, rowB, fieldIndices);
         newRows.add(new Row(newHeader, rowB.getKey(), values));
       }
-      return new Table(newHeader, newRows);
+      Table table = new Table(newHeader, newRows);
+      RequestContext context = null;
+      if (tableA.getContext() != null) {
+        context = tableA.getContext();
+      } else if (tableB.getContext() != null) {
+        context = tableB.getContext();
+      }
+      if (context != null && containOverlappedKeys) {
+        context.setWarningMsg("The query results contain overlapped keys.");
+      }
+      table.setContext(context);
+
+      return table;
     } else if (join.getJoinBy().equals(Constants.ORDINAL)) {
       if (headerA.hasKey() || headerB.hasKey()) {
         throw new InvalidOperatorParameterException(
@@ -2271,7 +2295,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowA.getKey());
       } else {
         Value value = rowA.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2294,7 +2318,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowB.getKey());
       } else {
         Value value = rowB.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2356,7 +2380,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowB.getKey());
       } else {
         Value value = rowB.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2372,7 +2396,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowA.getKey());
       } else {
         Value value = rowA.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2440,7 +2464,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowB.getKey());
       } else {
         Value value = rowB.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2456,7 +2480,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
         hash = Objects.hash(rowA.getKey());
       } else {
         Value value = rowA.getAsValue(0);
-        if (value == null) {
+        if (value.isNull()) {
           continue;
         }
         hash = getHash(value, needTypeCast);
@@ -2492,20 +2516,5 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
     private static final NaiveOperatorMemoryExecutor INSTANCE = new NaiveOperatorMemoryExecutor();
 
     private NaiveOperatorMemoryExecutorHolder() {}
-  }
-
-  private static class EmptySource implements Source {
-
-    public static final EmptySource EMPTY_SOURCE = new EmptySource();
-
-    @Override
-    public SourceType getType() {
-      return null;
-    }
-
-    @Override
-    public Source copy() {
-      return null;
-    }
   }
 }

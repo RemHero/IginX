@@ -18,10 +18,11 @@
  */
 package cn.edu.tsinghua.iginx.metadata;
 
+import static cn.edu.tsinghua.iginx.metadata.utils.IdUtils.generateDummyStorageUnitId;
 import static cn.edu.tsinghua.iginx.metadata.utils.ReshardStatus.EXECUTING;
 import static cn.edu.tsinghua.iginx.metadata.utils.ReshardStatus.NON_RESHARDING;
-import static cn.edu.tsinghua.iginx.metadata.utils.StorageEngineUtils.setSchemaPrefixInExtraParams;
-import static cn.edu.tsinghua.iginx.utils.HostUtils.convertHostNameToHostAddress;
+import static cn.edu.tsinghua.iginx.metadata.utils.StorageEngineUtils.checkEmbeddedStorageExtraParams;
+import static cn.edu.tsinghua.iginx.utils.HostUtils.isValidHost;
 
 import cn.edu.tsinghua.iginx.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iginx.conf.Constants;
@@ -234,24 +235,7 @@ public class DefaultMetaManager implements IMetaManager {
     storage.registerStorageChangeHook(
         (id, storageEngine) -> {
           if (storageEngine != null) {
-            if (storageEngine.isHasData()) {
-              StorageUnitMeta dummyStorageUnit = storageEngine.getDummyStorageUnit();
-              dummyStorageUnit.setStorageEngineId(id);
-              dummyStorageUnit.setId(StorageUnitMeta.generateDummyStorageUnitID(id));
-              dummyStorageUnit.setMasterId(dummyStorageUnit.getId());
-              FragmentMeta dummyFragment = storageEngine.getDummyFragment();
-              dummyFragment.setMasterStorageUnit(dummyStorageUnit);
-              dummyFragment.setMasterStorageUnitId(dummyStorageUnit.getId());
-            }
-            cache.addStorageEngine(storageEngine);
-            for (StorageEngineChangeHook hook : storageEngineChangeHooks) {
-              hook.onChanged(null, storageEngine);
-            }
-            if (storageEngine.isHasData()) {
-              for (StorageUnitHook storageUnitHook : storageUnitHooks) {
-                storageUnitHook.onChange(null, storageEngine.getDummyStorageUnit());
-              }
-            }
+            addStorageEngine(id, storageEngine);
           }
         });
     storageEngineListFromConf = resolveStorageEngineFromConf();
@@ -421,16 +405,7 @@ public class DefaultMetaManager implements IMetaManager {
       for (StorageEngineMeta storageEngineMeta : storageEngineMetas) {
         long id = storage.addStorageEngine(storageEngineMeta);
         storageEngineMeta.setId(id);
-        if (storageEngineMeta.isHasData()) {
-          StorageUnitMeta dummyStorageUnit = storageEngineMeta.getDummyStorageUnit();
-          dummyStorageUnit.setStorageEngineId(id);
-          dummyStorageUnit.setId(StorageUnitMeta.generateDummyStorageUnitID(id));
-          dummyStorageUnit.setMasterId(dummyStorageUnit.getId());
-          FragmentMeta dummyFragment = storageEngineMeta.getDummyFragment();
-          dummyFragment.setMasterStorageUnit(dummyStorageUnit);
-          dummyFragment.setMasterStorageUnitId(dummyStorageUnit.getId());
-        }
-        cache.addStorageEngine(storageEngineMeta);
+        addStorageEngine(id, storageEngineMeta);
       }
       return true;
     } catch (MetaStorageException e) {
@@ -439,27 +414,35 @@ public class DefaultMetaManager implements IMetaManager {
     return false;
   }
 
-  @Override
-  public boolean updateStorageEngine(long storageID, StorageEngineMeta storageEngineMeta) {
-    if (getStorageEngine(storageID) == null) {
-      return false;
+  private void addStorageEngine(long storageEngineId, StorageEngineMeta storageEngineMeta) {
+    if (storageEngineMeta.isHasData()) {
+      StorageUnitMeta dummyStorageUnit = storageEngineMeta.getDummyStorageUnit();
+      dummyStorageUnit.setStorageEngineId(storageEngineId);
+      dummyStorageUnit.setId(generateDummyStorageUnitId(storageEngineId));
+      dummyStorageUnit.setMasterId(dummyStorageUnit.getId());
+      FragmentMeta dummyFragment = storageEngineMeta.getDummyFragment();
+      dummyFragment.setMasterStorageUnit(dummyStorageUnit);
+      dummyFragment.setMasterStorageUnitId(dummyStorageUnit.getId());
     }
-    try {
-      storageEngineMeta.setId(storageID);
-      storage.updateStorageEngine(
-          storageID, storageEngineMeta); // 如果删除成功，则后续更新对应的 dummyFragament 的元数据
-      if (storageEngineMeta.isHasData()) { // 确保内部数据的一致性
-        StorageUnitMeta dummyStorageUnit = storageEngineMeta.getDummyStorageUnit();
-        dummyStorageUnit.setStorageEngineId(storageID);
-        dummyStorageUnit.setId(StorageUnitMeta.generateDummyStorageUnitID(storageID));
-        dummyStorageUnit.setMasterId(dummyStorageUnit.getId());
-        FragmentMeta dummyFragment = storageEngineMeta.getDummyFragment();
-        dummyFragment.setMasterStorageUnit(dummyStorageUnit);
-        dummyFragment.setMasterStorageUnitId(dummyStorageUnit.getId());
+    cache.addStorageEngine(storageEngineMeta);
+    for (StorageEngineChangeHook hook : storageEngineChangeHooks) {
+      hook.onChange(null, storageEngineMeta);
+    }
+    if (storageEngineMeta.isHasData()) {
+      for (StorageUnitHook storageUnitHook : storageUnitHooks) {
+        storageUnitHook.onChange(null, storageEngineMeta.getDummyStorageUnit());
       }
-      return cache.updateStorageEngine(storageID, storageEngineMeta);
+    }
+  }
+
+  @Override
+  public boolean removeDummyStorageEngine(long storageEngineId) {
+    try {
+      storage.removeDummyStorageEngine(storageEngineId);
+      return cache.removeDummyStorageEngine(storageEngineId);
+      // TODO 由于当前 StorageEngineChangeHook 和 StorageUnitHook 只会处理新增事件，因此不必调用相关 onChange 函数
     } catch (MetaStorageException e) {
-      logger.error("update storage engines error:", e);
+      logger.error("remove dummy storage engine {} error: {}", storageEngineId, e.getMessage());
     }
     return false;
   }
@@ -1214,6 +1197,10 @@ public class DefaultMetaManager implements IMetaManager {
       }
       String[] storageEngineParts = storageEngineStrings[i].split("#");
       String ip = storageEngineParts[0];
+      if (!isValidHost(ip)) { // IP 不合法
+        logger.error("ip {} is invalid", ip);
+        continue;
+      }
       int port = -1;
       if (!storageEngineParts[1].isEmpty()) {
         port = Integer.parseInt(storageEngineParts[1]);
@@ -1228,7 +1215,7 @@ public class DefaultMetaManager implements IMetaManager {
         } else {
           KAndV = storageEngineParts[j].split("=");
           if (KAndV.length != 2) {
-            logger.error("unexpected storage engine meta info: " + storageEngineStrings[i]);
+            logger.error("unexpected storage engine meta info {}", storageEngineStrings[i]);
             continue;
           }
           extraParams.put(KAndV[0], KAndV[1]);
@@ -1241,8 +1228,11 @@ public class DefaultMetaManager implements IMetaManager {
       }
       boolean readOnly =
           Boolean.parseBoolean(extraParams.getOrDefault(Constants.IS_READ_ONLY, "false"));
-      if (!setSchemaPrefixInExtraParams(
+      if (!checkEmbeddedStorageExtraParams(
           StorageEngineType.valueOf(storageEngine.toLowerCase()), extraParams)) {
+        logger.error(
+            "missing params or providing invalid ones for {} in config file",
+            storageEngineStrings[i]);
         continue;
       }
       String schemaPrefix = extraParams.get(Constants.SCHEMA_PREFIX);
@@ -1250,7 +1240,7 @@ public class DefaultMetaManager implements IMetaManager {
       StorageEngineMeta storage =
           new StorageEngineMeta(
               -1,
-              convertHostNameToHostAddress(ip),
+              ip,
               port,
               hasData,
               dataPrefix,
@@ -1260,8 +1250,7 @@ public class DefaultMetaManager implements IMetaManager {
               StorageEngineType.valueOf(storageEngine.toLowerCase()),
               id);
       if (hasData) {
-        StorageUnitMeta dummyStorageUnit =
-            new StorageUnitMeta(StorageUnitMeta.generateDummyStorageUnitID(i), i);
+        StorageUnitMeta dummyStorageUnit = new StorageUnitMeta(generateDummyStorageUnitId(i), i);
         Pair<ColumnsInterval, KeyInterval> boundary = StorageManager.getBoundaryOfStorage(storage);
         FragmentMeta dummyFragment;
 

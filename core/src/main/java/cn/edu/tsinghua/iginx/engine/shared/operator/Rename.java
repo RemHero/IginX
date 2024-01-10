@@ -40,14 +40,21 @@ public class Rename extends AbstractUnaryOperator {
   }
 
   @Override
+  public UnaryOperator copyWithSource(Source source) {
+    return new Rename(source, new HashMap<>(aliasMap));
+  }
+
+  @Override
   public String getInfo() {
     StringBuilder builder = new StringBuilder();
     builder.append("AliasMap: ");
     aliasMap.forEach(
         (k, v) -> builder.append("(").append(k).append(", ").append(v).append(")").append(","));
     builder.deleteCharAt(builder.length() - 1);
-    builder.append(", IgnorePatterns: ");
-    builder.append(ignorePatterns);
+    if (!ignorePatterns.isEmpty()) {
+      builder.append(", IgnorePatterns: ");
+      builder.append(ignorePatterns);
+    }
     return builder.toString();
   }
 }

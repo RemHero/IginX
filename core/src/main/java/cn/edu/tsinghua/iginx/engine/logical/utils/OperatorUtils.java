@@ -8,10 +8,11 @@ import static cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType.isB
 import static cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType.isMultipleOperator;
 import static cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType.isUnaryOperator;
 
+import cn.edu.tsinghua.iginx.engine.shared.expr.BaseExpression;
 import cn.edu.tsinghua.iginx.engine.shared.function.FunctionCall;
 import cn.edu.tsinghua.iginx.engine.shared.function.FunctionParams;
 import cn.edu.tsinghua.iginx.engine.shared.function.manager.FunctionManager;
-import cn.edu.tsinghua.iginx.engine.shared.operator.AbstractJoinOperator;
+import cn.edu.tsinghua.iginx.engine.shared.operator.AbstractJoin;
 import cn.edu.tsinghua.iginx.engine.shared.operator.BinaryOperator;
 import cn.edu.tsinghua.iginx.engine.shared.operator.CrossJoin;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Distinct;
@@ -25,6 +26,7 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.OuterJoin;
 import cn.edu.tsinghua.iginx.engine.shared.operator.PathUnion;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Rename;
+import cn.edu.tsinghua.iginx.engine.shared.operator.Reorder;
 import cn.edu.tsinghua.iginx.engine.shared.operator.RowTransform;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Select;
 import cn.edu.tsinghua.iginx.engine.shared.operator.SetTransform;
@@ -39,7 +41,6 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.type.OuterJoinType;
 import cn.edu.tsinghua.iginx.engine.shared.source.OperatorSource;
 import cn.edu.tsinghua.iginx.engine.shared.source.Source;
 import cn.edu.tsinghua.iginx.engine.shared.source.SourceType;
-import cn.edu.tsinghua.iginx.sql.expression.BaseExpression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,7 +101,7 @@ public class OperatorUtils {
           projectOperatorList, ((OperatorSource) binaryOperator.getSourceA()).getOperator());
       findProjectOperators(
           projectOperatorList, ((OperatorSource) binaryOperator.getSourceB()).getOperator());
-    } else {
+    } else if (OperatorType.isMultipleOperator(operator.getType())) {
       MultipleOperator multipleOperator = (MultipleOperator) operator;
       List<Source> sources = multipleOperator.getSources();
       for (Source source : sources) {
@@ -127,7 +128,7 @@ public class OperatorUtils {
           selectOperatorList, ((OperatorSource) binaryOperator.getSourceA()).getOperator());
       findSelectOperators(
           selectOperatorList, ((OperatorSource) binaryOperator.getSourceB()).getOperator());
-    } else {
+    } else if (OperatorType.isMultipleOperator(operator.getType())) {
       MultipleOperator multipleOperator = (MultipleOperator) operator;
       List<Source> sources = multipleOperator.getSources();
       for (Source source : sources) {
@@ -141,15 +142,16 @@ public class OperatorUtils {
       return root;
     }
 
-    AbstractJoinOperator apply = (AbstractJoinOperator) root;
+    AbstractJoin apply = (AbstractJoin) root;
     Operator operatorB = ((OperatorSource) apply.getSourceB()).getOperator();
     // 如果apply算子的右子树中不再有关联变量，则停止下推
     if (!hasPaths(operatorB, correlatedVariables)) {
       return root;
     }
-    AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+    AbstractJoin applyCopy = (AbstractJoin) apply.copy();
 
-    Operator operatorA = new Project(applyCopy.getSourceA(), correlatedVariables, null);
+    Operator operatorA =
+        new Project(applyCopy.getSourceA(), correlatedVariables, null, false, true);
     applyCopy.setSourceA(new OperatorSource(operatorA));
     applyCopy.setPrefixA(null);
     if (applyCopy.getType() == OperatorType.MarkJoin) {
@@ -200,7 +202,7 @@ public class OperatorUtils {
       return root;
     }
 
-    AbstractJoinOperator apply = (AbstractJoinOperator) root;
+    AbstractJoin apply = (AbstractJoin) root;
     Operator operatorB = ((OperatorSource) apply.getSourceB()).getOperator();
     // 如果apply算子的右子树中不再有关联变量，则停止下推
     if (!hasPaths(operatorB, correlatedVariables)) {
@@ -221,7 +223,14 @@ public class OperatorUtils {
             new Project(
                 new OperatorSource(pushDownApply(apply, correlatedVariables)),
                 patternsAll,
-                project.getTagFilter());
+                project.getTagFilter(),
+                false,
+                true);
+        break;
+      case Reorder:
+        Reorder reorder = (Reorder) operatorB;
+        apply.setSourceB(reorder.getSource());
+        root = pushDownApply(apply, correlatedVariables);
         break;
       case Select:
         Select select = (Select) operatorB;
@@ -250,7 +259,7 @@ public class OperatorUtils {
         break;
       case SetTransform:
         SetTransform setTransform = (SetTransform) operatorB;
-        Operator newOperatorA = new Distinct(apply.getSourceA());
+        Operator newOperatorA = new Distinct(apply.getSourceA(), Collections.singletonList("*"));
         apply.setSourceA(new OperatorSource(newOperatorA));
 
         apply.setSourceB(setTransform.getSource());
@@ -314,7 +323,7 @@ public class OperatorUtils {
           crossJoin.setSourceA(new OperatorSource(pushDownApply(apply, correlatedVariables)));
           root = crossJoin;
         } else if (aCorrelatedWithRoot) {
-          AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+          AbstractJoin applyCopy = (AbstractJoin) apply.copy();
           apply.setSourceB(crossJoin.getSourceA());
           apply.setPrefixB(crossJoin.getPrefixA());
           applyCopy.setSourceB(crossJoin.getSourceB());
@@ -347,7 +356,7 @@ public class OperatorUtils {
           apply.setPrefixB(innerJoin.getPrefixA());
           innerJoin.setSourceA(new OperatorSource(pushDownApply(apply, correlatedVariables)));
         } else if (aCorrelatedWithRoot) {
-          AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+          AbstractJoin applyCopy = (AbstractJoin) apply.copy();
           apply.setSourceB(innerJoin.getSourceA());
           apply.setPrefixB(innerJoin.getPrefixA());
           applyCopy.setSourceB(innerJoin.getSourceB());
@@ -374,7 +383,7 @@ public class OperatorUtils {
           apply.setPrefixB(outerJoin.getPrefixB());
           outerJoin.setSourceB(new OperatorSource(pushDownApply(apply, correlatedVariables)));
         } else {
-          AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+          AbstractJoin applyCopy = (AbstractJoin) apply.copy();
           apply.setSourceB(outerJoin.getSourceA());
           apply.setPrefixB(outerJoin.getPrefixA());
           applyCopy.setSourceB(outerJoin.getSourceB());
@@ -395,7 +404,7 @@ public class OperatorUtils {
           apply.setPrefixB(null);
           singleJoin.setSourceA(new OperatorSource(pushDownApply(apply, correlatedVariables)));
         } else {
-          AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+          AbstractJoin applyCopy = (AbstractJoin) apply.copy();
           apply.setSourceB(singleJoin.getSourceA());
           apply.setPrefixB(null);
           applyCopy.setSourceB(singleJoin.getSourceB());
@@ -416,7 +425,7 @@ public class OperatorUtils {
           apply.setPrefixB(null);
           markJoin.setSourceA(new OperatorSource(pushDownApply(apply, correlatedVariables)));
         } else {
-          AbstractJoinOperator applyCopy = (AbstractJoinOperator) apply.copy();
+          AbstractJoin applyCopy = (AbstractJoin) apply.copy();
           apply.setSourceB(markJoin.getSourceA());
           apply.setPrefixB(null);
           applyCopy.setSourceB(markJoin.getSourceB());

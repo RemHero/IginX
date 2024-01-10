@@ -1,18 +1,18 @@
 grammar Sql;
 
 sqlStatement
-   : statement (';')? EOF
+   : statement ';' EOF
    ;
 
 statement
    : INSERT INTO insertFullPathSpec VALUES insertValuesSpec # insertStatement
    | LOAD DATA importFileClause INTO insertFullPathSpec # insertFromFileStatement
    | DELETE FROM path (COMMA path)* whereClause? withClause? # deleteStatement
-   | EXPLAIN? (LOGICAL | PHYSICAL)? queryClause orderByClause? limitClause? exportFileClause? # selectStatement
+   | EXPLAIN? (LOGICAL | PHYSICAL)? cteClause? queryClause orderByClause? limitClause? exportFileClause? # selectStatement
    | COUNT POINTS # countPointsStatement
    | DELETE COLUMNS path (COMMA path)* withClause? # deleteColumnsStatement
    | CLEAR DATA # clearDataStatement
-   | SHOW COLUMNS (path (COMMA path)*)? withClause? limitClause? # showColumnsStatement
+   | SHOW COLUMNS showColumnsOptions # showColumnsStatement
    | SHOW REPLICA NUMBER # showReplicationStatement
    | ADD STORAGEENGINE storageEngineSpec # addStorageEngineStatement
    | SHOW CLUSTER INFO # showClusterInfoStatement
@@ -23,14 +23,46 @@ statement
    | SHOW TRANSFORM JOB STATUS jobId = INT # showJobStatusStatement
    | CANCEL TRANSFORM JOB jobId = INT # cancelJobStatement
    | SHOW jobStatus TRANSFORM JOB # showEligibleJobStatement
-   | REMOVE HISTORYDATARESOURCE removedStorageEngine (COMMA removedStorageEngine)* # removeHistoryDataResourceStatement
+   | REMOVE HISTORYDATASOURCE removedStorageEngine (COMMA removedStorageEngine)* # removeHistoryDataSourceStatement
    | SET CONFIG configName = stringLiteral configValue = stringLiteral # setConfigStatement
    | SHOW CONFIG configName = stringLiteral # showConfigStatement
+   | SHOW SESSIONID # showSessionIDStatement
    | COMPACT # compactStatement
+   | SHOW RULES # showRulesStatement
+   | SET RULES ruleAssignment (COMMA ruleAssignment)* # setRulesStatement
    ;
 
 insertFullPathSpec
    : path tagList? insertColumnsSpec
+   ;
+
+showColumnsOptions
+   : (path (COMMA path)*)? withClause? limitClause?
+   ;
+
+cteClause
+   : WITH commonTableExpr (COMMA commonTableExpr)*
+   ;
+
+commonTableExpr
+   : cteName (LR_BRACKET columnsList RR_BRACKET)? AS LR_BRACKET queryClause RR_BRACKET
+   | cteName (LR_BRACKET columnsList RR_BRACKET)? AS LR_BRACKET queryClause orderByClause limitClause RR_BRACKET
+   ;
+
+ruleAssignment
+   : ruleName = ID OPERATOR_EQ ruleValue = (ON | OFF)
+   ;
+
+cteName
+   : ID
+   ;
+
+columnsList
+   : cteColumn (COMMA cteColumn)*
+   ;
+
+cteColumn
+   : ID
    ;
 
 queryClause
@@ -56,12 +88,21 @@ selectSublist
 expression
    : LR_BRACKET inBracketExpr = expression RR_BRACKET
    | constant
-   | functionName LR_BRACKET (ALL | DISTINCT)? path (COMMA path)* RR_BRACKET
+   | function
    | path
    | (PLUS | MINUS) expr = expression
    | leftExpr = expression (STAR | DIV | MOD) rightExpr = expression
    | leftExpr = expression (PLUS | MINUS) rightExpr = expression
    | subquery
+   ;
+
+function
+   : functionName LR_BRACKET (ALL | DISTINCT)? path (COMMA path)* (COMMA param)* RR_BRACKET
+   ;
+
+param
+   : key = ID OPERATOR_EQ value = constant
+   | value = constant
    ;
 
 functionName
@@ -85,9 +126,10 @@ predicate
    : (KEY | path | functionName LR_BRACKET path RR_BRACKET) comparisonOperator constant
    | constant comparisonOperator (KEY | path | functionName LR_BRACKET path RR_BRACKET)
    | path comparisonOperator path
-   | path OPERATOR_LIKE regex = stringLiteral
+   | path stringLikeOperator regex = stringLiteral
    | OPERATOR_NOT? LR_BRACKET orExpression RR_BRACKET
    | predicateWithSubquery
+   | expression comparisonOperator expression
    ;
 
 predicateWithSubquery
@@ -172,7 +214,9 @@ joinPart
    ;
 
 tableReference
-   : (path | subquery) asClause?
+   : path asClause?
+   | subquery asClause?
+   | LR_BRACKET SHOW COLUMNS showColumnsOptions RR_BRACKET asClause?
    ;
 
 subquery
@@ -190,9 +234,7 @@ join
    ;
 
 specialClause
-   : aggregateWithLevelClause
-   | groupByClause havingClause?
-   | downsampleWithLevelClause
+   : groupByClause havingClause?
    | downsampleClause
    ;
 
@@ -208,10 +250,6 @@ orderByClause
    : ORDER BY (KEY | path) (COMMA path)* (DESC | ASC)?
    ;
 
-downsampleWithLevelClause
-   : downsampleClause aggregateWithLevelClause
-   ;
-
 downsampleClause
    : OVER LR_BRACKET RANGE aggLen IN timeInterval (STEP aggLen)? RR_BRACKET
    ;
@@ -220,12 +258,8 @@ aggLen
    : (TIME_WITH_UNIT | INT)
    ;
 
-aggregateWithLevelClause
-   : AGG LEVEL OPERATOR_EQ INT (COMMA INT)*
-   ;
-
 asClause
-   : AS ID
+   : AS? ID
    ;
 
 timeInterval
@@ -276,6 +310,24 @@ comparisonOperator
    | type = OPERATOR_LTE
    | type = OPERATOR_EQ
    | type = OPERATOR_NEQ
+   | type = OPERATOR_GT_AND
+   | type = OPERATOR_GTE_AND
+   | type = OPERATOR_LT_AND
+   | type = OPERATOR_LTE_AND
+   | type = OPERATOR_EQ_AND
+   | type = OPERATOR_NEQ_AND
+   | type = OPERATOR_GT_OR
+   | type = OPERATOR_GTE_OR
+   | type = OPERATOR_LT_OR
+   | type = OPERATOR_LTE_OR
+   | type = OPERATOR_EQ_OR
+   | type = OPERATOR_NEQ_OR
+   ;
+
+stringLikeOperator
+   : type = OPERATOR_LIKE
+   | type = OPERATOR_LIKE_AND
+   | type = OPERATOR_LIKE_OR
    ;
 
 insertColumnsSpec
@@ -288,7 +340,7 @@ insertPath
 
 insertValuesSpec
    : (COMMA? insertMultiValue)*
-   | LR_BRACKET queryClause RR_BRACKET (TIME_OFFSET OPERATOR_EQ INT)?
+   | LR_BRACKET cteClause? queryClause RR_BRACKET (TIME_OFFSET OPERATOR_EQ INT)?
    ;
 
 insertMultiValue
@@ -335,17 +387,8 @@ jobStatus
 nodeName
    : ID
    | STAR
-   | valueNode
+   | BACK_QUOTE_STRING_LITERAL_NOT_EMPTY
    | keyWords
-   ;
-
-valueNode
-   : stringLiteral
-   | TIME_WITH_UNIT
-   | dateExpression
-   | dateFormat
-   | MINUS? (EXPONENT | INT)
-   | booleanClause
    ;
 
 keyWords
@@ -366,7 +409,6 @@ keyWords
    | ORDER
    | HAVING
    | AGG
-   | LEVEL
    | ADD
    | VALUE
    | VALUES
@@ -378,7 +420,6 @@ keyWords
    | STORAGEENGINE
    | POINTS
    | DATA
-   | NULL
    | REPLICA
    | IOTDB
    | INFLUXDB
@@ -412,13 +453,14 @@ keyWords
    | RANGE
    | STEP
    | REMOVE
-   | HISTORYDATARESOURCE
+   | HISTORYDATASOURCE
    | COMPACT
    | EXPLAIN
    | LOGICAL
    | PHYSICAL
    | SET
    | CONFIG
+   | SESSIONID
    | COLUMNS
    | INTERSECT
    | UNION
@@ -436,6 +478,7 @@ keyWords
    | SKIPPING
    | HEADER
    | LOAD
+   | VALUE2META
    ;
 
 dateFormat
@@ -546,10 +589,6 @@ AGG
    : A G G
    ;
 
-LEVEL
-   : L E V E L
-   ;
-
 BY
    : B Y
    ;
@@ -612,6 +651,10 @@ DATA
 
 ADD
    : A D D
+   ;
+
+RULES
+   : R U L E S
    ;
 
 STORAGEENGINE
@@ -774,6 +817,10 @@ ON
    : O N
    ;
 
+OFF
+   : O F F
+   ;
+
 USING
    : U S I N G
    ;
@@ -794,8 +841,8 @@ REMOVE
    : R E M O V E
    ;
 
-HISTORYDATARESOURCE
-   : H I S T O R Y D A T A R E S O U R C E
+HISTORYDATASOURCE
+   : H I S T O R Y D A T A S O U R C E
    ;
 
 COMPACT
@@ -836,6 +883,10 @@ SET
 
 CONFIG
    : C O N F I G
+   ;
+
+SESSIONID
+   : S E S S I O N I D
    ;
 
 COLUMNS
@@ -953,12 +1004,68 @@ OPERATOR_NEQ
    | '<>'
    ;
 
+OPERATOR_EQ_AND
+   : '&' OPERATOR_EQ
+   ;
+
+OPERATOR_GT_AND
+   : '&' OPERATOR_GT
+   ;
+
+OPERATOR_GTE_AND
+   : '&' OPERATOR_GTE
+   ;
+
+OPERATOR_LT_AND
+   : '&' OPERATOR_LT
+   ;
+
+OPERATOR_LTE_AND
+   : '&' OPERATOR_LTE
+   ;
+
+OPERATOR_NEQ_AND
+   : '&' OPERATOR_NEQ
+   ;
+
+OPERATOR_EQ_OR
+   : '|' OPERATOR_EQ
+   ;
+
+OPERATOR_GT_OR
+   : '|' OPERATOR_GT
+   ;
+
+OPERATOR_GTE_OR
+   : '|' OPERATOR_GTE
+   ;
+
+OPERATOR_LT_OR
+   : '|' OPERATOR_LT
+   ;
+
+OPERATOR_LTE_OR
+   : '|' OPERATOR_LTE
+   ;
+
+OPERATOR_NEQ_OR
+   : '|' OPERATOR_NEQ
+   ;
+
 OPERATOR_IN
    : I N
    ;
 
 OPERATOR_LIKE
    : L I K E
+   ;
+
+OPERATOR_LIKE_AND
+   : '&' L I K E
+   ;
+
+OPERATOR_LIKE_OR
+   : '|' L I K E
    ;
 
 OPERATOR_AND
@@ -1034,6 +1141,10 @@ NaN
    : 'NaN'
    ;
 
+BACK_QUOTE
+   : '`'
+   ;
+
 INF
    : I N F
    ;
@@ -1086,6 +1197,10 @@ fragment NAME_CHAR
 
 fragment CN_CHAR
    : '\u2E86' .. '\u9FFF'
+   ;
+
+BACK_QUOTE_STRING_LITERAL_NOT_EMPTY
+   : BACK_QUOTE ('\\' . | ~ '"')+? BACK_QUOTE
    ;
 
 DOUBLE_QUOTE_STRING_LITERAL

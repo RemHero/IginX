@@ -1,10 +1,10 @@
 package cn.edu.tsinghua.iginx.sql.statement.selectstatement;
 
-import cn.edu.tsinghua.iginx.engine.shared.file.write.ExportFile;
-import cn.edu.tsinghua.iginx.sql.expression.Expression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.Expression;
 import cn.edu.tsinghua.iginx.sql.statement.DataStatement;
 import cn.edu.tsinghua.iginx.sql.statement.StatementType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,14 +15,13 @@ public abstract class SelectStatement extends DataStatement {
   protected SelectStatementType selectStatementType;
   protected boolean needLogicalExplain = false;
   protected boolean needPhysicalExplain = false;
-  protected ExportFile exportFile;
   protected final boolean isSubQuery;
   protected List<String> freeVariables;
   protected final List<String> orderByPaths;
   protected boolean ascending;
   protected int limit;
   protected int offset;
-  protected String globalAlias;
+  private List<CommonTableExpression> cteList;
 
   public SelectStatement(boolean isSubQuery) {
     this.statementType = StatementType.SELECT;
@@ -31,6 +30,7 @@ public abstract class SelectStatement extends DataStatement {
     this.limit = Integer.MAX_VALUE;
     this.offset = 0;
     this.isSubQuery = isSubQuery;
+    this.cteList = Collections.emptyList();
   }
 
   public SelectStatementType getSelectType() {
@@ -51,14 +51,6 @@ public abstract class SelectStatement extends DataStatement {
 
   public void setNeedPhysicalExplain(boolean needPhysicalExplain) {
     this.needPhysicalExplain = needPhysicalExplain;
-  }
-
-  public ExportFile getExportFile() {
-    return exportFile;
-  }
-
-  public void setExportFile(ExportFile exportFile) {
-    this.exportFile = exportFile;
   }
 
   public boolean isSubQuery() {
@@ -101,12 +93,12 @@ public abstract class SelectStatement extends DataStatement {
     this.offset = offset;
   }
 
-  public String getGlobalAlias() {
-    return globalAlias;
+  public List<CommonTableExpression> getCteList() {
+    return cteList;
   }
 
-  public void setGlobalAlias(String alias) {
-    this.globalAlias = alias;
+  public void setCteList(List<CommonTableExpression> cteList) {
+    this.cteList = cteList;
   }
 
   public List<String> getFreeVariables() {

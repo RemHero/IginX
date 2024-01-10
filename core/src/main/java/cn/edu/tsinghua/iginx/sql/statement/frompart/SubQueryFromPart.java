@@ -6,13 +6,12 @@ import cn.edu.tsinghua.iginx.sql.statement.selectstatement.BinarySelectStatement
 import cn.edu.tsinghua.iginx.sql.statement.selectstatement.SelectStatement;
 import cn.edu.tsinghua.iginx.sql.statement.selectstatement.UnarySelectStatement;
 import java.util.List;
+import java.util.Map;
 
 public class SubQueryFromPart implements FromPart {
 
-  private final FromPartType type = FromPartType.SubQueryFromPart;
   private final SelectStatement subQuery;
   private final List<String> patterns;
-  private final boolean isJoinPart;
   private JoinCondition joinCondition;
   private final String alias;
 
@@ -23,7 +22,6 @@ public class SubQueryFromPart implements FromPart {
   public SubQueryFromPart(SelectStatement subQuery, String alias) {
     this.subQuery = subQuery;
     this.patterns = subQuery.calculatePrefixSet();
-    this.isJoinPart = false;
     this.alias = alias;
   }
 
@@ -34,22 +32,23 @@ public class SubQueryFromPart implements FromPart {
   public SubQueryFromPart(SelectStatement subQuery, JoinCondition joinCondition, String alias) {
     this.subQuery = subQuery;
     this.patterns = subQuery.calculatePrefixSet();
-    this.isJoinPart = true;
     this.joinCondition = joinCondition;
     this.alias = alias;
   }
 
-  public String getAlias() {
-    return alias;
-  }
-
-  public boolean hasAlias() {
-    return alias != null && !alias.equals("");
+  @Override
+  public FromPartType getType() {
+    return FromPartType.SubQuery;
   }
 
   @Override
-  public FromPartType getType() {
-    return type;
+  public Map<String, String> getAliasMap() {
+    return subQuery.getSubQueryAliasMap(alias);
+  }
+
+  @Override
+  public boolean hasAlias() {
+    return alias != null && !alias.isEmpty();
   }
 
   @Override
@@ -66,12 +65,17 @@ public class SubQueryFromPart implements FromPart {
     if (((UnarySelectStatement) s).getFromParts().size() > 1) {
       return false;
     }
-    return ((UnarySelectStatement) s).getFromParts().get(0).hasSinglePrefix();
+    return ((UnarySelectStatement) s).getFromPart(0).hasSinglePrefix();
   }
 
   @Override
   public List<String> getPatterns() {
     return patterns;
+  }
+
+  @Override
+  public String getOriginPrefix() {
+    return "";
   }
 
   @Override
@@ -91,13 +95,13 @@ public class SubQueryFromPart implements FromPart {
   }
 
   @Override
-  public boolean isJoinPart() {
-    return isJoinPart;
+  public JoinCondition getJoinCondition() {
+    return joinCondition;
   }
 
   @Override
-  public JoinCondition getJoinCondition() {
-    return joinCondition;
+  public void setJoinCondition(JoinCondition joinCondition) {
+    this.joinCondition = joinCondition;
   }
 
   public SelectStatement getSubQuery() {

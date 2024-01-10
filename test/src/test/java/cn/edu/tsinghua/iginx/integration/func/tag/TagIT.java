@@ -1,5 +1,6 @@
 package cn.edu.tsinghua.iginx.integration.func.tag;
 
+import static cn.edu.tsinghua.iginx.constant.GlobalConstant.CLEAR_DUMMY_DATA_CAUTION;
 import static cn.edu.tsinghua.iginx.integration.controller.Controller.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -85,7 +86,7 @@ public class TagIT {
     try {
       res = session.executeSql(statement);
     } catch (SessionException | ExecutionException e) {
-      if (e.toString().trim().equals(CLEAR_DATA_EXCEPTION)) {
+      if (e.toString().trim().contains(CLEAR_DUMMY_DATA_CAUTION)) {
         logger.warn(CLEAR_DATA_WARNING);
       } else {
         logger.error(CLEAR_DATA_ERROR, statement, e.getMessage());
@@ -107,7 +108,7 @@ public class TagIT {
   }
 
   @Test
-  public void testShowTimeSeriesWithTags() {
+  public void testShowColumnsWithTags() {
     String statement = "SHOW COLUMNS ah.*;";
     String expected =
         "Columns:\n"
@@ -615,7 +616,7 @@ public class TagIT {
   @Test
   public void testDeleteTSWithTag() {
     if (!isAbleToDelete || isScaling) return;
-    String showTimeSeries = "SHOW COLUMNS ah.*;";
+    String showColumns = "SHOW COLUMNS ah.*;";
     String expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -636,12 +637,12 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 13\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
-    String deleteTimeSeries = "DELETE COLUMNS ah.*.s WITH t1=v1";
+    String deleteTimeSeries = "DELETE COLUMNS ah.*.s WITH t1=v1;";
     execute(deleteTimeSeries);
 
-    showTimeSeries = "SHOW COLUMNS ah.*;";
+    showColumns = "SHOW COLUMNS ah.*;";
     expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -659,16 +660,16 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 10\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
-    String showTimeSeriesData = "SELECT s FROM ah.* WITH t1=v1;";
+    String showColumnsData = "SELECT s FROM ah.* WITH t1=v1;";
     expected = "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
-    executeAndCompare(showTimeSeriesData, expected);
+    executeAndCompare(showColumnsData, expected);
 
-    deleteTimeSeries = "DELETE COLUMNS ah.*.v WITH_PRECISE t1=v1";
+    deleteTimeSeries = "DELETE COLUMNS ah.*.v WITH_PRECISE t1=v1;";
     execute(deleteTimeSeries);
 
-    showTimeSeries = "SHOW COLUMNS ah.*;";
+    showColumns = "SHOW COLUMNS ah.*;";
     expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -684,9 +685,9 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 8\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
-    showTimeSeriesData = "SELECT v FROM ah.* WITH t1=v1;";
+    showColumnsData = "SELECT v FROM ah.* WITH t1=v1;";
     expected =
         "ResultSets:\n"
             + "+---+----------------------+\n"
@@ -695,13 +696,13 @@ public class TagIT {
             + "|800|                    v8|\n"
             + "+---+----------------------+\n"
             + "Total line number = 1\n";
-    executeAndCompare(showTimeSeriesData, expected);
+    executeAndCompare(showColumnsData, expected);
   }
 
   @Test
   public void testDeleteTSWithMultiTags() {
     if (!isAbleToDelete || isScaling) return;
-    String showTimeSeries = "SHOW COLUMNS ah.*;";
+    String showColumns = "SHOW COLUMNS ah.*;";
     String expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -722,12 +723,12 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 13\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
     String deleteTimeSeries = "DELETE COLUMNS ah.*.v WITH t1=v1 AND t2=v2;";
     execute(deleteTimeSeries);
 
-    showTimeSeries = "SHOW COLUMNS ah.*;";
+    showColumns = "SHOW COLUMNS ah.*;";
     expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -747,17 +748,17 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 12\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
-    String showTimeSeriesData = "SELECT v FROM ah.* WITH t1=v1 AND t2=v2;";
+    String showColumnsData = "SELECT v FROM ah.* WITH t1=v1 AND t2=v2;";
     expected = "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     ;
-    executeAndCompare(showTimeSeriesData, expected);
+    executeAndCompare(showColumnsData, expected);
 
     deleteTimeSeries = "DELETE COLUMNS * WITH t1=v1 AND t2=vv2 OR t1=vv1 AND t2=v2;";
     execute(deleteTimeSeries);
 
-    showTimeSeries = "SHOW COLUMNS ah.*;";
+    showColumns = "SHOW COLUMNS ah.*;";
     expected =
         "Columns:\n"
             + "+-----------------------+--------+\n"
@@ -775,12 +776,12 @@ public class TagIT {
             + "|     ah.hr03.v{t1=vv11}|    LONG|\n"
             + "+-----------------------+--------+\n"
             + "Total line number = 10\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
 
-    showTimeSeriesData = "SELECT * FROM * WITH t1=v1 AND t2=vv2 OR t1=vv1 AND t2=v2;";
+    showColumnsData = "SELECT * FROM * WITH t1=v1 AND t2=vv2 OR t1=vv1 AND t2=v2;";
     expected = "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
     ;
-    executeAndCompare(showTimeSeriesData, expected);
+    executeAndCompare(showColumnsData, expected);
   }
 
   @Test
@@ -1310,8 +1311,8 @@ public class TagIT {
     String expected = "Points num: 0\n";
     executeAndCompare(countPoints, expected);
 
-    String showTimeSeries = "SELECT * FROM *;";
+    String showColumns = "SELECT * FROM *;";
     expected = "ResultSets:\n" + "+---+\n" + "|key|\n" + "+---+\n" + "+---+\n" + "Empty set.\n";
-    executeAndCompare(showTimeSeries, expected);
+    executeAndCompare(showColumns, expected);
   }
 }

@@ -8,6 +8,15 @@ import cn.edu.tsinghua.iginx.engine.logical.utils.ExprUtils;
 import cn.edu.tsinghua.iginx.engine.shared.KeyRange;
 import cn.edu.tsinghua.iginx.engine.shared.data.Value;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.RawDataType;
+import cn.edu.tsinghua.iginx.engine.shared.expr.BaseExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.BinaryExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.BracketExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.ConstantExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.Expression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.FromValueExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.FuncExpression;
+import cn.edu.tsinghua.iginx.engine.shared.expr.Operator;
+import cn.edu.tsinghua.iginx.engine.shared.expr.UnaryExpression;
 import cn.edu.tsinghua.iginx.engine.shared.file.CSVFile;
 import cn.edu.tsinghua.iginx.engine.shared.file.read.ImportCsv;
 import cn.edu.tsinghua.iginx.engine.shared.file.read.ImportFile;
@@ -16,6 +25,7 @@ import cn.edu.tsinghua.iginx.engine.shared.file.write.ExportCsv;
 import cn.edu.tsinghua.iginx.engine.shared.file.write.ExportFile;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.BoolFilter;
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.ExprFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.NotFilter;
@@ -30,7 +40,6 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.tag.OrTagFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.PreciseTagFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.WithoutTagFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.type.FuncType;
 import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.exceptions.SQLParserException;
 import cn.edu.tsinghua.iginx.sql.SqlParser.AddStorageEngineStatementContext;
@@ -41,10 +50,13 @@ import cn.edu.tsinghua.iginx.sql.SqlParser.AndTagExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.CancelJobStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ClearDataStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.CommitTransformJobStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.CommonTableExprContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.CompactStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ConstantContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.CountPointsStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.CsvFileContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.CteClauseContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.CteColumnContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.DateExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.DateFormatContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.DeleteColumnsStatementContext;
@@ -54,6 +66,7 @@ import cn.edu.tsinghua.iginx.sql.SqlParser.DropTaskStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ExportFileClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.FromClauseContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.FunctionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.GroupByClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ImportFileClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.InsertFromFileStatementContext;
@@ -64,83 +77,60 @@ import cn.edu.tsinghua.iginx.sql.SqlParser.InsertValuesSpecContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.JoinContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.JoinPartContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.LimitClauseContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.NodeNameContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.OrExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.OrPreciseExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.OrTagExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.OrderByClauseContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.ParamContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.PathContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.PreciseTagExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.PredicateContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.PredicateWithSubqueryContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.QueryClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.RegisterTaskStatementContext;
-import cn.edu.tsinghua.iginx.sql.SqlParser.RemoveHistoryDataResourceStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.RemoveHistoryDataSourceStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SelectClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SelectContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SelectStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SelectSublistContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SetConfigStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.SetRulesStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowClusterInfoStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.ShowColumnsOptionsContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowColumnsStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowConfigStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowEligibleJobStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowJobStatusStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowRegisterTaskStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.ShowReplicationStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.ShowRulesStatementContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.ShowSessionIDStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SpecialClauseContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.SqlStatementContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.StorageEngineContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.StringLiteralContext;
+import cn.edu.tsinghua.iginx.sql.SqlParser.TableReferenceContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.TagEquationContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.TagExpressionContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.TagListContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.TimeIntervalContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.TimeValueContext;
 import cn.edu.tsinghua.iginx.sql.SqlParser.WithClauseContext;
-import cn.edu.tsinghua.iginx.sql.expression.BaseExpression;
-import cn.edu.tsinghua.iginx.sql.expression.BinaryExpression;
-import cn.edu.tsinghua.iginx.sql.expression.BracketExpression;
-import cn.edu.tsinghua.iginx.sql.expression.ConstantExpression;
-import cn.edu.tsinghua.iginx.sql.expression.Expression;
-import cn.edu.tsinghua.iginx.sql.expression.Expression.ExpressionType;
-import cn.edu.tsinghua.iginx.sql.expression.FromValueExpression;
-import cn.edu.tsinghua.iginx.sql.expression.FuncExpression;
-import cn.edu.tsinghua.iginx.sql.expression.Operator;
-import cn.edu.tsinghua.iginx.sql.expression.UnaryExpression;
-import cn.edu.tsinghua.iginx.sql.statement.AddStorageEngineStatement;
-import cn.edu.tsinghua.iginx.sql.statement.CancelJobStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ClearDataStatement;
-import cn.edu.tsinghua.iginx.sql.statement.CommitTransformJobStatement;
-import cn.edu.tsinghua.iginx.sql.statement.CompactStatement;
-import cn.edu.tsinghua.iginx.sql.statement.CountPointsStatement;
-import cn.edu.tsinghua.iginx.sql.statement.DeleteColumnsStatement;
-import cn.edu.tsinghua.iginx.sql.statement.DeleteStatement;
-import cn.edu.tsinghua.iginx.sql.statement.DropTaskStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ExportFileFromSelectStatement;
-import cn.edu.tsinghua.iginx.sql.statement.InsertFromCsvStatement;
-import cn.edu.tsinghua.iginx.sql.statement.InsertFromSelectStatement;
-import cn.edu.tsinghua.iginx.sql.statement.InsertStatement;
-import cn.edu.tsinghua.iginx.sql.statement.RegisterTaskStatement;
-import cn.edu.tsinghua.iginx.sql.statement.RemoveHistoryDataSourceStatement;
-import cn.edu.tsinghua.iginx.sql.statement.SetConfigStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowClusterInfoStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowColumnsStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowConfigStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowEligibleJobStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowJobStatusStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowRegisterTaskStatement;
-import cn.edu.tsinghua.iginx.sql.statement.ShowReplicationStatement;
-import cn.edu.tsinghua.iginx.sql.statement.Statement;
-import cn.edu.tsinghua.iginx.sql.statement.StatementType;
+import cn.edu.tsinghua.iginx.sql.statement.*;
+import cn.edu.tsinghua.iginx.sql.statement.frompart.CteFromPart;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.FromPart;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.FromPartType;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.PathFromPart;
+import cn.edu.tsinghua.iginx.sql.statement.frompart.ShowColumnsFromPart;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.SubQueryFromPart;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.join.JoinCondition;
 import cn.edu.tsinghua.iginx.sql.statement.frompart.join.JoinType;
 import cn.edu.tsinghua.iginx.sql.statement.selectstatement.BinarySelectStatement;
+import cn.edu.tsinghua.iginx.sql.statement.selectstatement.CommonTableExpression;
 import cn.edu.tsinghua.iginx.sql.statement.selectstatement.SelectStatement;
 import cn.edu.tsinghua.iginx.sql.statement.selectstatement.UnarySelectStatement;
+import cn.edu.tsinghua.iginx.sql.utils.ExpressionUtils;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.thrift.JobState;
 import cn.edu.tsinghua.iginx.thrift.RemovedStorageEngineInfo;
@@ -157,12 +147,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
-
-  private static final Set<FuncType> supportedAggregateWithLevelFuncSet =
-      new HashSet<>(Arrays.asList(FuncType.Sum, FuncType.Count, FuncType.Avg));
 
   @Override
   public Statement visitSqlStatement(SqlStatementContext ctx) {
@@ -184,8 +170,12 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
     InsertValuesSpecContext valuesSpecContext = ctx.insertValuesSpec();
     if (hasSubQuery) {
+      List<CommonTableExpression> cteList = new ArrayList<>();
+      if (ctx.insertValuesSpec().cteClause() != null) {
+        parseCteClause(ctx.insertValuesSpec().cteClause(), cteList);
+      }
       SelectStatement selectStatement =
-          parseQueryClause(ctx.insertValuesSpec().queryClause(), false);
+          parseQueryClause(ctx.insertValuesSpec().queryClause(), cteList, false);
       long timeOffset =
           valuesSpecContext.TIME_OFFSET() == null
               ? 0
@@ -214,7 +204,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private void parseInsertFullPathSpec(
       InsertFullPathSpecContext ctx, InsertStatement insertStatement) {
-    insertStatement.setPrefixPath(ctx.path().getText());
+    insertStatement.setPrefixPath(parsePath(ctx.path()));
 
     if (ctx.tagList() != null) {
       Map<String, String> globalTags = parseTagList(ctx.tagList());
@@ -226,7 +216,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
         .insertPath()
         .forEach(
             e -> {
-              String path = e.path().getText();
+              String path = parsePath(e.path());
               Map<String, String> tags;
               if (e.tagList() != null) {
                 if (insertStatement.hasGlobalTags()) {
@@ -243,6 +233,20 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
               }
               insertStatement.setPath(path, tags);
             });
+  }
+
+  private String parsePath(PathContext ctx) {
+    StringBuilder path = new StringBuilder();
+    for (NodeNameContext nodeNameContext : ctx.nodeName()) {
+      String nodeName = nodeNameContext.getText();
+      if (nodeNameContext.BACK_QUOTE_STRING_LITERAL_NOT_EMPTY() != null) {
+        nodeName = nodeName.substring(1, nodeName.length() - 1);
+      }
+      path.append(nodeName);
+      path.append(SQLConstant.DOT);
+    }
+    path.deleteCharAt(path.length() - 1);
+    return path.toString();
   }
 
   private ImportFile parseImportFileClause(ImportFileClauseContext ctx) {
@@ -264,7 +268,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
   public Statement visitDeleteStatement(DeleteStatementContext ctx) {
     DeleteStatement deleteStatement = new DeleteStatement();
     // parse delete paths
-    ctx.path().forEach(e -> deleteStatement.addPath(e.getText()));
+    ctx.path().forEach(e -> deleteStatement.addPath(parsePath(e)));
     // parse time range
     if (ctx.whereClause() != null) {
       Filter filter = parseOrExpression(ctx.whereClause().orExpression(), deleteStatement);
@@ -284,7 +288,12 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   @Override
   public Statement visitSelectStatement(SelectStatementContext ctx) {
-    SelectStatement selectStatement = parseQueryClause(ctx.queryClause(), false);
+    List<CommonTableExpression> cteList = new ArrayList<>();
+    if (ctx.cteClause() != null) {
+      parseCteClause(ctx.cteClause(), cteList);
+    }
+
+    SelectStatement selectStatement = parseQueryClause(ctx.queryClause(), cteList, false);
     if (ctx.EXPLAIN() != null) {
       if (ctx.PHYSICAL() != null) {
         selectStatement.setNeedPhysicalExplain(true);
@@ -296,9 +305,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       parseOrderByClause(ctx.orderByClause(), selectStatement);
     }
     if (ctx.limitClause() != null) {
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.limitClause());
-      selectStatement.setLimit(limitAndOffset.getK());
-      selectStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.limitClause(), selectStatement);
     }
     if (ctx.exportFileClause() != null) {
       if (ctx.EXPLAIN() != null) {
@@ -306,34 +313,63 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
             "OUTFILE is not supported to be used in statement with EXPLAIN.");
       }
       ExportFile exportFile = parseExportFileClause(ctx.exportFileClause());
-      ExportFileFromSelectStatement statement =
-          new ExportFileFromSelectStatement(selectStatement, exportFile);
-      return statement;
+      return new ExportFileFromSelectStatement(selectStatement, exportFile);
     }
     return selectStatement;
   }
 
-  private SelectStatement parseQueryClause(QueryClauseContext ctx, boolean isSubQuery) {
+  private void parseCteClause(CteClauseContext ctx, List<CommonTableExpression> cteList) {
+    for (CommonTableExprContext cteCtx : ctx.commonTableExpr()) {
+      String name = cteCtx.cteName().getText();
+      SelectStatement statement = parseQueryClause(cteCtx.queryClause(), cteList, false);
+      if (cteCtx.orderByClause() != null) {
+        parseOrderByClause(cteCtx.orderByClause(), statement);
+      }
+      if (cteCtx.limitClause() != null) {
+        parseLimitClause(cteCtx.limitClause(), statement);
+      }
+      if (cteCtx.columnsList() != null) {
+        List<String> columns = new ArrayList<>();
+        for (CteColumnContext columnCtx : cteCtx.columnsList().cteColumn()) {
+          columns.add(columnCtx.getText());
+        }
+        if (columns.size() != statement.getExpressions().size()) {
+          throw new SQLParserException(
+              String.format(
+                  "CTE %s's renamed columns' size is %s, while selected expressions' size is %s",
+                  name, columns.size(), statement.getExpressions().size()));
+        }
+        cteList.add(new CommonTableExpression(statement, name, columns));
+      } else {
+        cteList.add(new CommonTableExpression(statement, name));
+      }
+    }
+  }
+
+  private SelectStatement parseQueryClause(
+      QueryClauseContext ctx, List<CommonTableExpression> cteList, boolean isSubQuery) {
     if (ctx.inBracketQuery != null) {
-      SelectStatement selectStatement = parseQueryClause(ctx.inBracketQuery, isSubQuery);
+      SelectStatement selectStatement = parseQueryClause(ctx.inBracketQuery, cteList, isSubQuery);
       if (ctx.orderByClause() != null) {
         parseOrderByClause(ctx.orderByClause(), selectStatement);
       }
       if (ctx.limitClause() != null) {
-        Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.limitClause());
-        selectStatement.setLimit(limitAndOffset.getK());
-        selectStatement.setOffset(limitAndOffset.getV());
+        parseLimitClause(ctx.limitClause(), selectStatement);
       }
       return selectStatement;
     } else if (ctx.leftQuery != null && ctx.rightQuery != null) {
-      SelectStatement leftSelectStatement = parseQueryClause(ctx.leftQuery, isSubQuery);
-      SelectStatement rightSelectStatement = parseQueryClause(ctx.rightQuery, isSubQuery);
+      SelectStatement leftSelectStatement = parseQueryClause(ctx.leftQuery, cteList, isSubQuery);
+      SelectStatement rightSelectStatement = parseQueryClause(ctx.rightQuery, cteList, isSubQuery);
       OperatorType setOperator = parseSetOperator(ctx);
-      boolean isDistinct = ctx.ALL() != null ? false : true;
-      return new BinarySelectStatement(
-          leftSelectStatement, setOperator, rightSelectStatement, isDistinct, isSubQuery);
+      boolean isDistinct = ctx.ALL() == null;
+      BinarySelectStatement statement =
+          new BinarySelectStatement(
+              leftSelectStatement, setOperator, rightSelectStatement, isDistinct, isSubQuery);
+      statement.setCteList(cteList);
+      return statement;
     } else {
       UnarySelectStatement selectStatement = new UnarySelectStatement(isSubQuery);
+      selectStatement.setCteList(cteList);
       parseSelect(ctx.select(), selectStatement);
       return selectStatement;
     }
@@ -355,7 +391,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     // Step 1. parse as much information as possible.
     // parse from paths
     if (ctx.fromClause() != null) {
-      parseFromPaths(ctx.fromClause(), selectStatement);
+      parseFromParts(ctx.fromClause(), selectStatement);
     }
     // parse select paths
     if (ctx.selectClause() != null) {
@@ -445,7 +481,7 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
   @Override
   public Statement visitDeleteColumnsStatement(DeleteColumnsStatementContext ctx) {
     DeleteColumnsStatement deleteColumnsStatement = new DeleteColumnsStatement();
-    ctx.path().forEach(e -> deleteColumnsStatement.addPath(e.getText()));
+    ctx.path().forEach(e -> deleteColumnsStatement.addPath(parsePath(e)));
 
     if (ctx.withClause() != null) {
       TagFilter tagFilter = parseWithClause(ctx.withClause());
@@ -493,18 +529,22 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   @Override
   public Statement visitShowColumnsStatement(ShowColumnsStatementContext ctx) {
+    return parseShowColumnsOptions(ctx.showColumnsOptions());
+  }
+
+  private ShowColumnsStatement parseShowColumnsOptions(ShowColumnsOptionsContext ctx) {
     ShowColumnsStatement showColumnsStatement = new ShowColumnsStatement();
-    for (PathContext pathRegex : ctx.path()) {
-      showColumnsStatement.setPathRegex(pathRegex.getText());
-    }
-    if (ctx.withClause() != null) {
-      TagFilter tagFilter = parseWithClause(ctx.withClause());
-      showColumnsStatement.setTagFilter(tagFilter);
-    }
-    if (ctx.limitClause() != null) {
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.limitClause());
-      showColumnsStatement.setLimit(limitAndOffset.getK());
-      showColumnsStatement.setOffset(limitAndOffset.getV());
+    if (ctx != null) {
+      for (PathContext pathRegex : ctx.path()) {
+        showColumnsStatement.setPathRegex(parsePath(pathRegex));
+      }
+      if (ctx.withClause() != null) {
+        TagFilter tagFilter = parseWithClause(ctx.withClause());
+        showColumnsStatement.setTagFilter(tagFilter);
+      }
+      if (ctx.limitClause() != null) {
+        parseLimitClause(ctx.limitClause(), showColumnsStatement);
+      }
     }
     return showColumnsStatement;
   }
@@ -515,8 +555,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
   }
 
   @Override
-  public Statement visitRemoveHistoryDataResourceStatement(
-      RemoveHistoryDataResourceStatementContext ctx) {
+  public Statement visitRemoveHistoryDataSourceStatement(
+      RemoveHistoryDataSourceStatementContext ctx) {
     RemoveHistoryDataSourceStatement statement = new RemoveHistoryDataSourceStatement();
     ctx.removedStorageEngine()
         .forEach(
@@ -545,106 +585,92 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     return statement;
   }
 
-  private void parseFromPaths(FromClauseContext ctx, UnarySelectStatement selectStatement) {
+  private void parseFromParts(FromClauseContext ctx, UnarySelectStatement selectStatement) {
     List<FromPart> fromParts = new ArrayList<>();
-    if (ctx.tableReference().path() != null) {
-      String fromPath = ctx.tableReference().path().getText();
-      if (ctx.tableReference().asClause() != null) {
-        fromParts.add(new PathFromPart(fromPath, ctx.tableReference().asClause().ID().getText()));
-        selectStatement.setGlobalAlias(ctx.tableReference().asClause().ID().getText());
-      } else {
-        fromParts.add(new PathFromPart(fromPath));
-        selectStatement.setGlobalAlias(fromPath);
-      }
-    } else {
-      SelectStatement subStatement =
-          parseQueryClause(ctx.tableReference().subquery().queryClause(), true);
-      if (ctx.tableReference().subquery().orderByClause() != null) {
-        parseOrderByClause(ctx.tableReference().subquery().orderByClause(), subStatement);
-      }
-      if (ctx.tableReference().subquery().limitClause() != null) {
-        Pair<Integer, Integer> limitAndOffset =
-            parseLimitClause(ctx.tableReference().subquery().limitClause());
-        subStatement.setLimit(limitAndOffset.getK());
-        subStatement.setOffset(limitAndOffset.getV());
-      }
-      // 计算子查询的自由变量
-      subStatement.initFreeVariables();
-
-      if (ctx.tableReference().asClause() != null) {
-        String alias = ctx.tableReference().asClause().ID().getText();
-        selectStatement.setGlobalAlias(alias);
-        fromParts.add(new SubQueryFromPart(subStatement, alias));
-      } else {
-        selectStatement.setGlobalAlias(subStatement.getGlobalAlias());
-        fromParts.add(new SubQueryFromPart(subStatement));
-      }
-    }
-
+    // parse first FromPart
+    fromParts.add(parseTableReference(ctx.tableReference(), selectStatement.getCteList()));
+    // parse joined FromPart
     if (ctx.joinPart() != null && !ctx.joinPart().isEmpty()) {
       selectStatement.setHasJoinParts(true);
-
       for (JoinPartContext joinPartContext : ctx.joinPart()) {
-        String pathPrefix;
-        String alias = "";
-        if (joinPartContext.tableReference().asClause() != null) {
-          alias = joinPartContext.tableReference().asClause().ID().getText();
-        }
-        SelectStatement subStatement = null;
-        if (joinPartContext.tableReference().path() != null) {
-          pathPrefix = joinPartContext.tableReference().path().getText();
-        } else {
-          subStatement =
-              parseQueryClause(joinPartContext.tableReference().subquery().queryClause(), true);
-          if (joinPartContext.tableReference().subquery().orderByClause() != null) {
-            parseOrderByClause(
-                joinPartContext.tableReference().subquery().orderByClause(), subStatement);
-          }
-          if (joinPartContext.tableReference().subquery().limitClause() != null) {
-            Pair<Integer, Integer> limitAndOffset =
-                parseLimitClause(joinPartContext.tableReference().subquery().limitClause());
-            subStatement.setLimit(limitAndOffset.getK());
-            subStatement.setOffset(limitAndOffset.getV());
-          }
-          // 计算子查询的自由变量
-          subStatement.initFreeVariables();
-          pathPrefix = subStatement.getGlobalAlias();
-        }
-        if (joinPartContext.join() == null) { // cross join
-          if (subStatement == null) {
-            fromParts.add(new PathFromPart(pathPrefix, new JoinCondition(), alias));
-          } else {
-            fromParts.add(new SubQueryFromPart(subStatement, new JoinCondition(), alias));
-          }
+        FromPart joinPart =
+            parseTableReference(joinPartContext.tableReference(), selectStatement.getCteList());
+        // cross join
+        if (joinPartContext.join() == null) {
+          joinPart.setJoinCondition(new JoinCondition());
+          fromParts.add(joinPart);
           continue;
         }
-
+        // inner join and outer join
         JoinType joinType = parseJoinType(joinPartContext.join());
-
         Filter filter = null;
         if (joinPartContext.orExpression() != null) {
           filter = parseOrExpression(joinPartContext.orExpression(), selectStatement);
         }
-
         List<String> columns = new ArrayList<>();
         if (joinPartContext.colList() != null && !joinPartContext.colList().isEmpty()) {
           joinPartContext
               .colList()
               .path()
-              .forEach(pathContext -> columns.add(pathContext.getText()));
+              .forEach(pathContext -> columns.add(parsePath(pathContext)));
         }
-
-        if (subStatement == null) {
-          fromParts.add(
-              new PathFromPart(pathPrefix, new JoinCondition(joinType, filter, columns), alias));
-        } else {
-          fromParts.add(
-              new SubQueryFromPart(
-                  subStatement, new JoinCondition(joinType, filter, columns), alias));
-        }
+        joinPart.setJoinCondition(new JoinCondition(joinType, filter, columns));
+        fromParts.add(joinPart);
       }
     }
+    checkShowColumnsRename(fromParts);
     selectStatement.setFromParts(fromParts);
+  }
+
+  private FromPart parseTableReference(
+      TableReferenceContext ctx, List<CommonTableExpression> cteList) {
+    if (ctx.path() != null) {
+      String fromPath = parsePath(ctx.path());
+      for (CommonTableExpression cte : cteList) {
+        if (cte.getName().equals(fromPath)) {
+          return ctx.asClause() != null
+              ? new CteFromPart(cte, ctx.asClause().ID().getText())
+              : new CteFromPart(cte);
+        }
+      }
+      return ctx.asClause() != null
+          ? new PathFromPart(fromPath, ctx.asClause().ID().getText())
+          : new PathFromPart(fromPath);
+    } else if (ctx.subquery() != null) {
+      SelectStatement subStatement = parseQueryClause(ctx.subquery().queryClause(), cteList, true);
+      if (ctx.subquery().orderByClause() != null) {
+        parseOrderByClause(ctx.subquery().orderByClause(), subStatement);
+      }
+      if (ctx.subquery().limitClause() != null) {
+        parseLimitClause(ctx.subquery().limitClause(), subStatement);
+      }
+      // 计算子查询的自由变量
+      subStatement.initFreeVariables();
+      return ctx.asClause() != null
+          ? new SubQueryFromPart(subStatement, ctx.asClause().ID().getText())
+          : new SubQueryFromPart(subStatement);
+    } else {
+      ShowColumnsStatement statement = parseShowColumnsOptions(ctx.showColumnsOptions());
+      return ctx.asClause() != null
+          ? new ShowColumnsFromPart(statement, ctx.asClause().ID().getText())
+          : new ShowColumnsFromPart(statement);
+    }
+  }
+
+  private void checkShowColumnsRename(List<FromPart> fromParts) {
+    if (fromParts.size() < 2) {
+      return;
+    }
+    int num = 0;
+    for (FromPart fromPart : fromParts) {
+      if (fromPart.getType().equals(FromPartType.ShowColumns) && !fromPart.hasAlias()) {
+        num++;
+      }
+      if (num >= 2) {
+        throw new SQLParserException(
+            "As clause is expected when multiple ShowColumns are joined together.");
+      }
+    }
   }
 
   private JoinType parseJoinType(JoinContext joinContext) {
@@ -762,6 +788,30 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     return new ShowConfigStatement(configName);
   }
 
+  @Override
+  public Statement visitShowSessionIDStatement(ShowSessionIDStatementContext ctx) {
+    return new ShowSessionIDStatement();
+  }
+
+  @Override
+  public Statement visitSetRulesStatement(SetRulesStatementContext ctx) {
+    Map<String, Boolean> rulesChange = new HashMap<>();
+
+    ctx.ruleAssignment()
+        .forEach(
+            ruleAssignmentContext -> {
+              String ruleName = ruleAssignmentContext.ruleName.getText();
+              boolean enable = ruleAssignmentContext.ruleValue.getText().equalsIgnoreCase("on");
+              rulesChange.put(ruleName, enable);
+            });
+    return new SetRulesStatement(rulesChange);
+  }
+
+  @Override
+  public Statement visitShowRulesStatement(ShowRulesStatementContext ctx) {
+    return new ShowRulesStatement();
+  }
+
   private void parseSelectPaths(SelectClauseContext ctx, UnarySelectStatement selectStatement) {
     if (ctx.VALUE2META() != null) {
       parseSelectPathsWithValue2Meta(ctx, selectStatement);
@@ -784,10 +834,9 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       }
       ret.forEach(
           expression -> {
-            if (expression.getType().equals(ExpressionType.Constant)) {
-              // 当select一个不包含在表达式的常量时，这个常量会被看成selectedPath
-              String selectedPath = ((ConstantExpression) expression).getValue().toString();
-              selectStatement.setExpression(parseBaseExpression(selectedPath, selectStatement));
+            if (ExpressionUtils.isConstantArithmeticExpr(expression)) {
+              throw new SQLParserException(
+                  "SELECT constant arithmetic expression isn't supported yet.");
             } else {
               selectStatement.setExpression(expression);
             }
@@ -801,14 +850,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private void parseSelectPathsWithValue2Meta(
       SelectClauseContext ctx, UnarySelectStatement selectStatement) {
-    SelectStatement subStatement = parseQueryClause(ctx.queryClause(), false);
+    SelectStatement subStatement =
+        parseQueryClause(ctx.queryClause(), selectStatement.getCteList(), false);
     if (ctx.orderByClause() != null) {
       parseOrderByClause(ctx.orderByClause(), subStatement);
     }
     if (ctx.limitClause() != null) {
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.limitClause());
-      subStatement.setLimit(limitAndOffset.getK());
-      subStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.limitClause(), subStatement);
     }
 
     selectStatement.setExpression(new FromValueExpression(subStatement));
@@ -817,11 +865,17 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private List<Expression> parseExpression(
       ExpressionContext ctx, UnarySelectStatement selectStatement) {
-    if (ctx.functionName() != null) {
+    return parseExpression(ctx, selectStatement, true);
+  }
+
+  private List<Expression> parseExpression(
+      ExpressionContext ctx, UnarySelectStatement selectStatement, boolean isFromSelectClause) {
+    if (ctx.function() != null) {
       return Collections.singletonList(parseFuncExpression(ctx, selectStatement));
     }
     if (ctx.path() != null && !ctx.path().isEmpty()) {
-      return Collections.singletonList(parseBaseExpression(ctx, selectStatement));
+      return Collections.singletonList(
+          parseBaseExpression(ctx, selectStatement, isFromSelectClause));
     }
     if (ctx.constant() != null) {
       return Collections.singletonList(new ConstantExpression(parseValue(ctx.constant())));
@@ -829,19 +883,22 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
     List<Expression> ret = new ArrayList<>();
     if (ctx.inBracketExpr != null) {
-      List<Expression> expressions = parseExpression(ctx.inBracketExpr, selectStatement);
+      List<Expression> expressions =
+          parseExpression(ctx.inBracketExpr, selectStatement, isFromSelectClause);
       for (Expression expression : expressions) {
         ret.add(new BracketExpression(expression));
       }
     } else if (ctx.expr != null) {
-      List<Expression> expressions = parseExpression(ctx.expr, selectStatement);
+      List<Expression> expressions = parseExpression(ctx.expr, selectStatement, isFromSelectClause);
       Operator operator = parseOperator(ctx);
       for (Expression expression : expressions) {
         ret.add(new UnaryExpression(operator, expression));
       }
     } else if (ctx.leftExpr != null && ctx.rightExpr != null) {
-      List<Expression> leftExpressions = parseExpression(ctx.leftExpr, selectStatement);
-      List<Expression> rightExpressions = parseExpression(ctx.rightExpr, selectStatement);
+      List<Expression> leftExpressions =
+          parseExpression(ctx.leftExpr, selectStatement, isFromSelectClause);
+      List<Expression> rightExpressions =
+          parseExpression(ctx.rightExpr, selectStatement, isFromSelectClause);
       Operator operator = parseOperator(ctx);
       for (Expression leftExpression : leftExpressions) {
         for (Expression rightExpression : rightExpressions) {
@@ -849,7 +906,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
         }
       }
     } else if (ctx.subquery() != null) {
-      SelectStatement subStatement = parseQueryClause(ctx.subquery().queryClause(), true);
+      SelectStatement subStatement =
+          parseQueryClause(ctx.subquery().queryClause(), selectStatement.getCteList(), true);
       if (ctx.subquery().orderByClause() != null) {
         throw new SQLParserException("Not supported for order by used in select subquery.");
       }
@@ -889,61 +947,71 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private Expression parseFuncExpression(
       ExpressionContext ctx, UnarySelectStatement selectStatement) {
-    String funcName = ctx.functionName().getText();
+    FunctionContext funcCtx = ctx.function();
+    String funcName = funcCtx.functionName().getText();
 
     boolean isDistinct = false;
-    if (ctx.ALL() != null || ctx.DISTINCT() != null) {
+    if (funcCtx.ALL() != null || funcCtx.DISTINCT() != null) {
       if (!isCanUseSetQuantifierFunction(funcName)) {
         throw new SQLParserException(
             "Function: " + funcName + " can't use ALL or DISTINCT in bracket.");
       }
-      if (ctx.DISTINCT() != null) {
+      if (funcCtx.DISTINCT() != null) {
         isDistinct = true;
       }
     }
 
-    List<String> params = new ArrayList<>();
-    for (PathContext pathContext : ctx.path()) {
-      params.add(pathContext.getText());
+    List<String> columns = new ArrayList<>();
+    for (PathContext pathContext : funcCtx.path()) {
+      columns.add(parsePath(pathContext));
+    }
+
+    List<Object> args = new ArrayList<>();
+    Map<String, Object> kvargs = new HashMap<>();
+    for (ParamContext paramContext : funcCtx.param()) {
+      Object val = parseValue(paramContext.value);
+      if (paramContext.key != null) {
+        String key = paramContext.key.getText();
+        kvargs.put(key, val);
+      } else {
+        args.add(val);
+      }
     }
 
     // 如果查询语句中FROM子句只有一个部分且FROM一个前缀，则SELECT子句中的path只用写出后缀
-    if (!selectStatement.hasJoinParts()
-        && selectStatement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-      String fromPath = selectStatement.getFromParts().get(0).getPrefix();
+    if (selectStatement.isFromSinglePath()) {
+      String fromPath = selectStatement.getFromPart(0).getPrefix();
 
-      List<String> newParams = new ArrayList<>();
-      for (String param : params) {
-        newParams.add(fromPath + SQLConstant.DOT + param);
+      List<String> newColumns = new ArrayList<>();
+      for (String column : columns) {
+        newColumns.add(fromPath + SQLConstant.DOT + column);
       }
-      params = newParams;
+      columns = newColumns;
     }
-    FuncExpression expression = new FuncExpression(funcName, params, isDistinct);
-    selectStatement.setSelectedFuncsAndPaths(funcName, expression);
+    FuncExpression expression = new FuncExpression(funcName, columns, args, kvargs, isDistinct);
+    selectStatement.setSelectedFuncsAndExpression(funcName, expression);
     return expression;
   }
 
   private Expression parseBaseExpression(
-      ExpressionContext ctx, UnarySelectStatement selectStatement) {
-    String selectedPath = ctx.path(0).getText();
-    return parseBaseExpression(selectedPath, selectStatement);
-  }
-
-  private Expression parseBaseExpression(
-      String selectedPath, UnarySelectStatement selectStatement) {
+      ExpressionContext ctx, UnarySelectStatement selectStatement, boolean isFromSelectClause) {
+    String selectedPath = parsePath(ctx.path());
     // 如果查询语句中FROM子句只有一个部分且FROM一个前缀，则SELECT子句中的path只用写出后缀
-    if (!selectStatement.hasJoinParts()
-        && selectStatement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-      PathFromPart pathFromPart = (PathFromPart) selectStatement.getFromParts().get(0);
-      String fullPath = pathFromPart.getPrefix() + SQLConstant.DOT + selectedPath;
-      String originFullPath = pathFromPart.getOriginPrefix() + SQLConstant.DOT + selectedPath;
+    if (selectStatement.isFromSinglePath()) {
+      FromPart fromPart = selectStatement.getFromPart(0);
+      String fullPath = fromPart.getPrefix() + SQLConstant.DOT + selectedPath;
+      String originFullPath = fromPart.getOriginPrefix() + SQLConstant.DOT + selectedPath;
       BaseExpression expression = new BaseExpression(fullPath);
-      selectStatement.addBaseExpression(expression);
-      selectStatement.setPathSet(originFullPath);
+      if (isFromSelectClause) {
+        selectStatement.addBaseExpression(expression);
+        selectStatement.setPathSet(originFullPath);
+      }
       return expression;
     } else {
       BaseExpression expression = new BaseExpression(selectedPath);
-      selectStatement.setSelectedPaths(expression);
+      if (isFromSelectClause) {
+        selectStatement.setSelectedPaths(expression);
+      }
       return expression;
     }
   }
@@ -965,17 +1033,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
   }
 
   private void parseSpecialClause(SpecialClauseContext ctx, UnarySelectStatement selectStatement) {
-    if (ctx.downsampleWithLevelClause() != null) {
-      // downsampleWithLevelClause = downsampleClause + aggregateWithLevelClause
-      parseDownsampleClause(ctx.downsampleWithLevelClause().downsampleClause(), selectStatement);
-      parseAggregateWithLevelClause(
-          ctx.downsampleWithLevelClause().aggregateWithLevelClause().INT(), selectStatement);
-    }
     if (ctx.downsampleClause() != null) {
       parseDownsampleClause(ctx.downsampleClause(), selectStatement);
-    }
-    if (ctx.aggregateWithLevelClause() != null) {
-      parseAggregateWithLevelClause(ctx.aggregateWithLevelClause().INT(), selectStatement);
     }
     if (ctx.groupByClause() != null) {
       parseGroupByClause(ctx.groupByClause(), selectStatement);
@@ -1015,16 +1074,6 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     selectStatement.setFilter(mergedFilter);
   }
 
-  private void parseAggregateWithLevelClause(
-      List<TerminalNode> layers, UnarySelectStatement selectStatement) {
-    if (!isSupportAggregateWithLevel(selectStatement)) {
-      throw new SQLParserException(
-          "Aggregate with level only support aggregate query count, sum, avg for now.");
-    }
-    layers.forEach(
-        terminalNode -> selectStatement.setLayer(Integer.parseInt(terminalNode.getText())));
-  }
-
   private void parseGroupByClause(GroupByClauseContext ctx, UnarySelectStatement selectStatement) {
     selectStatement.setHasGroupBy(true);
 
@@ -1033,15 +1082,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
             pathContext -> {
               String path, originPath;
               // 如果查询语句的FROM子句只有一个部分且FROM一个前缀，则GROUP BY后的path只用写出后缀
-              if (!selectStatement.hasJoinParts()
-                  && selectStatement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-                PathFromPart pathFromPart = (PathFromPart) selectStatement.getFromParts().get(0);
-                path = pathFromPart.getPrefix() + SQLConstant.DOT + pathContext.getText();
-                originPath =
-                    pathFromPart.getOriginPrefix() + SQLConstant.DOT + pathContext.getText();
+              if (selectStatement.isFromSinglePath()) {
+                FromPart fromPart = selectStatement.getFromPart(0);
+                path = fromPart.getPrefix() + SQLConstant.DOT + parsePath(pathContext);
+                originPath = fromPart.getOriginPrefix() + SQLConstant.DOT + parsePath(pathContext);
               } else {
-                path = pathContext.getText();
-                originPath = pathContext.getText();
+                path = parsePath(pathContext);
+                originPath = parsePath(pathContext);
               }
               if (path.contains("*")) {
                 throw new SQLParserException(
@@ -1061,12 +1108,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
             });
   }
 
-  private boolean isSupportAggregateWithLevel(UnarySelectStatement selectStatement) {
-    return supportedAggregateWithLevelFuncSet.containsAll(selectStatement.getFuncTypeSet());
-  }
-
   // like standard SQL, limit N, M means limit M offset N
-  private Pair<Integer, Integer> parseLimitClause(LimitClauseContext ctx) {
+  private void parseLimitClause(LimitClauseContext ctx, SelectStatement selectStatement) {
     int limit = Integer.MAX_VALUE;
     int offset = 0;
     if (ctx.INT().size() == 1) {
@@ -1081,7 +1124,27 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       throw new SQLParserException(
           "Parse limit clause error. Limit clause should like LIMIT M OFFSET N or LIMIT N, M.");
     }
-    return new Pair<>(limit, offset);
+    selectStatement.setLimit(limit);
+    selectStatement.setOffset(offset);
+  }
+
+  private void parseLimitClause(LimitClauseContext ctx, ShowColumnsStatement statement) {
+    int limit = Integer.MAX_VALUE;
+    int offset = 0;
+    if (ctx.INT().size() == 1) {
+      limit = Integer.parseInt(ctx.INT(0).getText());
+      if (ctx.offsetClause() != null) {
+        offset = Integer.parseInt(ctx.offsetClause().INT().getText());
+      }
+    } else if (ctx.INT().size() == 2) {
+      offset = Integer.parseInt(ctx.INT(0).getText());
+      limit = Integer.parseInt(ctx.INT(1).getText());
+    } else {
+      throw new SQLParserException(
+          "Parse limit clause error. Limit clause should like LIMIT M OFFSET N or LIMIT N, M.");
+    }
+    statement.setLimit(limit);
+    statement.setOffset(offset);
   }
 
   private void parseOrderByClause(OrderByClauseContext ctx, SelectStatement selectStatement) {
@@ -1090,16 +1153,14 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     }
     if (ctx.path() != null) {
       for (PathContext pathContext : ctx.path()) {
-        String suffix = pathContext.getText();
+        String suffix = parsePath(pathContext);
         String orderByPath = suffix;
         if (selectStatement.getSelectType() == SelectStatement.SelectStatementType.UNARY) {
           UnarySelectStatement unarySelectStatement = (UnarySelectStatement) selectStatement;
-          String prefix = unarySelectStatement.getFromParts().get(0).getPrefix();
+          String prefix = unarySelectStatement.getFromPart(0).getPrefix();
 
           // 如果查询语句的FROM子句只有一个部分且FROM一个前缀，则ORDER BY后的path只用写出后缀
-          if (!unarySelectStatement.hasJoinParts()
-              && unarySelectStatement.getFromParts().get(0).getType()
-                  == FromPartType.PathFromPart) {
+          if (unarySelectStatement.isFromSinglePath()) {
             orderByPath = prefix + SQLConstant.DOT + suffix;
           }
         }
@@ -1232,25 +1293,27 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     if (ctx.orExpression() != null) {
       Filter filter = parseOrExpression(ctx.orExpression(), statement, isHavingFilter);
       return ctx.OPERATOR_NOT() == null ? filter : new NotFilter(filter);
+    } else if (ctx.path().isEmpty()
+        && ctx.predicateWithSubquery() == null
+        && ctx.constant() != null) {
+      return parseKeyFilter(ctx);
     } else {
-      if (ctx.path().size() == 0 && ctx.predicateWithSubquery() == null) {
-        return parseKeyFilter(ctx);
-      } else {
-        StatementType type = statement.getType();
-        if (type != StatementType.SELECT) {
-          throw new SQLParserException(
-              String.format(
-                  "%s clause can not use value or path filter.", type.toString().toLowerCase()));
-        }
+      StatementType type = statement.getType();
+      if (type != StatementType.SELECT) {
+        throw new SQLParserException(
+            String.format(
+                "%s clause can not use value or path filter.", type.toString().toLowerCase()));
+      }
 
-        if (ctx.predicateWithSubquery() != null) {
-          return parseFilterWithSubQuery(
-              ctx.predicateWithSubquery(), (UnarySelectStatement) statement, isHavingFilter);
-        } else if (ctx.path().size() == 1) {
-          return parseValueFilter(ctx, (UnarySelectStatement) statement);
-        } else {
-          return parsePathFilter(ctx, (UnarySelectStatement) statement);
-        }
+      if (ctx.predicateWithSubquery() != null) {
+        return parseFilterWithSubQuery(
+            ctx.predicateWithSubquery(), (UnarySelectStatement) statement, isHavingFilter);
+      } else if (ctx.expression().size() == 2) {
+        return parseExprFilter(ctx, (UnarySelectStatement) statement);
+      } else if (ctx.path().size() == 1) {
+        return parseValueFilter(ctx, (UnarySelectStatement) statement);
+      } else {
+        return parsePathFilter(ctx, (UnarySelectStatement) statement);
       }
     }
   }
@@ -1265,16 +1328,22 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     return new KeyFilter(op, time);
   }
 
+  private ExprFilter parseExprFilter(PredicateContext ctx, UnarySelectStatement statement) {
+    Op op = Op.str2Op(ctx.comparisonOperator().getText());
+    assert ctx.expression().size() == 2;
+    Expression expressionA = parseExpression(ctx.expression().get(0), statement, false).get(0);
+    Expression expressionB = parseExpression(ctx.expression().get(1), statement, false).get(0);
+    return new ExprFilter(expressionA, op, expressionB);
+  }
+
   private Filter parseValueFilter(PredicateContext ctx, UnarySelectStatement statement) {
-    String path = ctx.path().get(0).getText();
+    String path = parsePath(ctx.path().get(0));
     String originPath = path;
     // 如果查询语句不是一个子查询，FROM子句只有一个部分且FROM一个前缀，则WHERE条件中的path只用写出后缀
-    if (!statement.hasJoinParts()
-        && !statement.isSubQuery()
-        && statement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-      PathFromPart pathFromPart = (PathFromPart) statement.getFromParts().get(0);
-      path = pathFromPart.getPrefix() + SQLConstant.DOT + path;
-      originPath = pathFromPart.getOriginPrefix() + SQLConstant.DOT + originPath;
+    if (statement.isFromSinglePath() && !statement.isSubQuery()) {
+      FromPart fromPart = statement.getFromPart(0);
+      path = fromPart.getPrefix() + SQLConstant.DOT + path;
+      originPath = fromPart.getOriginPrefix() + SQLConstant.DOT + originPath;
     }
     if (!statement.isFreeVariable(path)) {
       statement.setPathSet(originPath);
@@ -1287,8 +1356,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     }
 
     Op op;
-    if (ctx.OPERATOR_LIKE() != null) {
-      op = Op.LIKE;
+    if (ctx.stringLikeOperator() != null) {
+      op = Op.str2Op(ctx.stringLikeOperator().getText().trim().toLowerCase());
     } else {
       op = Op.str2Op(ctx.comparisonOperator().getText().trim().toLowerCase());
       // deal with sub clause like 100 < path
@@ -1309,22 +1378,20 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
   }
 
   private Filter parsePathFilter(PredicateContext ctx, UnarySelectStatement statement) {
-    String pathA = ctx.path().get(0).getText();
+    String pathA = parsePath(ctx.path().get(0));
     String originPathA = pathA;
-    String pathB = ctx.path().get(1).getText();
+    String pathB = parsePath(ctx.path().get(1));
     String originPathB = pathB;
 
     Op op = Op.str2Op(ctx.comparisonOperator().getText().trim().toLowerCase());
 
     // 如果查询语句不是一个子查询，FROM子句只有一个部分且FROM一个前缀，则WHERE条件中的path只用写出后缀
-    if (!statement.hasJoinParts()
-        && !statement.isSubQuery()
-        && statement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-      PathFromPart pathFromPart = (PathFromPart) statement.getFromParts().get(0);
-      originPathA = pathFromPart.getOriginPrefix() + SQLConstant.DOT + pathA;
-      pathA = pathFromPart.getPrefix() + SQLConstant.DOT + pathA;
-      originPathB = pathFromPart.getOriginPrefix() + SQLConstant.DOT + pathB;
-      pathB = pathFromPart.getPrefix() + SQLConstant.DOT + pathB;
+    if (statement.isFromSinglePath() && !statement.isSubQuery()) {
+      FromPart fromPart = statement.getFromPart(0);
+      originPathA = fromPart.getOriginPrefix() + SQLConstant.DOT + pathA;
+      pathA = fromPart.getPrefix() + SQLConstant.DOT + pathA;
+      originPathB = fromPart.getOriginPrefix() + SQLConstant.DOT + pathB;
+      pathB = fromPart.getPrefix() + SQLConstant.DOT + pathB;
     }
     if (!statement.isFreeVariable(pathA)) {
       statement.setPathSet(originPathA);
@@ -1354,14 +1421,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private Filter parseExistsFilter(
       PredicateWithSubqueryContext ctx, UnarySelectStatement statement, boolean isHavingFilter) {
-    SelectStatement subStatement = parseQueryClause(ctx.subquery().get(0).queryClause(), true);
+    SelectStatement subStatement =
+        parseQueryClause(ctx.subquery().get(0).queryClause(), statement.getCteList(), true);
 
     if (ctx.subquery().get(0).orderByClause() != null
         && ctx.subquery().get(0).limitClause() != null) {
       parseOrderByClause(ctx.subquery().get(0).orderByClause(), subStatement);
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.subquery().get(0).limitClause());
-      subStatement.setLimit(limitAndOffset.getK());
-      subStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.subquery().get(0).limitClause(), subStatement);
     } else if (ctx.subquery().get(0).orderByClause() != null
         ^ ctx.subquery().get(0).limitClause() != null) {
       throw new SQLParserException(
@@ -1389,14 +1455,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private Filter parseInFilter(
       PredicateWithSubqueryContext ctx, UnarySelectStatement statement, boolean isHavingFilter) {
-    SelectStatement subStatement = parseQueryClause(ctx.subquery().get(0).queryClause(), true);
+    SelectStatement subStatement =
+        parseQueryClause(ctx.subquery().get(0).queryClause(), statement.getCteList(), true);
 
     if (ctx.subquery().get(0).orderByClause() != null
         && ctx.subquery().get(0).limitClause() != null) {
       parseOrderByClause(ctx.subquery().get(0).orderByClause(), subStatement);
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.subquery().get(0).limitClause());
-      subStatement.setLimit(limitAndOffset.getK());
-      subStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.subquery().get(0).limitClause(), subStatement);
     } else if (ctx.subquery().get(0).orderByClause() != null
         ^ ctx.subquery().get(0).limitClause() != null) {
       throw new SQLParserException(
@@ -1412,23 +1477,22 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     markJoinCount += 1;
 
     Filter filter;
+    Expression expression = subStatement.getExpressions().get(0);
     if (ctx.constant() != null) {
       Value value = new Value(parseValue(ctx.constant()));
-      String path = subStatement.getExpressions().get(0).getColumnName();
+      String path = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
       filter = new ValueFilter(path, Op.E, value);
     } else {
-      String pathA = ctx.path().getText();
-      if (!statement.hasJoinParts()
-          && !statement.isSubQuery()
-          && statement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-        pathA = statement.getFromParts().get(0).getPrefix() + SQLConstant.DOT + pathA;
+      String pathA = parsePath(ctx.path());
+      if (statement.isFromSinglePath() && !statement.isSubQuery()) {
+        pathA = statement.getFromPart(0).getPrefix() + SQLConstant.DOT + pathA;
       }
       // deal with having filter with functions
       if (ctx.functionName() != null) {
         pathA = ctx.functionName().getText() + "(" + pathA + ")";
       }
 
-      String pathB = subStatement.getExpressions().get(0).getColumnName();
+      String pathB = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
       filter = new PathFilter(pathA, Op.E, pathB);
       subStatement.addFreeVariable(pathA);
     }
@@ -1447,14 +1511,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private Filter parseQuantifierComparisonFilter(
       PredicateWithSubqueryContext ctx, UnarySelectStatement statement, boolean isHavingFilter) {
-    SelectStatement subStatement = parseQueryClause(ctx.subquery().get(0).queryClause(), true);
+    SelectStatement subStatement =
+        parseQueryClause(ctx.subquery().get(0).queryClause(), statement.getCteList(), true);
 
     if (ctx.subquery().get(0).orderByClause() != null
         && ctx.subquery().get(0).limitClause() != null) {
       parseOrderByClause(ctx.subquery().get(0).orderByClause(), subStatement);
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.subquery().get(0).limitClause());
-      subStatement.setLimit(limitAndOffset.getK());
-      subStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.subquery().get(0).limitClause(), subStatement);
     } else if (ctx.subquery().get(0).orderByClause() != null
         ^ ctx.subquery().get(0).limitClause() != null) {
       throw new SQLParserException(
@@ -1471,27 +1534,33 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
     Filter filter;
     Op op = Op.str2Op(ctx.comparisonOperator().getText().trim().toLowerCase());
-    if (ctx.quantifier().all() != null) {
-      op = Op.getOpposite(op);
-    }
 
+    Expression expression = subStatement.getExpressions().get(0);
     if (ctx.constant() != null) {
       Value value = new Value(parseValue(ctx.constant()));
-      String path = subStatement.getExpressions().get(0).getColumnName();
+      String path = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
+
+      if (ctx.quantifier().all() != null) {
+        op = path.contains("*") ? Op.getDeMorganOpposite(op) : Op.getOpposite(op);
+      }
+
       filter = new ValueFilter(path, op, value);
     } else {
-      String pathA = ctx.path().getText();
-      if (!statement.hasJoinParts()
-          && !statement.isSubQuery()
-          && statement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-        pathA = statement.getFromParts().get(0).getPrefix() + SQLConstant.DOT + pathA;
+      String pathA = parsePath(ctx.path());
+      if (statement.isFromSinglePath() && !statement.isSubQuery()) {
+        pathA = statement.getFromPart(0).getPrefix() + SQLConstant.DOT + pathA;
       }
       // deal with having filter with functions
       if (ctx.functionName() != null) {
         pathA = ctx.functionName().getText() + "(" + pathA + ")";
       }
 
-      String pathB = subStatement.getExpressions().get(0).getColumnName();
+      String pathB = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
+
+      if (ctx.quantifier().all() != null) {
+        op = Op.getOpposite(op);
+      }
+
       filter = new PathFilter(pathA, op, pathB);
       subStatement.addFreeVariable(pathA);
     }
@@ -1510,14 +1579,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
 
   private Filter parseScalarSubQueryComparisonFilter(
       PredicateWithSubqueryContext ctx, UnarySelectStatement statement, boolean isHavingFilter) {
-    SelectStatement subStatement = parseQueryClause(ctx.subquery().get(0).queryClause(), true);
+    SelectStatement subStatement =
+        parseQueryClause(ctx.subquery().get(0).queryClause(), statement.getCteList(), true);
 
     if (ctx.subquery().get(0).orderByClause() != null
         && ctx.subquery().get(0).limitClause() != null) {
       parseOrderByClause(ctx.subquery().get(0).orderByClause(), subStatement);
-      Pair<Integer, Integer> limitAndOffset = parseLimitClause(ctx.subquery().get(0).limitClause());
-      subStatement.setLimit(limitAndOffset.getK());
-      subStatement.setOffset(limitAndOffset.getV());
+      parseLimitClause(ctx.subquery().get(0).limitClause(), subStatement);
     } else if (ctx.subquery().get(0).orderByClause() != null
         ^ ctx.subquery().get(0).limitClause() != null) {
       throw new SQLParserException(
@@ -1540,24 +1608,23 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       statement.addWhereSubQueryPart(subQueryPart);
     }
 
+    Expression expression = subStatement.getExpressions().get(0);
     Op op = Op.str2Op(ctx.comparisonOperator().getText().trim().toLowerCase());
     if (ctx.constant() != null) {
       Value value = new Value(parseValue(ctx.constant()));
-      String path = subStatement.getExpressions().get(0).getColumnName();
+      String path = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
       return new ValueFilter(path, op, value);
     } else {
-      String pathA = ctx.path().getText();
-      if (!statement.hasJoinParts()
-          && !statement.isSubQuery()
-          && statement.getFromParts().get(0).getType() == FromPartType.PathFromPart) {
-        pathA = statement.getFromParts().get(0).getPrefix() + SQLConstant.DOT + pathA;
+      String pathA = parsePath(ctx.path());
+      if (statement.isFromSinglePath() && !statement.isSubQuery()) {
+        pathA = statement.getFromPart(0).getPrefix() + SQLConstant.DOT + pathA;
       }
       // deal with having filter with functions
       if (ctx.functionName() != null) {
         pathA = ctx.functionName().getText() + "(" + pathA + ")";
       }
 
-      String pathB = subStatement.getExpressions().get(0).getColumnName();
+      String pathB = expression.hasAlias() ? expression.getAlias() : expression.getColumnName();
       return new PathFilter(pathA, op, pathB);
     }
   }
@@ -1567,15 +1634,13 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
     List<String> paths = new ArrayList<>();
 
     for (int i = 0; i < 2; i++) {
-      SelectStatement subStatement = parseQueryClause(ctx.subquery().get(i).queryClause(), true);
+      SelectStatement subStatement =
+          parseQueryClause(ctx.subquery().get(i).queryClause(), statement.getCteList(), true);
 
       if (ctx.subquery().get(0).orderByClause() != null
           && ctx.subquery().get(0).limitClause() != null) {
         parseOrderByClause(ctx.subquery().get(0).orderByClause(), subStatement);
-        Pair<Integer, Integer> limitAndOffset =
-            parseLimitClause(ctx.subquery().get(0).limitClause());
-        subStatement.setLimit(limitAndOffset.getK());
-        subStatement.setOffset(limitAndOffset.getV());
+        parseLimitClause(ctx.subquery().get(0).limitClause(), subStatement);
       } else if (ctx.subquery().get(0).orderByClause() != null
           ^ ctx.subquery().get(0).limitClause() != null) {
         throw new SQLParserException(
@@ -1587,7 +1652,8 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       }
       // 计算子查询的自由变量
       subStatement.initFreeVariables();
-      paths.add(subStatement.getExpressions().get(0).getColumnName());
+      Expression expression = subStatement.getExpressions().get(0);
+      paths.add(expression.hasAlias() ? expression.getAlias() : expression.getColumnName());
 
       Filter filter = new BoolFilter(true);
 
@@ -1618,6 +1684,11 @@ public class IginXSqlVisitor extends SqlBaseVisitor<Statement> {
       if (kvArray.length != 2) {
         if (kv.contains("url")) {
           map.put("url", kv.substring(kv.indexOf(":") + 1));
+        } else if (kv.contains("dir")) {
+          // for windows absolute path
+          String dirType = kv.substring(0, kv.indexOf(":")).trim();
+          String dirPath = kv.substring(kv.indexOf(":") + 1).trim();
+          map.put(dirType, dirPath);
         }
         continue;
       }

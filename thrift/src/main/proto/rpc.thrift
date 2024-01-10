@@ -72,13 +72,16 @@ enum SqlType {
     ShowJobStatus,
     CancelJob,
     ShowEligibleJob,
-    RemoveHistoryDataResource,
+    RemoveHistoryDataSource,
     SetConfig,
     ShowConfig,
     Compact,
     ExportCsv,
     ExportStream,
-    LoadCsv
+    LoadCsv,
+    ShowSessionID,
+    ShowRules,
+    SetRules,
 }
 
 enum AuthType {
@@ -376,6 +379,8 @@ struct ExecuteSqlResp {
     24: optional list<i64> jobIdList
     25: optional string configValue
     26: optional string loadCsvPath
+    27: optional list<i64> sessionIDList
+    28: optional map<string, bool> rules
 }
 
 struct UpdateUserReq {
@@ -461,8 +466,9 @@ struct ExecuteStatementResp {
     5: optional list<map<string, string>> tagsList
     6: optional list<DataType> dataTypeList
     7: optional QueryDataSetV2 queryDataSet
-    8: optional string exportStreamDir
-    9: optional ExportCSV exportCSV
+    8: optional string warningMsg;
+    9: optional string exportStreamDir
+    10: optional ExportCSV exportCSV
 }
 
 struct ExportCSV {
@@ -655,7 +661,30 @@ struct RemovedStorageEngineInfo {
 
 struct RemoveHistoryDataSourceReq {
     1: required i64 sessionId
-    2: required list<RemovedStorageEngineInfo> dummyStorageInfoList
+    2: required list<RemovedStorageEngineInfo> removedStorageEngineInfoList
+}
+
+struct ShowSessionIDReq {
+    1: required i64 sessionId
+}
+
+struct ShowSessionIDResp {
+    1: required Status status
+    2: required list<i64> sessionIDList
+}
+
+struct ShowRulesReq {
+    1: required i64 sessionId
+}
+
+struct ShowRulesResp {
+    1: required Status status
+    2: required map<string, bool> rules
+}
+
+struct SetRulesReq {
+    1: required i64 sessionId
+    2: required map<string, bool> rulesChange
 }
 
 service IService {
@@ -729,4 +758,10 @@ service IService {
     CurveMatchResp curveMatch(1: CurveMatchReq req);
 
     DebugInfoResp debugInfo(1: DebugInfoReq req);
+
+    ShowSessionIDResp showSessionID(1: ShowSessionIDReq req);
+
+    ShowRulesResp showRules(1: ShowRulesReq req);
+
+    Status setRules(1: SetRulesReq req);
 }

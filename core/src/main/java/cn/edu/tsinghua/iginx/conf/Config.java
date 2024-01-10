@@ -182,6 +182,8 @@ public class Config {
 
   private int maxThriftWrokerThreadNum = 2147483647;
 
+  private String ruleBasedOptimizer = "RemoveNotRule=on,FilterFragmentRule=on";
+
   //////////////
 
   public static final String tagNameAnnotation = TagKVUtils.tagNameAnnotation;
@@ -206,11 +208,9 @@ public class Config {
 
   /////////////
 
-  private int batchSizeExportCsv = 10000;
-
   private int batchSizeImportCsv = 10000;
 
-  private int batchSizeExportByteStream = 10000;
+  private boolean isUTTestEnv = false; // 是否是单元测试环境
 
   public int getMaxTimeseriesLength() {
     return maxTimeseriesLength;
@@ -872,14 +872,6 @@ public class Config {
     this.streamParallelGroupByWorkerNum = streamParallelGroupByWorkerNum;
   }
 
-  public int getBatchSizeExportCsv() {
-    return batchSizeExportCsv;
-  }
-
-  public void setBatchSizeExportCsv(int batchSizeExportCsv) {
-    this.batchSizeExportCsv = batchSizeExportCsv;
-  }
-
   public int getBatchSizeImportCsv() {
     return batchSizeImportCsv;
   }
@@ -888,11 +880,19 @@ public class Config {
     this.batchSizeImportCsv = batchSizeImportCsv;
   }
 
-  public int getBatchSizeExportByteStream() {
-    return batchSizeExportByteStream;
+  public boolean isUTTestEnv() {
+    return isUTTestEnv;
   }
 
-  public void setBatchSizeExportByteStream(int batchSizeExportByteStream) {
-    this.batchSizeExportByteStream = batchSizeExportByteStream;
+  public void setUTTestEnv(boolean UTTestEnv) {
+    isUTTestEnv = UTTestEnv;
+  }
+
+  public String getRuleBasedOptimizer() {
+    return ruleBasedOptimizer;
+  }
+
+  public void setRuleBasedOptimizer(String ruleBasedOptimizer) {
+    this.ruleBasedOptimizer = ruleBasedOptimizer;
   }
 }

@@ -18,14 +18,10 @@
  */
 package cn.edu.tsinghua.iginx.iotdb.tools;
 
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.KeyFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.NotFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.OrFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.ValueFilter;
-import java.util.stream.Collectors;
+import static cn.edu.tsinghua.iginx.engine.shared.operator.filter.Op.isLikeOp;
+
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.*;
+import cn.edu.tsinghua.iginx.thrift.DataType;
 
 public class FilterTransformer {
 
@@ -50,29 +46,64 @@ public class FilterTransformer {
   }
 
   private static String toString(AndFilter filter) {
-    return filter.getChildren().stream()
-        .map(FilterTransformer::toString)
-        .collect(Collectors.joining(" and ", "(", ")"));
+    StringBuilder sb = new StringBuilder();
+    for (Filter child : filter.getChildren()) {
+      String filterStr = toString(child);
+      if (!filterStr.isEmpty()) {
+        sb.append(toString(child)).append(" and ");
+      }
+    }
+
+    if (sb.length() == 0) {
+      return "";
+    }
+
+    return "(" + sb.substring(0, sb.length() - 4) + ")";
   }
 
   private static String toString(NotFilter filter) {
-    return "not " + filter.toString();
+    String childStr = toString(filter.getChild());
+
+    if (childStr.isEmpty()) {
+      return "";
+    }
+
+    return "not " + childStr;
   }
 
   private static String toString(KeyFilter filter) {
-    return "time " + Op.op2Str(filter.getOp()) + " " + filter.getValue();
+    return "time " + Op.op2StrWithoutAndOr(filter.getOp()) + " " + filter.getValue();
   }
 
   private static String toString(ValueFilter filter) {
-    if (filter.getOp().equals(Op.LIKE)) {
-      return filter.getPath() + " regexp '" + filter.getValue().getBinaryVAsString() + "'";
+    String value =
+        filter.getValue().getDataType() == DataType.BINARY
+            ? "'" + filter.getValue().getBinaryVAsString() + "'"
+            : filter.getValue().getValue().toString();
+
+    if (isLikeOp(filter.getOp())) {
+      if (!value.endsWith("$'")) {
+        value = value.substring(0, value.length() - 1) + "$'";
+      }
+      return filter.getPath() + " regexp " + value;
     }
-    return filter.getPath() + " " + Op.op2Str(filter.getOp()) + " " + filter.getValue().getValue();
+
+    return filter.getPath() + " " + Op.op2StrWithoutAndOr(filter.getOp()) + " " + value;
   }
 
   private static String toString(OrFilter filter) {
-    return filter.getChildren().stream()
-        .map(FilterTransformer::toString)
-        .collect(Collectors.joining(" or ", "(", ")"));
+    StringBuilder sb = new StringBuilder();
+    for (Filter child : filter.getChildren()) {
+      String filterStr = toString(child);
+      if (!filterStr.isEmpty()) {
+        sb.append(toString(child)).append(" or ");
+      }
+    }
+
+    if (sb.length() == 0) {
+      return "";
+    }
+
+    return "(" + sb.substring(0, sb.length() - 4) + ")";
   }
 }

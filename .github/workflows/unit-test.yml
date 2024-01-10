@@ -18,8 +18,8 @@ jobs:
             fail-fast: false
             matrix:
                 java: [17]
-                python-version: ["3.7.16"]
-                os: [ubuntu-latest, macos-latest]
+                python-version: ["3.9"]
+                os: [ubuntu-latest, macos-latest, windows-latest]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v2
@@ -32,4 +32,3 @@ jobs:
             - name: Test with Maven
               run: |
                   mvn clean package -pl core -am -P-format -q
-                  mvn clean package -pl dataSources/parquet -am -P-format -q

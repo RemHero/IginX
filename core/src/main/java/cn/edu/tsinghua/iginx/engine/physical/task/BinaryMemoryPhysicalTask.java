@@ -22,6 +22,8 @@ import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.UnexpectedOperatorException;
 import cn.edu.tsinghua.iginx.engine.physical.memory.execute.OperatorMemoryExecutor;
 import cn.edu.tsinghua.iginx.engine.physical.memory.execute.OperatorMemoryExecutorFactory;
+import cn.edu.tsinghua.iginx.engine.physical.task.visitor.TaskVisitor;
+import cn.edu.tsinghua.iginx.engine.shared.RequestContext;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.operator.BinaryOperator;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Operator;
@@ -40,8 +42,11 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
   private final PhysicalTask parentTaskB;
 
   public BinaryMemoryPhysicalTask(
-      List<Operator> operators, PhysicalTask parentTaskA, PhysicalTask parentTaskB) {
-    super(TaskType.BinaryMemory, operators);
+      List<Operator> operators,
+      PhysicalTask parentTaskA,
+      PhysicalTask parentTaskB,
+      RequestContext context) {
+    super(TaskType.BinaryMemory, operators, context);
     this.parentTaskA = parentTaskA;
     this.parentTaskB = parentTaskB;
   }
@@ -83,14 +88,14 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
       if (!OperatorType.isBinaryOperator(op.getType())) {
         throw new UnexpectedOperatorException("unexpected operator " + op + " in binary task");
       }
-      stream = executor.executeBinaryOperator((BinaryOperator) op, streamA, streamB);
+      stream = executor.executeBinaryOperator((BinaryOperator) op, streamA, streamB, getContext());
       for (int i = 1; i < operators.size(); i++) {
         op = operators.get(i);
         if (OperatorType.isBinaryOperator(op.getType())) {
           throw new UnexpectedOperatorException(
               "unexpected binary operator " + op + " in unary task");
         }
-        stream = executor.executeUnaryOperator((UnaryOperator) op, stream);
+        stream = executor.executeUnaryOperator((UnaryOperator) op, stream, getContext());
       }
     } catch (PhysicalException e) {
       logger.error("encounter error when execute operator in memory: ", e);
@@ -102,5 +107,21 @@ public class BinaryMemoryPhysicalTask extends MemoryPhysicalTask {
   @Override
   public boolean notifyParentReady() {
     return parentReadyCount.incrementAndGet() == 2;
+  }
+
+  @Override
+  public void accept(TaskVisitor visitor) {
+    visitor.enter();
+    visitor.visit(this);
+
+    PhysicalTask taskA = getParentTaskA();
+    if (taskA != null) {
+      taskA.accept(visitor);
+    }
+    PhysicalTask taskB = getParentTaskB();
+    if (taskB != null) {
+      taskB.accept(visitor);
+    }
+    visitor.leave();
   }
 }

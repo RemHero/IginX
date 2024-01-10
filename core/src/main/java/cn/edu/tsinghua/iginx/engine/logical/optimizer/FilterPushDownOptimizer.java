@@ -39,7 +39,7 @@ public class FilterPushDownOptimizer implements Optimizer {
   public Operator optimize(Operator root) {
     // only optimize query
     if (root.getType() == OperatorType.CombineNonQuery
-        || root.getType() == OperatorType.ShowTimeSeries) {
+        || root.getType() == OperatorType.ShowColumns) {
       return root;
     }
 
@@ -67,6 +67,14 @@ public class FilterPushDownOptimizer implements Optimizer {
       return;
     }
 
+    // 获取所有分片信息
+    Set<FragmentMeta> fragmentMetaSet = new HashSet<>();
+    for (Pair<Project, Operator> pair : projectAndFatherOperatorList) {
+      Project project = pair.getK();
+      FragmentMeta fragmentMeta = ((FragmentSource) project.getSource()).getFragment();
+      fragmentMetaSet.add(fragmentMeta);
+    }
+
     Map<String, Filter> cache = new HashMap<>();
     for (Pair<Project, Operator> pair : projectAndFatherOperatorList) {
       Filter filter = selectOperator.getFilter().copy();
@@ -90,6 +98,7 @@ public class FilterPushDownOptimizer implements Optimizer {
         subFilter = cache.get(fragmentMeta.getMasterStorageUnitId()).copy();
       } else {
         subFilter = ExprUtils.getSubFilterFromFragment(filter, fragmentMeta.getColumnsInterval());
+        subFilter = ExprUtils.removeWildCardOrFilterByFragment(subFilter, fragmentMetaSet);
         cache.put(fragmentMeta.getMasterStorageUnitId(), subFilter);
       }
       subFilter = ExprUtils.removePathByPatterns(subFilter, project.getPatterns());
@@ -116,7 +125,7 @@ public class FilterPushDownOptimizer implements Optimizer {
           } else if (operatorB.equals(project)) {
             binaryOperator.setSourceB(new OperatorSource(subSelect));
           }
-        } else {
+        } else if (OperatorType.isMultipleOperator(fatherOperator.getType())) {
           MultipleOperator multipleOperator = (MultipleOperator) fatherOperator;
           List<Source> sources = multipleOperator.getSources();
 
@@ -172,7 +181,7 @@ public class FilterPushDownOptimizer implements Optimizer {
           projectAndFatherOperatorList,
           stack,
           ((OperatorSource) binaryOperator.getSourceB()).getOperator());
-    } else {
+    } else if (OperatorType.isMultipleOperator(operator.getType())) {
       MultipleOperator multipleOperator = (MultipleOperator) operator;
       List<Source> sources = multipleOperator.getSources();
       for (Source source : sources) {
@@ -216,7 +225,7 @@ public class FilterPushDownOptimizer implements Optimizer {
                 target,
                 renameOperatorList);
       }
-    } else {
+    } else if (OperatorType.isMultipleOperator(curOperator.getType())) {
       MultipleOperator multipleOperator = (MultipleOperator) curOperator;
       List<Source> sources = multipleOperator.getSources();
       for (Source source : sources) {

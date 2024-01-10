@@ -16,6 +16,12 @@ public class Constant {
 
   public static int readOnlyPort = 6669;
 
+  public static int oriPortIginx = 6888;
+
+  public static int expPortIginx = 6889;
+
+  public static int readOnlyPortIginx = 6890;
+
   // path
   public static final List<String> ORI_PATH_LIST =
       Arrays.asList("mn.wf01.wt01.status", "mn.wf01.wt01.temperature");
@@ -59,13 +65,33 @@ public class Constant {
   public static List<List<Object>> REPEAT_EXP_VALUES_LIST1 =
       Arrays.asList(Arrays.asList(33333333L, 33333333L), Arrays.asList(44444444L, 44444444L));
 
-  // for file system
-  public static final Map<Integer, String> PORT_TO_ROOT =
+  // for file system & influxdb
+  public static Map<Integer, String> PORT_TO_ROOT =
       new HashMap<Integer, String>() {
         {
           put(oriPort, "mn");
           put(expPort, "nt");
           put(readOnlyPort, "tm");
+        }
+      };
+
+  // for multi iginx test
+  public static final Map<Integer, Integer> PORT_TO_RESTPORT =
+      new HashMap<Integer, Integer>() {
+        {
+          put(oriPort, 6666);
+          put(expPort, 6665);
+          put(readOnlyPort, 6664);
+        }
+      };
+
+  // for multi iginx test
+  public static final Map<Integer, Integer> PORT_TO_IGINXPORT =
+      new HashMap<Integer, Integer>() {
+        {
+          put(oriPort, oriPortIginx);
+          put(expPort, expPortIginx);
+          put(readOnlyPort, readOnlyPortIginx);
         }
       };
 

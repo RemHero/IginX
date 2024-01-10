@@ -12,6 +12,7 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.DataView;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.RawDataType;
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.AndTagFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.BasePreciseTagFilter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.BaseTagFilter;
@@ -22,6 +23,7 @@ import cn.edu.tsinghua.iginx.metadata.entity.ColumnsInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.KeyInterval;
 import cn.edu.tsinghua.iginx.parquet.thrift.*;
 import cn.edu.tsinghua.iginx.parquet.thrift.ParquetService.Client;
+import cn.edu.tsinghua.iginx.parquet.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.Bitmap;
 import cn.edu.tsinghua.iginx.utils.ByteUtils;
@@ -56,21 +58,21 @@ public class RemoteExecutor implements Executor {
   public TaskExecuteResult executeProjectTask(
       List<String> paths,
       TagFilter tagFilter,
-      String filter,
+      Filter filter,
       String storageUnit,
       boolean isDummyStorageUnit) {
     ProjectReq req = new ProjectReq(storageUnit, isDummyStorageUnit, paths);
     if (tagFilter != null) {
       req.setTagFilter(constructRawTagFilter(tagFilter));
     }
-    if (filter != null && !filter.equals("")) {
-      req.setFilter(filter);
+    if (filter != null) {
+      req.setFilter(FilterTransformer.toRawFilter(filter));
     }
 
-    try (TTransport transport = thriftConnPool.borrowAndOpenTransport()) {
+    try (TTransport transport = thriftConnPool.borrowTransport()) {
       Client client = new Client(new TBinaryProtocol(transport));
       ProjectResp resp = client.executeProject(req);
-      thriftConnPool.returnAndCloseTransport(transport);
+      thriftConnPool.returnTransport(transport);
       if (resp.getStatus().code == SUCCESS_CODE) {
         ParquetHeader parquetHeader = resp.getHeader();
         List<DataType> dataTypes = new ArrayList<>();
@@ -78,9 +80,11 @@ public class RemoteExecutor implements Executor {
         for (int i = 0; i < parquetHeader.getNamesSize(); i++) {
           DataType dataType = DataTypeUtils.getDataTypeFromString(parquetHeader.getTypes().get(i));
           dataTypes.add(dataType);
-          fields.add(
-              new Field(
-                  parquetHeader.getNames().get(i), dataType, parquetHeader.getTagsList().get(i)));
+          Map<String, String> tags =
+              parquetHeader.getTagsList().get(i).isEmpty()
+                  ? null
+                  : parquetHeader.getTagsList().get(i);
+          fields.add(new Field(parquetHeader.getNames().get(i), dataType, tags));
         }
         Header header = parquetHeader.hasKey ? new Header(Field.KEY, fields) : new Header(fields);
 
@@ -153,10 +157,10 @@ public class RemoteExecutor implements Executor {
             dataView.getRawDataType().toString());
 
     InsertReq req = new InsertReq(storageUnit, parquetRawData);
-    try (TTransport transport = thriftConnPool.borrowAndOpenTransport()) {
+    try (TTransport transport = thriftConnPool.borrowTransport()) {
       Client client = new Client(new TBinaryProtocol(transport));
       Status status = client.executeInsert(req);
-      thriftConnPool.returnAndCloseTransport(transport);
+      thriftConnPool.returnTransport(transport);
       if (status.code == SUCCESS_CODE) {
         return new TaskExecuteResult(null, null);
       } else {
@@ -240,10 +244,10 @@ public class RemoteExecutor implements Executor {
       req.setKeyRanges(parquetKeyRanges);
     }
 
-    try (TTransport transport = thriftConnPool.borrowAndOpenTransport()) {
+    try (TTransport transport = thriftConnPool.borrowTransport()) {
       Client client = new Client(new TBinaryProtocol(transport));
       Status status = client.executeDelete(req);
-      thriftConnPool.returnAndCloseTransport(transport);
+      thriftConnPool.returnTransport(transport);
       if (status.code == SUCCESS_CODE) {
         return new TaskExecuteResult(null, null);
       } else {
@@ -315,10 +319,10 @@ public class RemoteExecutor implements Executor {
 
   @Override
   public List<Column> getColumnsOfStorageUnit(String storageUnit) throws PhysicalException {
-    try (TTransport transport = thriftConnPool.borrowAndOpenTransport()) {
+    try (TTransport transport = thriftConnPool.borrowTransport()) {
       Client client = new Client(new TBinaryProtocol(transport));
       GetColumnsOfStorageUnitResp resp = client.getColumnsOfStorageUnit(storageUnit);
-      thriftConnPool.returnAndCloseTransport(transport);
+      thriftConnPool.returnTransport(transport);
       List<Column> columnList = new ArrayList<>();
       resp.getTsList()
           .forEach(
@@ -336,10 +340,10 @@ public class RemoteExecutor implements Executor {
 
   @Override
   public Pair<ColumnsInterval, KeyInterval> getBoundaryOfStorage() throws PhysicalException {
-    try (TTransport transport = thriftConnPool.borrowAndOpenTransport()) {
+    try (TTransport transport = thriftConnPool.borrowTransport()) {
       Client client = new Client(new TBinaryProtocol(transport));
       GetStorageBoundaryResp resp = client.getBoundaryOfStorage();
-      thriftConnPool.returnAndCloseTransport(transport);
+      thriftConnPool.returnTransport(transport);
       return new Pair<>(
           new ColumnsInterval(resp.getStartColumn(), resp.getEndColumn()),
           new KeyInterval(resp.getStartKey(), resp.getEndKey()));

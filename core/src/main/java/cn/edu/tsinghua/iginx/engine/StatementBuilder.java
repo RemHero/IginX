@@ -27,7 +27,7 @@ public class StatementBuilder {
     typeMap.put(StatementType.EXPORT_CSV_FROM_SELECT, SqlType.ExportCsv);
     typeMap.put(StatementType.EXPORT_STREAM_FROM_SELECT, SqlType.ExportStream);
     typeMap.put(StatementType.ADD_STORAGE_ENGINE, SqlType.AddStorageEngines);
-    typeMap.put(StatementType.REMOVE_HISTORY_DATA_RESOURCE, SqlType.RemoveHistoryDataResource);
+    typeMap.put(StatementType.REMOVE_HISTORY_DATA_SOURCE, SqlType.RemoveHistoryDataSource);
     typeMap.put(StatementType.SHOW_REPLICATION, SqlType.GetReplicaNum);
     typeMap.put(StatementType.COUNT_POINTS, SqlType.CountPoints);
     typeMap.put(StatementType.CLEAR_DATA, SqlType.ClearData);
@@ -44,6 +44,9 @@ public class StatementBuilder {
     typeMap.put(StatementType.COMPACT, SqlType.Compact);
     typeMap.put(StatementType.SET_CONFIG, SqlType.SetConfig);
     typeMap.put(StatementType.SHOW_CONFIG, SqlType.ShowConfig);
+    typeMap.put(StatementType.SHOW_SESSION_ID, SqlType.ShowSessionID);
+    typeMap.put(StatementType.SHOW_RULES, SqlType.ShowRules);
+    typeMap.put(StatementType.SET_RULES, SqlType.SetRules);
   }
 
   private static final StatementBuilder instance = new StatementBuilder();

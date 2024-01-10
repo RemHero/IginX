@@ -7,6 +7,7 @@ import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.file.CSVFile;
 import cn.edu.tsinghua.iginx.engine.shared.file.write.ExportCsv;
+import cn.edu.tsinghua.iginx.exceptions.StatusCode;
 import cn.edu.tsinghua.iginx.thrift.*;
 import cn.edu.tsinghua.iginx.utils.Bitmap;
 import cn.edu.tsinghua.iginx.utils.ByteUtils;
@@ -60,6 +61,10 @@ public class Result {
   private String loadCSVPath;
   private List<String> loadCSVColumns;
   private Long loadCSVRecordNum;
+
+  private List<Long> sessionIDs;
+
+  private Map<String, Boolean> rules;
 
   public Result(Status status) {
     this.status = status;
@@ -135,7 +140,7 @@ public class Result {
 
   public ExecuteSqlResp getExecuteSqlResp() {
     ExecuteSqlResp resp = new ExecuteSqlResp(status, sqlType);
-    if (status != RpcUtils.SUCCESS) {
+    if (status != RpcUtils.SUCCESS && status.code != StatusCode.PARTIAL_SUCCESS.getStatusCode()) {
       resp.setParseErrorMsg(status.getMessage());
       return resp;
     }
@@ -167,12 +172,15 @@ public class Result {
     resp.setConfigValue(configValue);
     // INFILE AS CSV
     resp.setLoadCsvPath(loadCSVPath);
+    resp.setSessionIDList(sessionIDs);
+    resp.setRules(rules);
     return resp;
   }
 
   public ExecuteStatementResp getExecuteStatementResp(int fetchSize) {
     ExecuteStatementResp resp = new ExecuteStatementResp(status, sqlType);
-    if (status != RpcUtils.SUCCESS) {
+    resp.setWarningMsg(status.getMessage());
+    if (status != RpcUtils.SUCCESS && status.code != StatusCode.PARTIAL_SUCCESS.getStatusCode()) {
       return resp;
     }
     resp.setQueryId(queryId);
@@ -259,7 +267,7 @@ public class Result {
 
   public LoadCSVResp getLoadCSVResp() {
     LoadCSVResp resp = new LoadCSVResp(status);
-    if (status != RpcUtils.SUCCESS) {
+    if (status != RpcUtils.SUCCESS && status.code != StatusCode.PARTIAL_SUCCESS.getStatusCode()) {
       resp.setParseErrorMsg(status.getMessage());
       return resp;
     }
@@ -271,7 +279,7 @@ public class Result {
   public FetchResultsResp fetch(int fetchSize) {
     FetchResultsResp resp = new FetchResultsResp(status, false);
 
-    if (status != RpcUtils.SUCCESS) {
+    if (status != RpcUtils.SUCCESS && status.code != StatusCode.PARTIAL_SUCCESS.getStatusCode()) {
       return resp;
     }
     try {

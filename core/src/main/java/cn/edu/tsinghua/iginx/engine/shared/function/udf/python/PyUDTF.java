@@ -12,9 +12,12 @@ import cn.edu.tsinghua.iginx.engine.shared.function.MappingType;
 import cn.edu.tsinghua.iginx.engine.shared.function.udf.UDTF;
 import cn.edu.tsinghua.iginx.engine.shared.function.udf.utils.CheckUtils;
 import cn.edu.tsinghua.iginx.engine.shared.function.udf.utils.RowUtils;
+import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.StringUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
 import pemja.core.PythonInterpreter;
@@ -55,9 +58,9 @@ public class PyUDTF implements UDTF {
 
     PythonInterpreter interpreter = interpreters.take();
 
-    List<Object> colNames = new ArrayList<>();
-    List<Object> colTypes = new ArrayList<>();
-    List<Object> rowData = new ArrayList<>();
+    List<Object> colNames = new ArrayList<>(Collections.singletonList("key"));
+    List<Object> colTypes = new ArrayList<>(Collections.singletonList(DataType.LONG.toString()));
+    List<Object> rowData = new ArrayList<>(Collections.singletonList(row.getKey()));
 
     List<String> paths = params.getPaths();
     flag:
@@ -85,7 +88,7 @@ public class PyUDTF implements UDTF {
       }
     }
 
-    if (colNames.isEmpty()) {
+    if (colNames.size() == 1) {
       return Row.EMPTY_ROW;
     }
 
@@ -93,18 +96,33 @@ public class PyUDTF implements UDTF {
     data.add(colNames);
     data.add(colTypes);
     data.add(rowData);
+
+    List<Object> args = params.getArgs();
+    Map<String, Object> kvargs = params.getKwargs();
+
     List<List<Object>> res =
-        (List<List<Object>>) interpreter.invokeMethod(UDF_CLASS, UDF_FUNC, data);
+        (List<List<Object>>) interpreter.invokeMethod(UDF_CLASS, UDF_FUNC, data, args, kvargs);
 
     if (res == null || res.size() < 3) {
       return Row.EMPTY_ROW;
     }
     interpreters.add(interpreter);
 
+    // [["key", col1, col2 ....],
+    // ["LONG", type1, type2 ...],
+    // [key1, val11, val21 ...]]
+    boolean hasKey = res.get(0).get(0).equals("key");
+    long key = -1;
+    if (hasKey) {
+      res.get(0).remove(0);
+      res.get(1).remove(0);
+      key = (Long) res.get(2).remove(0);
+    }
+
     Header header =
         RowUtils.constructHeaderWithFirstTwoRowsUsingFuncName(
             res, row.getHeader().hasKey(), funcName);
-    return RowUtils.constructNewRowWithKey(header, row.getKey(), res.get(2));
+    return RowUtils.constructNewRowWithKey(header, hasKey ? key : row.getKey(), res.get(2));
   }
 
   @Override

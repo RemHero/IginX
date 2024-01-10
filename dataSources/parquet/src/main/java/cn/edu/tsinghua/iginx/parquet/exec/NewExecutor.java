@@ -9,10 +9,13 @@ import cn.edu.tsinghua.iginx.engine.shared.KeyRange;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.ClearEmptyRowStreamWrapper;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.DataView;
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.metadata.entity.ColumnsInterval;
 import cn.edu.tsinghua.iginx.metadata.entity.KeyInterval;
 import cn.edu.tsinghua.iginx.parquet.entity.NewQueryRowStream;
+import cn.edu.tsinghua.iginx.parquet.tools.FileUtils;
+import cn.edu.tsinghua.iginx.parquet.tools.FilterRowStreamWrapper;
 import cn.edu.tsinghua.iginx.parquet.tools.TagKVUtils;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import cn.edu.tsinghua.iginx.utils.StringUtils;
@@ -40,6 +43,8 @@ public class NewExecutor implements Executor {
 
   public String dummyDir;
 
+  private final String embeddedPrefix;
+
   private final Map<String, DUManager> duManagerMap = new ConcurrentHashMap<>();
 
   private boolean isClosed = false;
@@ -47,7 +52,26 @@ public class NewExecutor implements Executor {
   public NewExecutor(
       Connection connection, boolean hasData, boolean readOnly, String dataDir, String dummyDir)
       throws StorageInitializationException {
+    this(connection, hasData, readOnly, dataDir, dummyDir, null);
+  }
+
+  // dirPrefix: the last layer dir name of parquet data path will be added as prefix in every data
+  // column
+  public NewExecutor(
+      Connection connection,
+      boolean hasData,
+      boolean readOnly,
+      String dataDir,
+      String dummyDir,
+      String dirPrefix)
+      throws StorageInitializationException {
     testValidAndInit(hasData, readOnly, dataDir, dummyDir);
+
+    if (dummyDir != null && !dummyDir.isEmpty() && (dirPrefix == null || dirPrefix.isEmpty())) {
+      embeddedPrefix = FileUtils.getLastDirName(dummyDir);
+    } else {
+      embeddedPrefix = dirPrefix;
+    }
 
     this.connection = connection;
 
@@ -71,6 +95,7 @@ public class NewExecutor implements Executor {
                 }));
   }
 
+  // to test whether dummy_dir is dir and create data_dir if not exits
   private void testValidAndInit(
       boolean has_data, boolean read_only, String data_dir, String dummy_dir)
       throws StorageInitializationException {
@@ -147,14 +172,15 @@ public class NewExecutor implements Executor {
     if (duDirs != null) {
       for (File duDir : duDirs) {
         if (duDir.isFile()) continue;
-        DUManager duManager = new DUManager(duDir.getName(), dataDir, connection, false);
+        DUManager duManager =
+            new DUManager(duDir.getName(), dataDir, connection, false, embeddedPrefix);
         duManagerMap.put(duDir.getName(), duManager);
       }
     }
   }
 
   private void recoverFromParquet() throws IOException {
-    DUManager duManager = new DUManager(dummyDir, dummyDir, connection, true);
+    DUManager duManager = new DUManager(dummyDir, dummyDir, connection, true, embeddedPrefix);
     duManagerMap.put(dummyDir, duManager);
   }
 
@@ -164,7 +190,11 @@ public class NewExecutor implements Executor {
     if (duManager == null) {
       duManager =
           new DUManager(
-              storageUnit, isDummyStorageUnit ? dummyDir : dataDir, connection, isDummyStorageUnit);
+              storageUnit,
+              isDummyStorageUnit ? dummyDir : dataDir,
+              connection,
+              isDummyStorageUnit,
+              embeddedPrefix);
       duManagerMap.putIfAbsent(storageUnit, duManager);
       duManager = duManagerMap.get(storageUnit);
     }
@@ -175,7 +205,7 @@ public class NewExecutor implements Executor {
   public TaskExecuteResult executeProjectTask(
       List<String> paths,
       TagFilter tagFilter,
-      String filter,
+      Filter filter,
       String storageUnit,
       boolean isDummyStorageUnit) {
     DUManager duManager;
@@ -189,6 +219,7 @@ public class NewExecutor implements Executor {
       List<cn.edu.tsinghua.iginx.parquet.entity.Column> columns =
           duManager.project(paths, tagFilter, filter);
       RowStream rowStream = new ClearEmptyRowStreamWrapper(new NewQueryRowStream(columns));
+      rowStream = new FilterRowStreamWrapper(rowStream, filter);
       return new TaskExecuteResult(rowStream, null);
     } catch (SQLException e) {
       return new TaskExecuteResult(null, new PhysicalException("Fail to project data ", e));

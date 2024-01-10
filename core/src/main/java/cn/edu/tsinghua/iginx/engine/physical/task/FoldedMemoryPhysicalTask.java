@@ -2,7 +2,7 @@ package cn.edu.tsinghua.iginx.engine.physical.task;
 
 import static cn.edu.tsinghua.iginx.engine.logical.utils.MetaUtils.getFragmentsByColumnsInterval;
 import static cn.edu.tsinghua.iginx.engine.logical.utils.MetaUtils.mergeRawData;
-import static cn.edu.tsinghua.iginx.engine.physical.task.utils.TaskUtils.getStorageTasks;
+import static cn.edu.tsinghua.iginx.engine.physical.task.utils.TaskUtils.getBottomTasks;
 import static cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType.isUnaryOperator;
 
 import cn.edu.tsinghua.iginx.conf.Config;
@@ -14,6 +14,7 @@ import cn.edu.tsinghua.iginx.engine.physical.PhysicalEngineImpl;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.physical.optimizer.PhysicalOptimizer;
 import cn.edu.tsinghua.iginx.engine.physical.storage.execute.StoragePhysicalTaskExecutor;
+import cn.edu.tsinghua.iginx.engine.shared.RequestContext;
 import cn.edu.tsinghua.iginx.engine.shared.constraint.ConstraintManager;
 import cn.edu.tsinghua.iginx.engine.shared.data.Value;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
+public class FoldedMemoryPhysicalTask extends MultipleMemoryPhysicalTask {
 
   private static final Logger logger = LoggerFactory.getLogger(FoldedMemoryPhysicalTask.class);
 
@@ -59,27 +60,23 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
 
   private final Operator foldedRoot;
 
-  private final List<PhysicalTask> parentTasks;
-
   public FoldedMemoryPhysicalTask(
-      List<Operator> operators, Operator foldedRoot, List<PhysicalTask> parentTasks) {
-    super(TaskType.Folded, operators);
+      List<Operator> operators,
+      Operator foldedRoot,
+      List<PhysicalTask> parentTasks,
+      RequestContext context) {
+    super(operators, parentTasks, context);
     this.foldedRoot = foldedRoot;
-    this.parentTasks = parentTasks;
   }
 
   public Operator getFoldedRoot() {
     return foldedRoot;
   }
 
-  public List<PhysicalTask> getParentTasks() {
-    return parentTasks;
-  }
-
   @Override
   public TaskExecuteResult execute() {
     List<RowStream> streams = new ArrayList<>();
-    for (PhysicalTask parentTask : parentTasks) {
+    for (PhysicalTask parentTask : getParentTasks()) {
       TaskExecuteResult parentResult = parentTask.getResult();
       if (parentResult == null) {
         return new TaskExecuteResult(
@@ -98,11 +95,11 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
           "Execute Error: can not reconstruct this folded operator to a legal logical tree.");
     }
 
-    PhysicalTask task = optimizer.optimize(finalRoot);
+    PhysicalTask task = optimizer.optimize(finalRoot, getContext());
 
     PhysicalTask originFollowTask = getFollowerTask();
     task.setFollowerTask(originFollowTask);
-    if (originFollowTask.getType().equals(TaskType.CompletedFolded)) {
+    if (originFollowTask instanceof CompletedFoldedPhysicalTask) {
       ((CompletedFoldedPhysicalTask) originFollowTask).setParentTask(task);
     } else {
       throw new RuntimeException(
@@ -110,26 +107,50 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
     }
     setFollowerTask(null);
 
-    List<StoragePhysicalTask> storageTasks = new ArrayList<>();
-    getStorageTasks(storageTasks, task);
-    storageTaskExecutor.commit(storageTasks);
+    List<PhysicalTask> bottomTasks = new ArrayList<>();
+    getBottomTasks(bottomTasks, task);
+    commitBottomTasks(bottomTasks);
 
     return null;
   }
 
+  private void commitBottomTasks(List<PhysicalTask> bottomTasks) {
+    List<StoragePhysicalTask> storageTasks = new ArrayList<>();
+    List<GlobalPhysicalTask> globalTasks = new ArrayList<>();
+    for (PhysicalTask task : bottomTasks) {
+      if (task.getType().equals(TaskType.Storage)) {
+        storageTasks.add((StoragePhysicalTask) task);
+      } else if (task.getType().equals(TaskType.Global)) {
+        globalTasks.add((GlobalPhysicalTask) task);
+      }
+    }
+
+    storageTaskExecutor.commit(storageTasks);
+    for (GlobalPhysicalTask globalTask : globalTasks) {
+      storageTaskExecutor.executeGlobalTask(globalTask);
+    }
+  }
+
   private Operator reGenerateRoot(Operator root, List<RowStream> streams) {
-    Set<String> selectedPaths = new HashSet<>();
+    Set<String> set = new HashSet<>();
+    List<String> selectedPaths = new ArrayList<>();
     streams.forEach(
         stream -> {
           try {
             int index = stream.getHeader().indexOf("SelectedPath");
-            if (index != -1) {
-              while (stream.hasNext()) {
-                Row row = stream.next();
-                Value value = row.getAsValue(index);
-                if (!value.isNull()) {
-                  selectedPaths.add(value.getBinaryVAsString());
-                }
+            if (index == -1) {
+              return;
+            }
+            while (stream.hasNext()) {
+              Row row = stream.next();
+              Value value = row.getAsValue(index);
+              if (value.isNull()) {
+                continue;
+              }
+              String path = value.getBinaryVAsString();
+              if (!set.contains(path)) {
+                set.add(path);
+                selectedPaths.add(path);
               }
             }
           } catch (PhysicalException e) {
@@ -138,7 +159,7 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
           }
         });
 
-    return fillRootWithPath(root, new ArrayList<>(selectedPaths));
+    return fillRootWithPath(root, selectedPaths);
   }
 
   private Operator fillRootWithPath(Operator operator, List<String> selectedPaths) {
@@ -151,6 +172,7 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
                     ((OperatorSource) reorder.getSource()).getOperator(), selectedPaths)));
         if (reorder.isNeedSelectedPath()) {
           reorder.getPatterns().addAll(selectedPaths);
+          selectedPaths.forEach(p -> reorder.getIsPyUDF().add(false));
           reorder.setNeedSelectedPath(false);
         }
         return reorder;
@@ -196,10 +218,5 @@ public class FoldedMemoryPhysicalTask extends MemoryPhysicalTask {
     List<FragmentMeta> dummyFragments = pair.v;
 
     return mergeRawData(fragments, dummyFragments, pathList, tagFilter);
-  }
-
-  @Override
-  public boolean notifyParentReady() {
-    return parentReadyCount.incrementAndGet() == parentTasks.size();
   }
 }

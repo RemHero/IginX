@@ -52,6 +52,9 @@ public class Constants {
 
   public static final String DATA_PREFIX = "data_prefix";
 
+  // especially for embedded storage engines: parquet, filesystem
+  public static final String EMBEDDED_PREFIX = "embedded_prefix";
+
   public static final String SCHEMA_PREFIX = "schema_prefix";
 
   public static final String DUMMY = "dummy";
@@ -63,4 +66,8 @@ public class Constants {
   public static final String UDSF = "udsf";
 
   public static final String TRANSFORM = "transform";
+
+  // for ZooKeeper
+  // The sequence number is always fixed length of 10 digits, 0 padded.
+  public static int LENGTH_OF_SEQUENCE_NUMBER = 10;
 }

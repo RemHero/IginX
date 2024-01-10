@@ -7,7 +7,6 @@ import cn.edu.tsinghua.iginx.engine.shared.data.Value;
 import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.filter.AndFilter;
-import cn.edu.tsinghua.iginx.engine.shared.operator.filter.NotFilter;
 import cn.edu.tsinghua.iginx.metadata.entity.KeyInterval;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import com.mongodb.client.model.Filters;
@@ -86,24 +85,30 @@ public class FilterUtils {
     long value = filter.getValue();
     switch (filter.getOp()) {
       case GE:
+      case GE_AND:
         return Collections.singletonList(new Pair<>(value, Long.MAX_VALUE));
       case G:
+      case G_AND:
         if (value == Long.MAX_VALUE) {
           return EMPTY_RANGES;
         } else {
           return Collections.singletonList(new Pair<>(value + 1, Long.MAX_VALUE));
         }
       case LE:
+      case LE_AND:
         return Collections.singletonList(new Pair<>(Long.MIN_VALUE, value));
       case L:
+      case L_AND:
         if (value == Long.MIN_VALUE) {
           return EMPTY_RANGES;
         } else {
           return Collections.singletonList(new Pair<>(Long.MIN_VALUE, value - 1));
         }
       case E:
+      case E_AND:
         return Collections.singletonList(new Pair<>(value, value));
       case NE:
+      case NE_AND:
         if (value == Long.MIN_VALUE) {
           return Collections.singletonList(new Pair<>(value + 1, Long.MAX_VALUE));
         } else if (value == Long.MAX_VALUE) {
@@ -199,6 +204,8 @@ public class FilterUtils {
   public static Bson getPostFilter(Filter filter, Map<Field, String> renamedFields) {
     switch (filter.getType()) {
       case Key:
+      case Expr:
+      case Not:
         return null;
       case Value:
         return getFilter((ValueFilter) filter, renamedFields);
@@ -210,8 +217,6 @@ public class FilterUtils {
         return getPostFilter((AndFilter) filter, renamedFields);
       case Or:
         return getFilter((OrFilter) filter, renamedFields);
-      case Not:
-        return getFilter((NotFilter) filter, renamedFields);
       default:
         throw new IllegalStateException("unexpected filter type: " + filter.getType());
     }
@@ -226,14 +231,15 @@ public class FilterUtils {
         return getFilter((ValueFilter) filter, renamedFields);
       case Path:
         return getFilter((PathFilter) filter, renamedFields);
+      case Expr:
+      case Not:
+        return null;
       case Bool:
         return getFilter((BoolFilter) filter);
       case And:
         return getPostFilter((AndFilter) filter, renamedFields);
       case Or:
         return getFilter((OrFilter) filter, renamedFields);
-      case Not:
-        return getFilter((NotFilter) filter, renamedFields);
       default:
         throw new IllegalStateException("unexpected filter type: " + filter.getType());
     }
@@ -259,7 +265,7 @@ public class FilterUtils {
     } else if (subFilters.isEmpty()) {
       return null;
     } else {
-      return and(subFilters);
+      return unionComparisonFilters(filter.getOp(), subFilters);
     }
   }
 
@@ -273,21 +279,31 @@ public class FilterUtils {
     return matchedNames;
   }
 
-  private static Bson fieldValueOp(Op op, String fieldName, BsonValue value) {
+  public static Bson fieldValueOp(Op op, String fieldName, BsonValue value) {
+    if (fieldName.contains("*")) {
+      throw new IllegalArgumentException("wildcard is not support");
+    }
     switch (op) {
       case GE:
+      case GE_AND:
         return gte(fieldName, value);
       case G:
+      case G_AND:
         return gt(fieldName, value);
       case LE:
+      case LE_AND:
         return lte(fieldName, value);
       case L:
+      case L_AND:
         return lt(fieldName, value);
       case E:
+      case E_AND:
         return eq(fieldName, value);
       case NE:
+      case NE_AND:
         return ne(fieldName, value);
       case LIKE:
+      case LIKE_AND:
         // why append a '$' to the pattern
         // for example:
         //   match "sadaa" with /^.*[s|d]/,
@@ -328,26 +344,59 @@ public class FilterUtils {
     } else if (subFilters.isEmpty()) {
       return null;
     } else {
-      return and(subFilters);
+      return unionComparisonFilters(filter.getOp(), subFilters);
     }
   }
 
-  private static Bson fieldOp(Op op, String fieldA, String fieldB) {
-    List<String> fields = Arrays.asList("$" + fieldA, "$" + fieldB);
+  private static Bson unionComparisonFilters(Op op, List<Bson> subFilters) {
     switch (op) {
       case GE:
+      case G:
+      case LE:
+      case L:
+      case E:
+      case NE:
+      case LIKE:
+        return or(subFilters);
+      case GE_AND:
+      case G_AND:
+      case LE_AND:
+      case L_AND:
+      case E_AND:
+      case NE_AND:
+      case LIKE_AND:
+        return and(subFilters);
+      default:
+        throw new IllegalArgumentException("unexpected Filter op: " + op);
+    }
+  }
+
+  public static Bson fieldOp(Op op, String fieldA, String fieldB) {
+    List<String> fields = Arrays.asList("$" + fieldA, "$" + fieldB);
+    if (fieldA.contains("*") || fieldB.contains("*")) {
+      throw new IllegalArgumentException("wildcard is not support");
+    }
+    switch (op) {
+      case GE:
+      case GE_AND:
         return expr(new Document("$gte", fields));
       case G:
+      case G_AND:
         return expr(new Document("$gt", fields));
       case LE:
+      case LE_AND:
         return expr(new Document("$lte", fields));
       case L:
+      case L_AND:
         return expr(new Document("$lt", fields));
       case E:
+      case E_AND:
         return expr(new Document("$eq", fields));
       case NE:
+      case NE_AND:
         return expr(new Document("$ne", fields));
       case LIKE:
+      case LIKE_AND:
         Bson pattern = new Document("$concat", Arrays.asList(fields.get(0), "$"));
         return expr(
             new Document(
@@ -392,14 +441,5 @@ public class FilterUtils {
       return null;
     }
     return or(subFilterList);
-  }
-
-  @Nullable
-  private static Bson getFilter(NotFilter filter, Map<Field, String> renamedFields) {
-    Bson childFilter = getFilter((Filter) filter, renamedFields);
-    if (childFilter == null) {
-      return null;
-    }
-    return nor(childFilter);
   }
 }

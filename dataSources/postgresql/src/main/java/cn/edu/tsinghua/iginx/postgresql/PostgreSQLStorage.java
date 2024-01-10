@@ -96,6 +96,10 @@ public class PostgreSQLStorage implements IStorage {
             meta.getIp(), meta.getPort(), username, password);
     try {
       connection = DriverManager.getConnection(connUrl);
+      Statement statement = connection.createStatement();
+      String sql = "alter system set idle_in_transaction_session_timeout='1min'";
+      statement.executeUpdate(sql);
+      statement.close();
     } catch (SQLException e) {
       throw new StorageInitializationException("cannot connect to " + meta);
     }
@@ -308,12 +312,13 @@ public class PostgreSQLStorage implements IStorage {
         for (Map.Entry<String, String> entry : tableNameToColumnNames.entrySet()) {
           String tableName = entry.getKey();
           String quotColumnNames = getQuotColumnNames(entry.getValue());
+          String filterStr = FilterTransformer.toString(filter);
           statement =
               String.format(
                   QUERY_STATEMENT,
                   quotColumnNames,
                   getQuotName(tableName),
-                  FilterTransformer.toString(filter));
+                  filterStr.isEmpty() ? "" : "WHERE " + filterStr);
 
           ResultSet rs = null;
           try {
@@ -377,16 +382,26 @@ public class PostgreSQLStorage implements IStorage {
 
         // 对通配符做处理，将通配符替换成对应的列名
         if (FilterTransformer.toString(filter).contains("*")) {
+          // 把fullColumnNamesList中的列名全部用removeFullColumnNameQuote去掉引号
+          fullColumnNamesList.replaceAll(
+              columnNames -> {
+                List<String> newColumnNames = new ArrayList<>();
+                for (String columnName : columnNames) {
+                  newColumnNames.add(removeFullColumnNameQuote(columnName));
+                }
+                return newColumnNames;
+              });
           filter = generateWildCardsFilter(filter, fullColumnNamesList);
           filter = ExprUtils.mergeTrue(filter);
         }
 
+        String filterStr = FilterTransformer.toString(filter);
         statement =
             String.format(
                 QUERY_STATEMENT_WITHOUT_KEYNAME,
                 fullColumnNames,
                 fullTableName,
-                FilterTransformer.toString(filter),
+                filterStr.isEmpty() ? "" : "WHERE " + filterStr,
                 PostgreSQLSchema.getQuotFullName(tableNames.get(0), KEY_NAME));
 
         ResultSet rs = null;
@@ -454,6 +469,10 @@ public class PostgreSQLStorage implements IStorage {
                   new ValueFilter(
                       matched, ((ValueFilter) filter).getOp(), ((ValueFilter) filter).getValue()));
             }
+
+            if (Op.isOrOp(((ValueFilter) filter).getOp())) {
+              return new OrFilter(andValueChildren);
+            }
             return new AndFilter(andValueChildren);
           }
         }
@@ -478,12 +497,16 @@ public class PostgreSQLStorage implements IStorage {
                   new PathFilter(
                       matched, ((PathFilter) filter).getOp(), ((PathFilter) filter).getPathB()));
             }
-            filter = new AndFilter(andPathChildren);
+            if (Op.isOrOp(((ValueFilter) filter).getOp())) {
+              filter = new OrFilter(andPathChildren);
+            } else {
+              filter = new AndFilter(andPathChildren);
+            }
           }
         }
 
         if (pathB.contains("*")) {
-          if (filter.getType() != FilterType.And) {
+          if (filter.getType() != FilterType.Path) {
             return generateWildCardsFilter(filter, columnNamesList);
           }
 
@@ -502,6 +525,9 @@ public class PostgreSQLStorage implements IStorage {
                   new PathFilter(
                       ((PathFilter) filter).getPathA(), ((PathFilter) filter).getOp(), matched));
             }
+            if (Op.isOrOp(((ValueFilter) filter).getOp())) {
+              return new OrFilter(andPathChildren);
+            }
             return new AndFilter(andPathChildren);
           }
         }
@@ -518,8 +544,7 @@ public class PostgreSQLStorage implements IStorage {
 
   private List<String> getMatchedPath(String path, List<List<String>> columnNamesList) {
     List<String> matchedPath = new ArrayList<>();
-    path = path.replaceAll("[.^${}]", "\\\\$0");
-    path = path.replace("*", ".*");
+    path = StringUtils.reformatPath(path);
     Pattern pattern = Pattern.compile("^" + path + "$");
     for (int i = 0; i < columnNamesList.size(); i++) {
       List<String> columnNames = columnNamesList.get(i);
@@ -531,6 +556,10 @@ public class PostgreSQLStorage implements IStorage {
       }
     }
     return matchedPath;
+  }
+
+  private String removeFullColumnNameQuote(String fullColumnName) {
+    return fullColumnName.substring(1, fullColumnName.length() - 1).replace("\".\"", ".");
   }
 
   private Filter cutFilterDatabaseNameForDummy(Filter filter, String databaseName) {
@@ -608,6 +637,7 @@ public class PostgreSQLStorage implements IStorage {
   }
 
   private TaskExecuteResult executeProjectDummyWithFilter(Project project, Filter filter) {
+    List<Connection> connList = new ArrayList<>();
     try {
       List<String> databaseNameList = new ArrayList<>();
       List<ResultSet> resultSets = new ArrayList<>();
@@ -625,6 +655,8 @@ public class PostgreSQLStorage implements IStorage {
         if (conn == null) {
           continue;
         }
+        connList.add(conn);
+
         if (!filter.toString().contains("*")
             && !(tableNameToColumnNames.size() > 1
                 && filterContainsType(Arrays.asList(FilterType.Value, FilterType.Path), filter))) {
@@ -635,16 +667,17 @@ public class PostgreSQLStorage implements IStorage {
             String fullQuotColumnNames = getQuotColumnNames(entry.getValue());
             List<String> fullPathList = Arrays.asList(entry.getValue().split(", "));
             fullPathList.replaceAll(s -> PostgreSQLSchema.getQuotFullName(tableName, s));
+            String filterStr =
+                FilterTransformer.toString(
+                    dummyFilterSetTrueByColumnNames(
+                        cutFilterDatabaseNameForDummy(filter.copy(), databaseName), fullPathList));
             statement =
                 String.format(
-                    CONCAT_QUERY_STATEMENT_WITH_WHERE_CLAUSE_AND_CONCAT_KEY,
+                    CONCAT_QUERY_STATEMENT_AND_CONCAT_KEY,
                     allColumnNameForTable.get(tableName),
                     fullQuotColumnNames,
                     getQuotName(tableName),
-                    FilterTransformer.toString(
-                        dummyFilterSetTrueByColumnNames(
-                            cutFilterDatabaseNameForDummy(filter.copy(), databaseName),
-                            fullPathList)),
+                    filterStr.isEmpty() ? "" : "WHERE " + filterStr,
                     allColumnNameForTable.get(tableName));
 
             try {
@@ -728,17 +761,27 @@ public class PostgreSQLStorage implements IStorage {
 
           // 对通配符做处理，将通配符替换成对应的列名
           if (FilterTransformer.toString(copyFilter).contains("*")) {
+            // 把fullColumnNamesList中的列名全部用removeFullColumnNameQuote去掉引号
+            fullColumnNamesList.replaceAll(
+                columnNames -> {
+                  List<String> newColumnNames = new ArrayList<>();
+                  for (String columnName : columnNames) {
+                    newColumnNames.add(removeFullColumnNameQuote(columnName));
+                  }
+                  return newColumnNames;
+                });
             copyFilter = generateWildCardsFilter(copyFilter, fullColumnNamesList);
             copyFilter = ExprUtils.mergeTrue(copyFilter);
           }
 
+          String filterStr = FilterTransformer.toString(copyFilter);
           statement =
               String.format(
-                  CONCAT_QUERY_STATEMENT_WITH_WHERE_CLAUSE_AND_CONCAT_KEY,
+                  CONCAT_QUERY_STATEMENT_AND_CONCAT_KEY,
                   allColumnNames,
                   fullColumnNames,
                   fullTableName,
-                  FilterTransformer.toString(copyFilter),
+                  filterStr.isEmpty() ? "" : "WHERE " + filterStr,
                   allColumnNames);
 
           try {
@@ -759,14 +802,19 @@ public class PostgreSQLStorage implements IStorage {
           new ClearEmptyRowStreamWrapper(
               new PostgreSQLQueryRowStream(
                   databaseNameList, resultSets, true, filter, project.getTagFilter()));
-      if (conn != null) {
-        conn.close();
-      }
       return new TaskExecuteResult(rowStream);
     } catch (SQLException e) {
       logger.error(e.getMessage());
       return new TaskExecuteResult(
           new PhysicalTaskExecuteFailureException("execute project task in postgresql failure", e));
+    } finally {
+      for (Connection conn : connList) {
+        try {
+          conn.close();
+        } catch (SQLException e) {
+          logger.error(e.getMessage());
+        }
+      }
     }
   }
 
@@ -1011,6 +1059,38 @@ public class PostgreSQLStorage implements IStorage {
     return new Pair<>(columnsInterval, new KeyInterval(minKey, maxKey + 1));
   }
 
+  private List<Pattern> getRegexPatternByName(
+      String tableName, String columnNames, boolean isDummy) {
+    // 我们输入例如test%，是希望匹配到test或test.abc这样的表，但是不希望匹配到test1这样的表，但语法不支持，因此在这里做一下过滤
+    String tableNameRegex = tableName;
+    tableNameRegex = StringUtils.reformatPath(tableNameRegex);
+    tableNameRegex = tableNameRegex.replace("%", ".*");
+    if (tableNameRegex.endsWith(".*")
+        && !tableNameRegex.endsWith(SEPARATOR + ".*")
+        && !tableNameRegex.equals(".*")) {
+      tableNameRegex = tableNameRegex.substring(0, tableNameRegex.length() - 2);
+      tableNameRegex += "(\\" + SEPARATOR + ".*)?";
+    }
+    Pattern tableNamePattern = Pattern.compile("^" + tableNameRegex + "$");
+
+    String columnNameRegex = columnNames;
+    if (isDummy) {
+      columnNameRegex = StringUtils.reformatPath(columnNameRegex);
+      columnNameRegex = columnNameRegex.replace("%", ".*");
+    } else {
+      if (columnNames.equals("%")) {
+        columnNameRegex = ".*";
+      } else {
+        // columnNames中只会有一个 %
+        columnNameRegex = StringUtils.reformatPath(columnNameRegex);
+        columnNameRegex = columnNameRegex.replace("%", "(" + TAGKV_SEPARATOR + ".*)?");
+      }
+    }
+    Pattern columnNamePattern = Pattern.compile("^" + columnNameRegex + "$");
+
+    return Arrays.asList(tableNamePattern, columnNamePattern);
+  }
+
   private Map<String, String> splitAndMergeQueryPatterns(
       String databaseName, Connection conn, List<String> patterns) throws SQLException {
     // table name -> column names
@@ -1048,28 +1128,45 @@ public class PostgreSQLStorage implements IStorage {
       if (!columnNames.endsWith("%")) {
         columnNames += "%"; // 匹配 tagKV
       }
-      ResultSet rs = conn.getMetaData().getColumns(databaseName, "public", tableName, columnNames);
+      ResultSet rs =
+          conn.getMetaData()
+              .getColumns(
+                  databaseName,
+                  "public",
+                  StringUtils.reformatPath(tableName),
+                  StringUtils.reformatPath(columnNames));
+
+      List<Pattern> patternList = getRegexPatternByName(tableName, columnNames, false);
+      Pattern tableNamePattern = patternList.get(0), columnNamePattern = patternList.get(1);
+
       while (rs.next()) {
-        tableName = rs.getString("TABLE_NAME");
-        columnNames = rs.getString("COLUMN_NAME");
-        if (columnNames.equals(KEY_NAME)) {
+        String curTableName = rs.getString("TABLE_NAME");
+        String curColumnNames = rs.getString("COLUMN_NAME");
+        if (curColumnNames.equals(KEY_NAME)) {
           continue;
         }
-        if (tableNameToColumnNames.containsKey(tableName)) {
-          columnNames = tableNameToColumnNames.get(tableName) + ", " + columnNames;
+
+        if (!tableNamePattern.matcher(curTableName).find()
+            || !columnNamePattern.matcher(curColumnNames).find()) {
+          continue;
+        }
+
+        if (tableNameToColumnNames.containsKey(curTableName)) {
+          curColumnNames = tableNameToColumnNames.get(curTableName) + ", " + curColumnNames;
           // 此处需要去重
           List<String> columnNamesList =
-              new ArrayList<>(Arrays.asList(tableNameToColumnNames.get(tableName).split(", ")));
-          List<String> newColumnNamesList = new ArrayList<>(Arrays.asList(columnNames.split(", ")));
+              new ArrayList<>(Arrays.asList(tableNameToColumnNames.get(curTableName).split(", ")));
+          List<String> newColumnNamesList =
+              new ArrayList<>(Arrays.asList(curColumnNames.split(", ")));
           for (String newColumnName : newColumnNamesList) {
             if (!columnNamesList.contains(newColumnName)) {
               columnNamesList.add(newColumnName);
             }
           }
 
-          columnNames = String.join(", ", columnNamesList);
+          curColumnNames = String.join(", ", columnNamesList);
         }
-        tableNameToColumnNames.put(tableName, columnNames);
+        tableNameToColumnNames.put(curTableName, curColumnNames);
       }
       rs.close();
     }
@@ -1111,6 +1208,9 @@ public class PostgreSQLStorage implements IStorage {
         }
       }
 
+      List<Pattern> patternList = getRegexPatternByName(tableName, columnNames, true);
+      Pattern tableNamePattern = patternList.get(0), columnNamePattern = patternList.get(1);
+
       if (databaseName.equals("%")) {
         Statement stmt = connection.createStatement();
         ResultSet databaseSet = stmt.executeQuery(QUERY_DATABASES_STATEMENT);
@@ -1129,10 +1229,16 @@ public class PostgreSQLStorage implements IStorage {
                   tempDatabaseName, "public", tableName, new String[] {"TABLE"});
           while (tableSet.next()) {
             String tempTableName = tableSet.getString("TABLE_NAME");
+            if (!tableNamePattern.matcher(tempTableName).find()) {
+              continue;
+            }
             ResultSet columnSet =
                 databaseMetaData.getColumns(tempDatabaseName, "public", tempTableName, columnNames);
             while (columnSet.next()) {
               String tempColumnNames = columnSet.getString("COLUMN_NAME");
+              if (!columnNamePattern.matcher(tempColumnNames).find()) {
+                continue;
+              }
               Map<String, String> tableNameToColumnNames = new HashMap<>();
               if (splitResults.containsKey(tempDatabaseName)) {
                 tableNameToColumnNames = splitResults.get(tempDatabaseName);
@@ -1143,6 +1249,7 @@ public class PostgreSQLStorage implements IStorage {
               splitResults.put(tempDatabaseName, tableNameToColumnNames);
             }
           }
+          conn.close();
         }
       } else {
         Connection conn = getConnection(databaseName);
@@ -1155,6 +1262,10 @@ public class PostgreSQLStorage implements IStorage {
         while (rs.next()) {
           tableName = rs.getString("TABLE_NAME");
           columnNames = rs.getString("COLUMN_NAME");
+          if (!tableNamePattern.matcher(tableName).find()
+              || !columnNamePattern.matcher(columnNames).find()) {
+            continue;
+          }
           if (tableNameToColumnNames.containsKey(tableName)) {
             columnNames = tableNameToColumnNames.get(tableName) + ", " + columnNames;
           }
@@ -1182,6 +1293,7 @@ public class PostgreSQLStorage implements IStorage {
           tableNameToColumnNames = oldTableNameToColumnNames;
         }
         splitResults.put(databaseName, tableNameToColumnNames);
+        conn.close();
       }
     }
 

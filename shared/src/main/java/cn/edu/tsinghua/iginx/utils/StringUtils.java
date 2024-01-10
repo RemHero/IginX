@@ -20,6 +20,7 @@ package cn.edu.tsinghua.iginx.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -101,8 +102,7 @@ public class StringUtils {
   }
 
   public static String reformatPath(String path) {
-    path = path.replaceAll("\\\\", "\\\\\\\\");
-    path = path.replaceAll("[.^${}]", "\\\\$0");
+    path = path.replaceAll("[.^${}+?()\\[\\]|\\\\]", "\\\\$0");
     if (!path.contains("*")) {
       return path;
     }
@@ -110,12 +110,21 @@ public class StringUtils {
     return path;
   }
 
-  public static String reformatColumnName(String name) {
+  public static boolean match(String string, String regex) {
+    return Pattern.matches(StringUtils.reformatColumnName(regex), string);
+  }
+
+  private static String reformatColumnName(String name) {
     if (!name.contains("*") && !name.contains("(") && !name.contains(")")) return name;
     name = name.replaceAll("[.]", "[.]");
     name = name.replaceAll("[*]", ".*");
     name = name.replaceAll("[(]", "[(]");
     name = name.replaceAll("[)]", "[)]");
+    name = name.replaceAll("[{]", "[{]");
+    name = name.replaceAll("[}]", "[}]");
+    name = name.replaceAll("[+]", "[\\\\+]");
+    name = name.replaceAll("\\$", "[\\$]");
+    name = name.replaceAll("\\^", "[\\\\^]");
     name = name.replaceAll("\\\\", "\\\\\\\\");
     return name;
   }
@@ -138,5 +147,12 @@ public class StringUtils {
       }
     }
     return false;
+  }
+
+  public static boolean isEqual(String str1, String str2) {
+    if ((str1 == null || str1.isEmpty()) && (str2 == null || str2.isEmpty())) {
+      return true;
+    }
+    return Objects.equals(str1, str2);
   }
 }

@@ -16,7 +16,7 @@ public class RowUtils {
     List<Field> targetFields = new ArrayList<>();
     for (int i = 0; i < res.get(0).size(); i++) {
       String resColumnName = (String) res.get(0).get(i);
-      if (resColumnName.matches(".*(.*)")) {
+      if (resColumnName.matches(".*[(].*[)]")) {
         String resFuncName = resColumnName.substring(0, resColumnName.indexOf("("));
         resColumnName = resColumnName.replaceFirst(resFuncName, funcName);
       }
@@ -50,6 +50,17 @@ public class RowUtils {
             .skip(startIndex)
             .map(row -> constructNewRow(header, row))
             .collect(Collectors.toList());
+    return new Table(header, rowList);
+  }
+
+  public static Table constructNewTableWithKey(
+      Header header, List<List<Object>> values, int startIndex) {
+    List<Row> rowList = new ArrayList<>();
+    Long key;
+    for (int i = startIndex; i < values.size(); i++) {
+      key = (Long) values.get(i).remove(0);
+      rowList.add(constructNewRowWithKey(header, key, values.get(i)));
+    }
     return new Table(header, rowList);
   }
 }

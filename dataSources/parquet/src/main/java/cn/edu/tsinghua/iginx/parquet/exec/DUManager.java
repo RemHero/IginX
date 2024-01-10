@@ -34,14 +34,12 @@ import static cn.edu.tsinghua.iginx.parquet.tools.DataTypeTransformer.toParquetD
 import cn.edu.tsinghua.iginx.engine.shared.KeyRange;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.BitmapView;
 import cn.edu.tsinghua.iginx.engine.shared.data.write.DataView;
+import cn.edu.tsinghua.iginx.engine.shared.operator.filter.Filter;
 import cn.edu.tsinghua.iginx.engine.shared.operator.tag.TagFilter;
 import cn.edu.tsinghua.iginx.metadata.entity.KeyInterval;
 import cn.edu.tsinghua.iginx.parquet.entity.Column;
 import cn.edu.tsinghua.iginx.parquet.entity.FileMeta;
-import cn.edu.tsinghua.iginx.parquet.tools.DataTypeTransformer;
-import cn.edu.tsinghua.iginx.parquet.tools.DataViewWrapper;
-import cn.edu.tsinghua.iginx.parquet.tools.FileUtils;
-import cn.edu.tsinghua.iginx.parquet.tools.TagKVUtils;
+import cn.edu.tsinghua.iginx.parquet.tools.*;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import cn.edu.tsinghua.iginx.utils.StringUtils;
@@ -81,6 +79,8 @@ public class DUManager {
 
   private final String dataDir;
 
+  private final String embeddedPrefix;
+
   private final Connection connection;
 
   private final boolean isDummyStorageUnit;
@@ -103,12 +103,18 @@ public class DUManager {
 
   private final ExecutorService flushPool = Executors.newSingleThreadExecutor();
 
-  public DUManager(String id, String dataDir, Connection connection, boolean isDummyStorageUnit)
+  public DUManager(
+      String id,
+      String dataDir,
+      Connection connection,
+      boolean isDummyStorageUnit,
+      String embeddedPrefix)
       throws IOException {
     this.id = id;
     this.dataDir = dataDir;
     this.connection = connection;
     this.isDummyStorageUnit = isDummyStorageUnit;
+    this.embeddedPrefix = embeddedPrefix;
 
     if (!isDummyStorageUnit) {
       if (Files.exists(Paths.get(dataDir, id))) {
@@ -191,7 +197,7 @@ public class DUManager {
     }
   }
 
-  public List<Column> project(List<String> paths, TagFilter tagFilter, String filter)
+  public List<Column> project(List<String> paths, TagFilter tagFilter, Filter filter)
       throws SQLException {
     if (isDummyStorageUnit) {
       return projectDummy(paths, tagFilter, filter);
@@ -221,7 +227,7 @@ public class DUManager {
     return new ArrayList<>(dataMap.values());
   }
 
-  private List<Column> projectDummy(List<String> paths, TagFilter tagFilter, String filter)
+  private List<Column> projectDummy(List<String> paths, TagFilter tagFilter, Filter filter)
       throws SQLException {
     Map<String, Column> dataMap = new HashMap<>();
     File file = new File(dataDir);
@@ -234,6 +240,8 @@ public class DUManager {
 
         Set<String> pathsInFile = getPathsFromFile(dataFile.getPath()).keySet();
         List<String> filePaths = determinePathList(pathsInFile, paths, tagFilter);
+        // dir prefix in dummy column & filter be removed
+        filePaths.replaceAll(s -> s.substring(s.indexOf(".") + 1));
         if (!filePaths.isEmpty()) {
           List<Column> columns =
               projectInParquet(filePaths, filter, dataFile.getPath(), null, Long.MAX_VALUE);
@@ -244,7 +252,7 @@ public class DUManager {
     return new ArrayList<>(dataMap.values());
   }
 
-  private List<Column> projectInMemTable(List<String> paths, String filter) throws SQLException {
+  private List<Column> projectInMemTable(List<String> paths, Filter filter) throws SQLException {
     try {
       memTableLock.readLock().lock();
 
@@ -255,8 +263,7 @@ public class DUManager {
       paths.forEach(
           path -> builder.append(path.replaceAll(IGINX_SEPARATOR, PARQUET_SEPARATOR)).append(", "));
       ResultSet rs =
-          stmt.executeQuery(
-              String.format(SELECT_MEM_STMT, builder.toString(), curMemTable, filter));
+          stmt.executeQuery(String.format(SELECT_MEM_STMT, builder.toString(), curMemTable));
       stmt.close();
       conn.close();
 
@@ -270,7 +277,7 @@ public class DUManager {
 
   private List<Column> projectInParquet(
       List<String> paths,
-      String filter,
+      Filter filter,
       String dataPath,
       Map<String, List<KeyRange>> deleteRanges,
       long endTime)
@@ -280,9 +287,12 @@ public class DUManager {
 
     StringBuilder builder = new StringBuilder();
     paths.forEach(
-        path -> builder.append(path.replaceAll(IGINX_SEPARATOR, PARQUET_SEPARATOR)).append(", "));
-    ResultSet rs =
-        stmt.executeQuery(String.format(SELECT_STMT, builder.toString(), dataPath, filter));
+        path ->
+            builder
+                .append("\"")
+                .append(path.replaceAll(IGINX_SEPARATOR, PARQUET_SEPARATOR))
+                .append("\", "));
+    ResultSet rs = stmt.executeQuery(String.format(SELECT_STMT, builder.toString(), dataPath));
     stmt.close();
     conn.close();
 
@@ -323,6 +333,11 @@ public class DUManager {
         continue;
       }
       DataType type = fromParquetDataType(rsMetaData.getColumnTypeName(i));
+      // dummy path should add dir prefix
+      // won't affect deleteRange because deleteRange will be null in dummy
+      if (isDummyStorageUnit) {
+        pathName = embeddedPrefix + "." + pathName;
+      }
       columns.add(new Column(pathName, physicalPath, type));
     }
 
@@ -486,38 +501,38 @@ public class DUManager {
   }
 
   private String generateColInsertStmtBody(DataViewWrapper data) {
-    String[] rowValueArray = new String[data.getKeySize()];
+    StringBuilder[] rowStringBuilderArray = new StringBuilder[data.getKeySize()];
     for (int i = 0; i < data.getKeySize(); i++) {
-      rowValueArray[i] = "(" + data.getKey(i) + ", ";
+      rowStringBuilderArray[i] = new StringBuilder("(" + data.getKey(i) + ", ");
     }
     for (int i = 0; i < data.getPathNum(); i++) {
       BitmapView bitmapView = data.getBitmapView(i);
-
       int index = 0;
       for (int j = 0; j < data.getKeySize(); j++) {
         if (bitmapView.get(j)) {
           DataType type = data.getDataType(i);
           if (type == DataType.BINARY) {
             byte[] bytes = (byte[]) data.getValue(i, index);
-            rowValueArray[j] += "'" + new String(bytes) + "', ";
+            rowStringBuilderArray[j].append("'").append(new String(bytes)).append("', ");
             curMemSize += bytes.length;
           } else {
-            rowValueArray[j] += data.getValue(i, index) + ", ";
+            rowStringBuilderArray[j].append(data.getValue(i, index)).append(", ");
             curMemSize += DataTypeTransformer.getDataSize(type);
           }
           index++;
         } else {
-          rowValueArray[j] += "NULL, ";
+          rowStringBuilderArray[j].append("NULL, ");
         }
       }
     }
+
     for (int i = 0; i < data.getKeySize(); i++) {
-      rowValueArray[i] += "), ";
+      rowStringBuilderArray[i].append("), ");
     }
 
     StringBuilder builder = new StringBuilder();
-    for (String row : rowValueArray) {
-      builder.append(row);
+    for (StringBuilder row : rowStringBuilderArray) {
+      builder.append(row.toString());
     }
     return builder.toString();
   }
@@ -723,7 +738,7 @@ public class DUManager {
             ((String) rs.getObject(NAME)).replaceAll(PARQUET_SEPARATOR, IGINX_SEPARATOR);
         DataType type = fromDuckDBDataType((String) rs.getObject(COLUMN_TYPE));
         if (!pathName.equals(DUCKDB_SCHEMA) && !pathName.equals(COLUMN_KEY)) {
-          ret.put(pathName, type);
+          ret.put(embeddedPrefix + "." + pathName, type);
         }
       }
       stmt.close();

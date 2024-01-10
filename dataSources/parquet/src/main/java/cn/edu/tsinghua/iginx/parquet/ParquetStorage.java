@@ -21,7 +21,6 @@ import cn.edu.tsinghua.iginx.parquet.exec.Executor;
 import cn.edu.tsinghua.iginx.parquet.exec.NewExecutor;
 import cn.edu.tsinghua.iginx.parquet.exec.RemoteExecutor;
 import cn.edu.tsinghua.iginx.parquet.server.ParquetServer;
-import cn.edu.tsinghua.iginx.parquet.tools.FilterTransformer;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import java.sql.Connection;
@@ -67,6 +66,7 @@ public class ParquetStorage implements IStorage {
     Map<String, String> extraParams = meta.getExtraParams();
     String dataDir = extraParams.get("dir");
     String dummyDir = extraParams.get("dummy_dir");
+    String dirPrefix = extraParams.get("embedded_prefix");
 
     Connection connection;
     try {
@@ -76,7 +76,8 @@ public class ParquetStorage implements IStorage {
     }
 
     this.executor =
-        new NewExecutor(connection, meta.isHasData(), meta.isReadOnly(), dataDir, dummyDir);
+        new NewExecutor(
+            connection, meta.isHasData(), meta.isReadOnly(), dataDir, dummyDir, dirPrefix);
     this.server = new ParquetServer(meta.getPort(), executor);
     this.thread = new Thread(server);
     thread.start();
@@ -111,11 +112,7 @@ public class ParquetStorage implements IStorage {
                 new KeyFilter(Op.GE, keyInterval.getStartKey()),
                 new KeyFilter(Op.L, keyInterval.getEndKey())));
     return executor.executeProjectTask(
-        project.getPatterns(),
-        project.getTagFilter(),
-        FilterTransformer.toString(filter),
-        dataArea.getStorageUnit(),
-        false);
+        project.getPatterns(), project.getTagFilter(), filter, dataArea.getStorageUnit(), false);
   }
 
   @Override
@@ -127,11 +124,7 @@ public class ParquetStorage implements IStorage {
                 new KeyFilter(Op.GE, keyInterval.getStartKey()),
                 new KeyFilter(Op.L, keyInterval.getEndKey())));
     return executor.executeProjectTask(
-        project.getPatterns(),
-        project.getTagFilter(),
-        FilterTransformer.toString(filter),
-        dataArea.getStorageUnit(),
-        true);
+        project.getPatterns(), project.getTagFilter(), filter, dataArea.getStorageUnit(), true);
   }
 
   @Override
@@ -142,23 +135,29 @@ public class ParquetStorage implements IStorage {
   @Override
   public TaskExecuteResult executeProjectWithSelect(
       Project project, Select select, DataArea dataArea) {
+    KeyInterval keyInterval = dataArea.getKeyInterval();
+    Filter filter =
+        new AndFilter(
+            Arrays.asList(
+                new KeyFilter(Op.GE, keyInterval.getStartKey()),
+                new KeyFilter(Op.L, keyInterval.getEndKey()),
+                select.getFilter()));
     return executor.executeProjectTask(
-        project.getPatterns(),
-        project.getTagFilter(),
-        FilterTransformer.toString(select.getFilter()),
-        dataArea.getStorageUnit(),
-        false);
+        project.getPatterns(), project.getTagFilter(), filter, dataArea.getStorageUnit(), false);
   }
 
   @Override
   public TaskExecuteResult executeProjectDummyWithSelect(
       Project project, Select select, DataArea dataArea) {
+    KeyInterval keyInterval = dataArea.getKeyInterval();
+    Filter filter =
+        new AndFilter(
+            Arrays.asList(
+                new KeyFilter(Op.GE, keyInterval.getStartKey()),
+                new KeyFilter(Op.L, keyInterval.getEndKey()),
+                select.getFilter()));
     return executor.executeProjectTask(
-        project.getPatterns(),
-        project.getTagFilter(),
-        FilterTransformer.toString(select.getFilter()),
-        dataArea.getStorageUnit(),
-        true);
+        project.getPatterns(), project.getTagFilter(), filter, dataArea.getStorageUnit(), true);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package cn.edu.tsinghua.iginx.integration.controller;
 
+import static cn.edu.tsinghua.iginx.constant.GlobalConstant.CLEAR_DUMMY_DATA_CAUTION;
 import static org.junit.Assert.fail;
 
 import cn.edu.tsinghua.iginx.exceptions.ExecutionException;
@@ -12,7 +13,9 @@ import cn.edu.tsinghua.iginx.session.SessionExecuteSqlResult;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
 import cn.edu.tsinghua.iginx.utils.ShellRunner;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +23,6 @@ import org.slf4j.LoggerFactory;
 public class Controller {
 
   private static final Logger logger = LoggerFactory.getLogger(Controller.class);
-
-  public static final String CLEAR_DATA_EXCEPTION =
-      "cn.edu.tsinghua.iginx.exceptions.ExecutionException: Caution: can not clear the data of read-only node.";
 
   public static final String CLEAR_DATA = "CLEAR DATA;";
 
@@ -36,6 +36,19 @@ public class Controller {
 
   private static final String MVN_RUN_TEST = "../.github/scripts/test/test_union.sh";
 
+  public static final Map<String, Boolean> SUPPORT_KEY =
+      new HashMap<String, Boolean>() {
+        {
+          put("filesystem", false);
+          put("iotdb12", true);
+          put("influxdb", true);
+          put("postgresql", false);
+          put("redis", false);
+          put("mongodb", false);
+          put("parquet", true);
+        }
+      };
+
   private List<StorageEngineMeta> storageEngineMetas = new ArrayList<>();
 
   public static void clearData(Session session) {
@@ -47,7 +60,7 @@ public class Controller {
     try {
       res = session.executeSql(CLEAR_DATA);
     } catch (SessionException | ExecutionException e) {
-      if (e.toString().trim().equals(CLEAR_DATA_EXCEPTION)) {
+      if (e.toString().trim().contains(CLEAR_DUMMY_DATA_CAUTION)) {
         logger.warn(CLEAR_DATA_WARNING);
       } else {
         logger.error(CLEAR_DATA_ERROR, CLEAR_DATA, e.getMessage());
