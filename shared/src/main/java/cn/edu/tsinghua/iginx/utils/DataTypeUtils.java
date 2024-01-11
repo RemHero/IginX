@@ -117,10 +117,10 @@ public class DataTypeUtils {
         strValue = Integer.toString((int) object);
         break;
       case DOUBLE:
-        strValue = Double.toString((double) object);
+        strValue = String.format("%.4f", (double) object);
         break;
       case FLOAT:
-        strValue = Float.toString((float) object);
+        strValue = String.format("%.4f", (float) object);
         break;
       case BOOLEAN:
         strValue = Boolean.toString((boolean) object);
