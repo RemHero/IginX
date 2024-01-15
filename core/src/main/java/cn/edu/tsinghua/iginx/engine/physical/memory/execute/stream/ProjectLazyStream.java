@@ -21,12 +21,12 @@ package cn.edu.tsinghua.iginx.engine.physical.memory.execute.stream;
 import static cn.edu.tsinghua.iginx.engine.shared.Constants.KEY;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Project;
 import cn.edu.tsinghua.iginx.utils.StringUtils;
+import jdk.incubator.vector.ByteVector;
+import jdk.incubator.vector.VectorSpecies;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -38,6 +38,8 @@ public class ProjectLazyStream extends UnaryLazyStream {
   private Header header;
 
   private Row nextRow = null;
+  private long execTime = 0;
+  VectorSpecies<Byte> BYTE_SPECIES = ByteVector.SPECIES_PREFERRED;
 
   public ProjectLazyStream(Project project, RowStream stream) {
     super(stream);
@@ -108,11 +110,49 @@ public class ProjectLazyStream extends UnaryLazyStream {
 
   @Override
   public Row next() throws PhysicalException {
+    long startTime = System.nanoTime();
     if (!hasNext()) {
       throw new IllegalStateException("row stream doesn't have more data!");
     }
     Row row = nextRow;
     nextRow = null;
+    long endTime = System.nanoTime();
+    execTime += (endTime - startTime);
     return row;
+  }
+
+  @Override
+  public Batch nextBatch() throws PhysicalException {
+    long startTime = System.nanoTime();
+    int length = BYTE_SPECIES.length();
+    Batch batch = null;
+    while (stream.hasNextBatch()) {
+      boolean isAllZero = true;
+      int i = 0;
+      batch = stream.nextBatch();
+      byte[] bitmap = batch.getBitmap();
+      for (; i <= bitmap.length - length; i += length) {
+        var byteVector = ByteVector.fromArray(BYTE_SPECIES, bitmap, i);
+        if (!byteVector.eq((byte) 0).allTrue()) {
+          isAllZero = false;
+          break;
+        }
+      }
+      if (!isAllZero) break;
+    }
+    long endTime = System.nanoTime();
+    execTime += (endTime - startTime);
+    return batch;
+  }
+
+  @Override
+  public boolean hasNextBatch() throws PhysicalException {
+    return stream.hasNextBatch();
+  }
+
+  @Override
+  public String printExecTime() throws PhysicalException {
+    System.out.println(stream.printExecTime());
+    return "Project Exec Time: " + execTime;
   }
 }

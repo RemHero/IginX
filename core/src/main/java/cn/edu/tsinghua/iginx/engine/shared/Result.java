@@ -1,10 +1,7 @@
 package cn.edu.tsinghua.iginx.engine.shared;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.*;
 import cn.edu.tsinghua.iginx.engine.shared.file.CSVFile;
 import cn.edu.tsinghua.iginx.engine.shared.file.write.ExportCsv;
 import cn.edu.tsinghua.iginx.exceptions.StatusCode;
@@ -216,6 +213,15 @@ public class Result {
 
       int cnt = 0;
       boolean hasKey = resultStream.getHeader().hasKey();
+      long startTime = System.currentTimeMillis();
+
+      List<Batch> results = new ArrayList<>();
+//      while (resultStream.hasNextBatch()) {
+//        results.add(resultStream.nextBatch());
+//      }
+
+
+
       while (resultStream.hasNext() && cnt < fetchSize) {
         Row row = resultStream.next();
 
@@ -237,6 +243,12 @@ public class Result {
         bitmapList.add(ByteBuffer.wrap(bitmap.getBytes()));
         cnt++;
       }
+
+      long span = System.currentTimeMillis() - startTime;
+      System.out.println("All exec time:" + span);
+
+      System.out.println(resultStream.printExecTime());
+
       resp.setColumns(paths);
       resp.setTagsList(tagsList);
       resp.setDataTypeList(types);

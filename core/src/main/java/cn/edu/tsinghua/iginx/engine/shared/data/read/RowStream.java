@@ -20,6 +20,7 @@ package cn.edu.tsinghua.iginx.engine.shared.data.read;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.shared.RequestContext;
+import cn.edu.tsinghua.iginx.transform.data.BatchData;
 
 public interface RowStream {
 
@@ -34,6 +35,18 @@ public interface RowStream {
   default void setContext(RequestContext context) {}
 
   default RequestContext getContext() {
+    return null;
+  }
+
+  default Batch nextBatch() throws PhysicalException {
+    return null;
+  }
+
+  default boolean hasNextBatch() throws PhysicalException {
+    return false;
+  }
+
+  default String printExecTime() throws PhysicalException {
     return null;
   }
 }

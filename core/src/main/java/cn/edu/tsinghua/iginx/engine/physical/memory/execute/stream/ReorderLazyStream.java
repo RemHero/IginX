@@ -1,10 +1,7 @@
 package cn.edu.tsinghua.iginx.engine.physical.memory.execute.stream;
 
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Reorder;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import cn.edu.tsinghua.iginx.utils.StringUtils;
@@ -23,6 +20,7 @@ public class ReorderLazyStream extends UnaryLazyStream {
   private Map<Integer, Integer> reorderMap;
 
   private Row nextRow = null;
+  private long execTime = 0;
 
   public ReorderLazyStream(Reorder reorder, RowStream stream) {
     super(stream);
@@ -99,11 +97,30 @@ public class ReorderLazyStream extends UnaryLazyStream {
 
   @Override
   public Row next() throws PhysicalException {
+    long startTime = System.nanoTime();
     if (!hasNext()) {
       throw new IllegalStateException("row stream doesn't have more data!");
     }
     Row row = nextRow;
     nextRow = null;
+    long endTime = System.nanoTime();
+    execTime += (endTime - startTime);
     return row;
+  }
+
+  @Override
+  public Batch nextBatch() throws PhysicalException {
+    return stream.nextBatch();
+  }
+
+  @Override
+  public boolean hasNextBatch() throws PhysicalException {
+    return stream.hasNextBatch();
+  }
+
+  @Override
+  public String printExecTime() throws PhysicalException {
+    System.out.println(stream.printExecTime());
+    return "Reorder Exec Time: " + execTime;
   }
 }

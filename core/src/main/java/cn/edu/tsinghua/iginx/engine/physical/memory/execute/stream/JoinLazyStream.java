@@ -21,11 +21,11 @@ package cn.edu.tsinghua.iginx.engine.physical.memory.execute.stream;
 import cn.edu.tsinghua.iginx.engine.physical.exception.InvalidOperatorParameterException;
 import cn.edu.tsinghua.iginx.engine.physical.exception.PhysicalException;
 import cn.edu.tsinghua.iginx.engine.shared.Constants;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Field;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Header;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.Row;
-import cn.edu.tsinghua.iginx.engine.shared.data.read.RowStream;
+import cn.edu.tsinghua.iginx.engine.shared.data.read.*;
 import cn.edu.tsinghua.iginx.engine.shared.operator.Join;
+import cn.edu.tsinghua.iginx.thrift.DataType;
+import jdk.incubator.vector.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +50,18 @@ public class JoinLazyStream extends BinaryLazyStream {
   private Row nextA;
 
   private Row nextB;
+
+  //vec imp
+  private Batch batchA;
+  private Batch batchB;
+  private Batch batchResult = new Batch();
+  final VectorSpecies<Double> SPECIES_DOUBLE = DoubleVector.SPECIES_PREFERRED;
+  final VectorSpecies<Integer> SPECIES_INTEGER = IntVector.SPECIES_PREFERRED;
+  final VectorSpecies<Long> SPECIES_LONG = LongVector.SPECIES_PREFERRED;
+  private double[] doubleResult = new double[Batch.BATCH_SIZE];
+  private int[] intResult = new int[Batch.BATCH_SIZE];
+  private long[] keyResult = new long[Batch.BATCH_SIZE];
+  private long execTime = 0;
 
   public JoinLazyStream(Join join, RowStream streamA, RowStream streamB) {
     super(streamA, streamB);
@@ -93,25 +105,20 @@ public class JoinLazyStream extends BinaryLazyStream {
       }
     }
     List<Field> newFields = new ArrayList<>();
-    if (hasIntersect) {
-      fieldIndices = new HashMap<>();
-      for (Field field : headerA.getFields()) {
-        if (fieldIndices.containsKey(field)) {
-          continue;
-        }
-        fieldIndices.put(field, newFields.size());
-        newFields.add(field);
+    fieldIndices = new HashMap<>();
+    for (Field field : headerA.getFields()) {
+      if (fieldIndices.containsKey(field)) {
+        continue;
       }
-      for (Field field : headerB.getFields()) {
-        if (fieldIndices.containsKey(field)) {
-          continue;
-        }
-        fieldIndices.put(field, newFields.size());
-        newFields.add(field);
+      fieldIndices.put(field, newFields.size());
+      newFields.add(field);
+    }
+    for (Field field : headerB.getFields()) {
+      if (fieldIndices.containsKey(field)) {
+        continue;
       }
-    } else {
-      newFields.addAll(headerA.getFields());
-      newFields.addAll(headerB.getFields());
+      fieldIndices.put(field, newFields.size());
+      newFields.add(field);
     }
 
     if (joinByTime) {
@@ -148,6 +155,7 @@ public class JoinLazyStream extends BinaryLazyStream {
 
   @Override
   public Row next() throws PhysicalException {
+    long startTime = System.nanoTime();
     if (!hasNext()) {
       throw new IllegalStateException("row stream doesn't have more data!");
     }
@@ -161,17 +169,23 @@ public class JoinLazyStream extends BinaryLazyStream {
       Row row = nextB;
       nextB = null;
       // 做一个转换
+      long endTime = System.nanoTime();
+      execTime += (endTime - startTime);
       return buildRow(null, row);
     }
     if (nextB == null) { // 流 B 被消费完毕
       Row row = nextA;
       nextA = null;
+      long endTime = System.nanoTime();
+      execTime += (endTime - startTime);
       return buildRow(row, null);
     }
     if (joinByOrdinal) {
       Row row = buildRow(nextA, nextB);
       nextA = null;
       nextB = null;
+      long endTime = System.nanoTime();
+      execTime += (endTime - startTime);
       return row;
     }
     if (joinByTime) {
@@ -187,8 +201,12 @@ public class JoinLazyStream extends BinaryLazyStream {
         row = buildRow(null, nextB);
         nextB = null;
       }
+      long endTime = System.nanoTime();
+      execTime += (endTime - startTime);
       return row;
     }
+    long endTime = System.nanoTime();
+    execTime += (endTime - startTime);
     return null;
   }
 
@@ -232,5 +250,83 @@ public class JoinLazyStream extends BinaryLazyStream {
       }
       values[fieldIndices.get(fields.get(i))] = row.getValue(i);
     }
+  }
+
+  @Override
+  public Batch nextBatch() throws PhysicalException {
+    long startTime = System.nanoTime();
+    if (!hasNextBatch()) {
+      throw new IllegalStateException("row stream doesn't have more data!");
+    }
+    if (streamA.hasNextBatch()) {
+      batchA = streamA.nextBatch();
+    }
+    if (streamB.hasNextBatch()) {
+      batchB = streamB.nextBatch();
+    }
+    double[] doubles = null;
+    int[] ints = null;
+    long[] keyInt = null;
+    long[] keyDouble = null;
+
+    if (batchA.getDataType()== DataType.DOUBLE) {
+      doubles = (double[]) batchA.getBatch();
+      keyDouble = (long[]) batchA.getKeys();
+    } else {
+      ints = (int[]) batchA.getBatch();
+      keyInt = (long[]) batchA.getKeys();
+    }
+
+    if (batchB.getDataType()== DataType.DOUBLE) {
+      doubles = (double[]) batchB.getBatch();
+      keyDouble = (long[]) batchA.getKeys();
+    } else {
+      ints = (int[]) batchB.getBatch();
+      keyInt = (long[]) batchA.getKeys();
+    }
+
+    int pos =0;
+    int i=0,j=0;
+    for(;i<keyInt.length;i++) {
+      long key = keyInt[i];
+      LongVector veckey1 = LongVector.broadcast(SPECIES_LONG, key); // Fills the vector with the value
+      for (;j<keyDouble.length;j+=SPECIES_DOUBLE.length()) {
+        LongVector veckey2 = LongVector.fromArray(SPECIES_LONG, keyDouble, j);
+        VectorMask<Long> mask = veckey1.compare(VectorOperators.EQ, veckey2);
+        if (mask.anyTrue()) {
+          for (int p = 0; p < mask.length(); p++) {
+            int tmp = mask.laneIsSet(p) ? 1 : 0;
+            doubleResult[pos] = doubles[j+p];
+            intResult[pos] = ints[j+p];
+            keyResult[pos] = key;
+            pos+=tmp;
+          }
+          break;
+        }
+      }
+    }
+
+    batchResult.setKeys(keyResult);
+    batchResult.setHeader(header);
+    batchResult.setInts(intResult);
+    batchResult.setDoubles(doubleResult);
+    batchResult.setBitmap(batchA.getBitmap());
+
+    long endTime = System.nanoTime();
+    execTime += (endTime - startTime);
+
+    return batchResult;
+  }
+
+  @Override
+  public boolean hasNextBatch() throws PhysicalException {
+    return streamA.hasNextBatch() && streamB.hasNextBatch();
+  }
+
+  @Override
+  public String printExecTime() throws PhysicalException {
+    System.out.println(streamA.printExecTime());
+    System.out.println(streamB.printExecTime());
+    return "Join Exec Time: " + execTime;
   }
 }

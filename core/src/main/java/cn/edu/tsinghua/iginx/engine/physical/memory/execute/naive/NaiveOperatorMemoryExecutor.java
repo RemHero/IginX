@@ -193,6 +193,7 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
   }
 
   private Table transformToTable(RowStream stream) throws PhysicalException {
+    long startTime = System.currentTimeMillis();
     if (stream instanceof Table) {
       return (Table) stream;
     }
@@ -202,6 +203,8 @@ public class NaiveOperatorMemoryExecutor implements OperatorMemoryExecutor {
       rows.add(stream.next());
     }
     stream.close();
+    long span = System.currentTimeMillis() - startTime;
+    System.out.println("Table scan exec time:" + span);
     return new Table(header, rows);
   }
 

@@ -98,7 +98,7 @@ public class IginxClient {
   static String port = "6888";
   static String username = "root";
   static String password = "root";
-  static String fetchSize = "1000";
+  static String fetchSize = "10485760";
 
   static String execute = "";
 
@@ -210,7 +210,7 @@ public class IginxClient {
       username = parseArg(USERNAME_ARGS, USERNAME_NAME, false, "root");
       password = parseArg(PASSWORD_ARGS, PASSWORD_NAME, false, "root");
       execute = parseArg(EXECUTE_ARGS, EXECUTE_NAME, false, "");
-      fetchSize = parseArg(FETCH_SIZE_ARGS, FETCH_SIZE_NAME, false, "1000");
+      fetchSize = parseArg(FETCH_SIZE_ARGS, FETCH_SIZE_NAME, false, "10485760");
 
       session = new Session(host, port, username, password);
       session.openSession();
@@ -395,7 +395,10 @@ public class IginxClient {
       boolean isCancelled = false;
       int total = cache.size() - 1;
 
+      int max = 1000;
       while (res.hasMore()) {
+        max--;
+        if(max<=0)  break;
         System.out.printf(
             "Reach the max_display_num = %s. Press ENTER to show more, input 'q' to quit.",
             Integer.parseInt(fetchSize));
@@ -442,7 +445,10 @@ public class IginxClient {
     }
 
     int rowIndex = 0;
+    int max = 1000;
     while (queryDataSet.hasMore() && rowIndex < Integer.parseInt(fetchSize)) {
+      max--;
+      if(max<=0)  break;
       List<String> strRow = new ArrayList<>();
       Object[] nextRow = queryDataSet.nextRow();
       if (nextRow != null) {
