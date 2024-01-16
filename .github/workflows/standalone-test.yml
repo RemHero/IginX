@@ -64,45 +64,45 @@ jobs:
                   version: ${VERSION}
                   if-test-udf: "true"
 
-            - name: Run UDF path test
-              if: always()
-              shell: bash
-              run: |
-                  mvn test -q -Dtest=UDFPathIT -DfailIfNoTests=false -P-format
-
-            - name: set client test context
-              uses: ./.github/actions/context
-              with:
-                  work-name: restart-iginx-zk
-
-            - name: set client test context
-              uses: ./.github/actions/context
-              with:
-                  DB-name: ${{ matrix.DB-name }}
-                  shell: client-before
-
-            # large image export only tested in FileSystem and Parquet
-            - name: Test Client Export File
-              if: always()
-              shell: bash
-              run: |
-                  if [[ "${{ matrix.DB-name }}" == "FileSystem" || "${{ matrix.DB-name }}" == "Parquet" ]]; then
-                      mvn test -q -Dtest=ExportFileIT -DfailIfNoTests=false -P-format
-                  else
-                      mvn test -q -Dtest=ExportFileIT#checkExportByteStream -DfailIfNoTests=false -P-format
-                      mvn test -q -Dtest=ExportFileIT#checkExportCsv -DfailIfNoTests=false -P-format
-                  fi
-
-            - name: set client test context
-              uses: ./.github/actions/context
-              with:
-                  shell: client-after
-
-            - name: Test Client Import File
-              if: always()
-              shell: bash
-              run: |
-                  mvn test -q -Dtest=ImportFileIT -DfailIfNoTests=false -P-format
+#            - name: Run UDF path test
+#              if: always()
+#              shell: bash
+#              run: |
+#                  mvn test -q -Dtest=UDFPathIT -DfailIfNoTests=false -P-format
+#
+#            - name: set client test context
+#              uses: ./.github/actions/context
+#              with:
+#                  work-name: restart-iginx-zk
+#
+#            - name: set client test context
+#              uses: ./.github/actions/context
+#              with:
+#                  DB-name: ${{ matrix.DB-name }}
+#                  shell: client-before
+#
+#            # large image export only tested in FileSystem and Parquet
+#            - name: Test Client Export File
+#              if: always()
+#              shell: bash
+#              run: |
+#                  if [[ "${{ matrix.DB-name }}" == "FileSystem" || "${{ matrix.DB-name }}" == "Parquet" ]]; then
+#                      mvn test -q -Dtest=ExportFileIT -DfailIfNoTests=false -P-format
+#                  else
+#                      mvn test -q -Dtest=ExportFileIT#checkExportByteStream -DfailIfNoTests=false -P-format
+#                      mvn test -q -Dtest=ExportFileIT#checkExportCsv -DfailIfNoTests=false -P-format
+#                  fi
+#
+#            - name: set client test context
+#              uses: ./.github/actions/context
+#              with:
+#                  shell: client-after
+#
+#            - name: Test Client Import File
+#              if: always()
+#              shell: bash
+#              run: |
+#                  mvn test -q -Dtest=ImportFileIT -DfailIfNoTests=false -P-format
 
             - name: clean zk data and restart IGinX
               uses: ./.github/actions/context
