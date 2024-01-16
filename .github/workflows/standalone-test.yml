@@ -114,7 +114,7 @@ jobs:
               shell: bash
               run: |
                   chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/test_union.sh"
-                  mvn test -q -Dtest=Controller -DfailIfNoTests=false -P-format
+                  mvn test -Dtest=RestIT -DfailIfNoTests=false -P-format
 
             - name: Change IGinX config
               uses: ./.github/actions/confWriter
