@@ -50,7 +50,7 @@ jobs:
               if: always()
               shell: bash
               run: |
-                  mvn test -q -Dtest=MixClusterShowColumnsRegressionTest -DfailIfNoTests=false -P-format
+                  mvn test -q -Dtest=MixClusterShowColumnsRegressionTest "-Dsurefire.failIfNoSpecifiedTests=false" -P-format
 
             - name: Show IGinX log
               if: always()
