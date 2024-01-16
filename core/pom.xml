@@ -241,6 +241,14 @@
                     <verbose>false</verbose>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <argLine>--add-modules jdk.incubator.vector</argLine>
+                </configuration>
+            </plugin>
             <!--docker镜像生成-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
