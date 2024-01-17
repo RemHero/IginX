@@ -24,6 +24,7 @@ public class RestIT {
   private boolean isAbleToDelete = true;
 
   public RestIT() {
+    System.out.println("RestIT Begin!");
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     DBConf dbConf = conf.loadDBConf(conf.getStorageType());
     this.isAbleToClearData = dbConf.getEnumValue(DBConf.DBConfType.isAbleToClearData);
