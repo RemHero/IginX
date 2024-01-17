@@ -74,4 +74,9 @@ public class RpcUtils {
   public static boolean verifyNoRedirect(Status status) {
     return status.code != StatusCode.REDIRECT.getStatusCode();
   }
+
+  public static int getLineNumber() {
+    // 返回调用 getLineNumber 方法的代码行数
+    return Thread.currentThread().getStackTrace()[2].getLineNumber();
+  }
 }

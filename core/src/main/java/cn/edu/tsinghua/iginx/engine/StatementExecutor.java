@@ -250,10 +250,13 @@ public class StatementExecutor {
       ctx.setResult(new Result(RpcUtils.SERVICE_UNAVAILABLE));
       return;
     }
+    System.out.println(RpcUtils.getLineNumber());
     before(ctx, preExecuteProcessors);
     if (ctx.isFromSQL()) {
+      System.out.println(RpcUtils.getLineNumber());
       executeSQL(ctx);
     } else {
+      System.out.println(RpcUtils.getLineNumber());
       executeStatement(ctx);
     }
     after(ctx, postExecuteProcessors);
@@ -290,6 +293,7 @@ public class StatementExecutor {
           case DELETE:
           case INSERT:
           case SHOW_COLUMNS:
+            System.out.println(RpcUtils.getLineNumber());
             process(ctx);
             return;
           case INSERT_FROM_SELECT:
@@ -331,12 +335,15 @@ public class StatementExecutor {
   }
 
   private void process(RequestContext ctx) throws ExecutionException, PhysicalException {
+    System.out.println(RpcUtils.getLineNumber());
     StatementType type = ctx.getStatement().getType();
     List<LogicalGenerator> generatorList = generatorMap.get(type);
     for (LogicalGenerator generator : generatorList) {
+      System.out.println(RpcUtils.getLineNumber());
       before(ctx, preLogicalProcessors);
       Operator root = generator.generate(ctx);
       after(ctx, postLogicalProcessors);
+      System.out.println(RpcUtils.getLineNumber());
       if (root == null && !metaManager.hasWritableStorageEngines()) {
         ctx.setResult(new Result(RpcUtils.SUCCESS));
         setResult(ctx, new EmptyRowStream());

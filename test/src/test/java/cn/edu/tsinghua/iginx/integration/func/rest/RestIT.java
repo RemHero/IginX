@@ -105,7 +105,7 @@ public class RestIT {
 
   public void printLog() {
     try {
-      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", "cat iginx-*.log");
+      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", "cat /Users/runner/work/IGinX/IGinX/iginx-*.log");
       Process process = processBuilder.start();
 
       BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

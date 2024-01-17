@@ -23,6 +23,7 @@ import cn.edu.tsinghua.iginx.rest.bean.QueryResultDataset;
 import cn.edu.tsinghua.iginx.session.SessionQueryDataSet;
 import cn.edu.tsinghua.iginx.thrift.AggregateType;
 import cn.edu.tsinghua.iginx.thrift.TimePrecision;
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import cn.edu.tsinghua.iginx.utils.TimeUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,11 +121,15 @@ public abstract class QueryAggregator {
       long startKey,
       long endKey,
       TimePrecision timePrecision) {
+    System.out.println(RpcUtils.getLineNumber());
     SessionQueryDataSet sessionQueryDataSet = null;
     try {
+      System.out.println(RpcUtils.getLineNumber());
       if (type == QueryAggregatorType.NONE) {
+        System.out.println(RpcUtils.getLineNumber());
         sessionQueryDataSet = session.queryData(paths, startKey, endKey, tagList, timePrecision);
       } else if (aggregateType != null) {
+        System.out.println(RpcUtils.getLineNumber());
         sessionQueryDataSet =
             session.downsampleQuery(
                 paths, tagList, startKey, endKey, aggregateType, getDur(), timePrecision);
@@ -134,10 +139,12 @@ public abstract class QueryAggregator {
       e.printStackTrace();
       return new QueryResultDataset();
     }
+    System.out.println(RpcUtils.getLineNumber());
     if (sessionQueryDataSet == null) {
       // type != QueryAggregatorType.NONE) and aggregateType == null
       throw new RuntimeException("Unsupported Query");
     }
+    System.out.println(RpcUtils.getLineNumber());
     QueryResultDataset queryResultDataset = new QueryResultDataset();
     queryResultDataset.setPaths(getPathsFromSessionQueryDataSet(sessionQueryDataSet));
     int n = sessionQueryDataSet.getKeys().length;
@@ -145,6 +152,7 @@ public abstract class QueryAggregator {
     if (sessionQueryDataSet.getPaths() != null) {
       m = sessionQueryDataSet.getPaths().size();
     }
+    System.out.println(RpcUtils.getLineNumber());
     int datapoints = 0;
     for (int j = 0; j < m; j++) {
       List<Object> value = new ArrayList<>();
@@ -158,9 +166,11 @@ public abstract class QueryAggregator {
           datapoints += 1;
         }
       }
+      System.out.println(RpcUtils.getLineNumber());
       queryResultDataset.addValueLists(value);
       queryResultDataset.addKeyLists(time);
     }
+    System.out.println(RpcUtils.getLineNumber());
     queryResultDataset.setSampleSize(datapoints);
     return queryResultDataset;
   }

@@ -45,6 +45,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,11 +207,15 @@ public class MetricsResource {
     threadPool.execute(new InsertWorker(asyncResponse, httpheaders, stream, false));
   }
 
+
+
   @POST
   @Path(QUERY_URL)
   public Response postQuery(final InputStream stream) {
     try {
+      System.out.println(RpcUtils.getLineNumber());
       String str = inputStreamToString(stream);
+      System.out.println(RpcUtils.getLineNumber());
       return postQuery(str, false, false, false);
     } catch (Exception e) {
       logger.error("Error occurred during execution ", e);
@@ -272,14 +278,17 @@ public class MetricsResource {
   }
 
   private static String inputStreamToString(InputStream inputStream) throws Exception {
+    System.out.println(RpcUtils.getLineNumber());
     StringBuilder buffer = new StringBuilder();
     InputStreamReader inputStreamReader =
         new InputStreamReader(inputStream, StandardCharsets.UTF_8);
     BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
     String str;
+    System.out.println(RpcUtils.getLineNumber());
     while ((str = bufferedReader.readLine()) != null) {
       buffer.append(str);
     }
+    System.out.println(RpcUtils.getLineNumber());
     bufferedReader.close();
     inputStreamReader.close();
     inputStream.close();
@@ -287,7 +296,9 @@ public class MetricsResource {
   }
 
   private QueryResult normalQuery(Query query) throws Exception {
+    System.out.println(RpcUtils.getLineNumber());
     QueryExecutor executor = new QueryExecutor(query);
+    System.out.println(RpcUtils.getLineNumber());
     return executor.execute(false);
   }
 
@@ -333,26 +344,33 @@ public class MetricsResource {
   private Response postQuery(
       String jsonStr, boolean isAnnotation, boolean isAnnoData, boolean isGrafana) {
     try {
+      System.out.println(RpcUtils.getLineNumber());
       if (jsonStr == null) {
         throw new Exception("query json must not be null or empty");
       }
+      System.out.println(RpcUtils.getLineNumber());
       QueryParser parser = new QueryParser();
       String entity;
       Query query =
           isAnnotation
               ? parser.parseAnnotationQueryMetric(jsonStr, isGrafana)
               : parser.parseQueryMetric(jsonStr);
+      System.out.println(RpcUtils.getLineNumber());
       if (!isAnnotation) {
+        System.out.println(RpcUtils.getLineNumber());
         QueryResult result = normalQuery(query);
         entity = parser.parseResultToJson(result, false);
       } else if (isAnnoData) {
+        System.out.println(RpcUtils.getLineNumber());
         QueryResult result = annoDataQuery(query, parser);
         entity = parser.parseAnnoDataResultToJson(result);
       } else { // 只查询anno信息
+        System.out.println(RpcUtils.getLineNumber());
         QueryResult result = annoQuery(parser, jsonStr);
         parser.getAnnoCategory(result);
         entity = parser.parseAnnoResultToJson(result);
       }
+      System.out.println(RpcUtils.getLineNumber());
       return setHeaders(Response.status(Status.OK).entity(entity + "\n")).build();
     } catch (Exception e) {
       logger.error("Error occurred during execution ", e);

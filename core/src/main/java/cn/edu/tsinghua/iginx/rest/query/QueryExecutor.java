@@ -30,6 +30,8 @@ import cn.edu.tsinghua.iginx.rest.query.aggregator.QueryAggregatorNone;
 import cn.edu.tsinghua.iginx.rest.query.aggregator.QueryShowColumns;
 import cn.edu.tsinghua.iginx.thrift.TimePrecision;
 import java.util.*;
+
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +59,13 @@ public class QueryExecutor {
   }
 
   public QueryResult execute(boolean isDelete) throws Exception {
+    System.out.println(RpcUtils.getLineNumber());
     QueryResult ret = new QueryResult();
     try {
+      System.out.println(RpcUtils.getLineNumber());
       session.openSession();
       for (QueryMetric queryMetric : query.getQueryMetrics()) {
+        System.out.println(RpcUtils.getLineNumber());
         List<String> paths = new ArrayList<>();
         paths.add(queryMetric.getName());
         if (isDelete) {
@@ -74,6 +79,7 @@ public class QueryExecutor {
               query.getTimePrecision());
           session.closeSession();
         } else if (queryMetric.getAggregators().isEmpty()) {
+          System.out.println(RpcUtils.getLineNumber());
           ret.addResultSet(
               new QueryAggregatorNone()
                   .doAggregate(
@@ -86,6 +92,7 @@ public class QueryExecutor {
               queryMetric,
               new QueryAggregatorNone());
         } else {
+          System.out.println(RpcUtils.getLineNumber());
           for (QueryAggregator queryAggregator : queryMetric.getAggregators()) {
             ret.addResultSet(
                 queryAggregator.doAggregate(

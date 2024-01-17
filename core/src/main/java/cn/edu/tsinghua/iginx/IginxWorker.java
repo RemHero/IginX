@@ -228,9 +228,11 @@ public class IginxWorker implements IService.Iface {
 
   @Override
   public QueryDataResp queryData(QueryDataReq req) {
+    System.out.println(RpcUtils.getLineNumber());
     if (!sessionManager.checkSession(req.getSessionId(), AuthType.Read)) {
       return new QueryDataResp(RpcUtils.ACCESS_DENY);
     }
+    System.out.println(RpcUtils.getLineNumber());
     RequestContext ctx = contextBuilder.build(req);
     executor.execute(ctx);
     return ctx.getResult().getQueryDataResp();
