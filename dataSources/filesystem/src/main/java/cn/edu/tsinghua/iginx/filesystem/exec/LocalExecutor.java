@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,19 +115,24 @@ public class LocalExecutor implements Executor {
       Filter filter,
       String storageUnit,
       boolean isDummyStorageUnit) {
+    logger.info(RpcUtils.getLineNumber());
     if (isDummyStorageUnit) {
+      logger.info(RpcUtils.getLineNumber());
       if (tagFilter != null) {
         logger.error("dummy storage query should not contain tag filter");
         return new TaskExecuteResult(new EmptyRowStream());
       }
+      logger.info(RpcUtils.getLineNumber());
       return executeDummyProjectTask(paths, filter);
     }
+    logger.info(RpcUtils.getLineNumber());
     return executeQueryTask(storageUnit, paths, tagFilter, filter);
   }
 
   public TaskExecuteResult executeQueryTask(
       String storageUnit, List<String> paths, TagFilter tagFilter, Filter filter) {
     try {
+      logger.info(RpcUtils.getLineNumber());
       List<FileSystemResultTable> result = new ArrayList<>();
       logger.info("[Query] execute query file: {}", paths);
       List<KeyRange> keyRanges = getKeyRangesFromFilter(filter);

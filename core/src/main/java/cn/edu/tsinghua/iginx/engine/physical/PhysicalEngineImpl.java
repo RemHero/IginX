@@ -37,6 +37,8 @@ import cn.edu.tsinghua.iginx.engine.shared.operator.type.OperatorType;
 import cn.edu.tsinghua.iginx.migration.MigrationPhysicalExecutor;
 import java.util.ArrayList;
 import java.util.List;
+
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +70,7 @@ public class PhysicalEngineImpl implements PhysicalEngine {
 
   @Override
   public RowStream execute(RequestContext ctx, Operator root) throws PhysicalException {
+    logger.info(RpcUtils.getLineNumber());
     if (OperatorType.isGlobalOperator(root.getType())) { // 全局任务临时兼容逻辑
       // 迁移任务单独处理
       if (root.getType() == OperatorType.Migration) {
@@ -82,15 +85,23 @@ public class PhysicalEngineImpl implements PhysicalEngine {
         return result.getRowStream();
       }
     }
+    logger.info(RpcUtils.getLineNumber());
     PhysicalTask task = optimizer.optimize(root, ctx);
+    logger.info(RpcUtils.getLineNumber());
     ctx.setPhysicalTree(task);
+    logger.info(RpcUtils.getLineNumber());
     List<PhysicalTask> bottomTasks = new ArrayList<>();
+    logger.info(RpcUtils.getLineNumber());
     getBottomTasks(bottomTasks, task);
+    logger.info(RpcUtils.getLineNumber());
     commitBottomTasks(bottomTasks);
+    logger.info(RpcUtils.getLineNumber());
     TaskExecuteResult result = task.getResult();
+    logger.info(RpcUtils.getLineNumber());
     if (result.getException() != null) {
       throw result.getException();
     }
+    logger.info(RpcUtils.getLineNumber());
     return result.getRowStream();
   }
 

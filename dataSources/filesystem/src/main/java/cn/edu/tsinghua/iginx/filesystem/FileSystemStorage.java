@@ -43,6 +43,8 @@ import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
 import cn.edu.tsinghua.iginx.utils.Pair;
 import java.util.Arrays;
 import java.util.List;
+
+import cn.edu.tsinghua.iginx.utils.RpcUtils;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,26 +61,37 @@ public class FileSystemStorage implements IStorage {
 
   public FileSystemStorage(StorageEngineMeta meta)
       throws StorageInitializationException, TTransportException {
+    logger.info(RpcUtils.getLineNumber());
     if (!meta.getStorageEngine().equals(StorageEngineType.filesystem)) {
       throw new StorageInitializationException("unexpected database: " + meta.getStorageEngine());
     }
 
+    logger.info(RpcUtils.getLineNumber());
     if (isLocal(meta)) {
+      logger.info(RpcUtils.getLineNumber());
       initLocalExecutor(meta);
+      logger.info(RpcUtils.getLineNumber());
     } else {
+      logger.info(RpcUtils.getLineNumber());
       this.executor = new RemoteExecutor(meta.getIp(), meta.getPort(), meta.getExtraParams());
+      logger.info(RpcUtils.getLineNumber());
     }
   }
 
   private void initLocalExecutor(StorageEngineMeta meta) {
+    logger.info(RpcUtils.getLineNumber());
     this.executor = new LocalExecutor(meta.isReadOnly(), meta.isHasData(), meta.getExtraParams());
     this.server = new FileSystemServer(meta.getPort(), executor);
+    logger.info(RpcUtils.getLineNumber());
     this.thread = new Thread(server);
+    logger.info(RpcUtils.getLineNumber());
     thread.start();
+    logger.info(RpcUtils.getLineNumber());
   }
 
   @Override
   public TaskExecuteResult executeProject(Project project, DataArea dataArea) {
+    logger.info(RpcUtils.getLineNumber());
     KeyInterval keyInterval = dataArea.getKeyInterval();
     Filter filter =
         new AndFilter(

@@ -75,8 +75,8 @@ public class RpcUtils {
     return status.code != StatusCode.REDIRECT.getStatusCode();
   }
 
-  public static int getLineNumber() {
+  public static String getLineNumber() {
     // 返回调用 getLineNumber 方法的代码行数
-    return Thread.currentThread().getStackTrace()[2].getLineNumber();
+    return String.valueOf(Thread.currentThread().getStackTrace()[2].getLineNumber());
   }
 }

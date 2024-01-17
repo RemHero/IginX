@@ -345,10 +345,12 @@ public class StatementExecutor {
       after(ctx, postLogicalProcessors);
       System.out.println(RpcUtils.getLineNumber());
       if (root == null && !metaManager.hasWritableStorageEngines()) {
+        logger.info(RpcUtils.getLineNumber());
         ctx.setResult(new Result(RpcUtils.SUCCESS));
         setResult(ctx, new EmptyRowStream());
         return;
       }
+      logger.info(RpcUtils.getLineNumber());
       if (constraintManager.check(root) && checker.check(root)) {
         if (type == StatementType.SELECT) {
           SelectStatement selectStatement = (SelectStatement) ctx.getStatement();
@@ -358,11 +360,16 @@ public class StatementExecutor {
           }
         }
 
+        logger.info(RpcUtils.getLineNumber());
         before(ctx, prePhysicalProcessors);
+        logger.info(RpcUtils.getLineNumber());
         RowStream stream = engine.execute(ctx, root);
+        logger.info(RpcUtils.getLineNumber());
         after(ctx, postPhysicalProcessors);
+        logger.info(RpcUtils.getLineNumber());
 
         if (type == StatementType.SELECT) {
+          logger.info(RpcUtils.getLineNumber());
           SelectStatement selectStatement = (SelectStatement) ctx.getStatement();
           if (selectStatement.isNeedPhysicalExplain()) {
             processExplainPhysicalStatement(ctx);
@@ -370,6 +377,7 @@ public class StatementExecutor {
           }
         }
 
+        logger.info(RpcUtils.getLineNumber());
         setResult(ctx, stream);
         return;
       }
