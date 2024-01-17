@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
     Union-DB-Test:
-        timeout-minutes: 35
+        timeout-minutes: 5
         strategy:
             fail-fast: false
             matrix:
@@ -31,6 +31,14 @@ jobs:
                     ]
         runs-on: ${{ matrix.os }}
         steps:
+            # 设置 Maven 版本
+            - name: Set up Maven
+              uses: actions/setup-java@v2
+              with:
+                  java-version: ${{ matrix.java }}
+                  distribution: 'temurin' # 或者您选择的其他发行版
+                  maven-version: '3.8.6' # 指定 Maven 版
+
             - uses: actions/checkout@v2
             - name: Environment dependence
               uses: ./.github/actions/dependence
@@ -114,7 +122,7 @@ jobs:
               shell: bash
               run: |
                   chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/test_union.sh"
-                  mvn test -Dtest=RestIT "-Dsurefire.failIfNoSpecifiedTests=false" -P-format
+                  mvn test -Dtest=RestIT "-Dsurefire.failIfNoSpecifiedTests=false" -P-format -X
 
             - name: Change IGinX config
               uses: ./.github/actions/confWriter
