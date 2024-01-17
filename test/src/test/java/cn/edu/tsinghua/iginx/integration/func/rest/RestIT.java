@@ -103,6 +103,25 @@ public class RestIT {
     return ret.toString();
   }
 
+  public void printLog() {
+    try {
+      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", "cat iginx-*.log");
+      Process process = processBuilder.start();
+
+      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        System.out.println(line);
+      }
+
+      int exitCode = process.waitFor();
+      System.out.println("\nExited with error code : " + exitCode);
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
   public String execute(String json, TYPE type) throws Exception {
     System.out.println(getLineNumber());
     StringBuilder ret = new StringBuilder();
@@ -112,14 +131,21 @@ public class RestIT {
       ProcessBuilder processBuilder = new ProcessBuilder(curlArray.split(" "));
       processBuilder.directory(new File("./src/test/resources/restIT"));
       // 执行 url 命令
+      printLog();
       process = processBuilder.start();
       System.out.println(getLineNumber());
+      printLog();
 
       // 输出子进程信息
       InputStreamReader inputStreamReaderINFO = new InputStreamReader(process.getInputStream());
+      System.out.println(getLineNumber());
       BufferedReader bufferedReaderINFO = new BufferedReader(inputStreamReaderINFO);
+      System.out.println(getLineNumber());
       String lineStr;
+      printLog();
       while ((lineStr = bufferedReaderINFO.readLine()) != null) {
+        System.out.println(getLineNumber());
+        System.out.println(lineStr);
         ret.append(lineStr);
       }
       System.out.println(getLineNumber());
