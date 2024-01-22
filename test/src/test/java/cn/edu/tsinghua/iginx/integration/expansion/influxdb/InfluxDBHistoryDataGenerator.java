@@ -160,7 +160,7 @@ public class InfluxDBHistoryDataGenerator extends BaseHistoryDataGenerator {
     // find bucket for given port
     List<Bucket> allBuckets = client.getBucketsApi().findBuckets();
     for (Bucket bucket : allBuckets) {
-      if (bucket != null) {
+      if (bucket != null && !bucket.getName().startsWith("_")) {
         client.getBucketsApi().deleteBucket(bucket);
       }
     }
