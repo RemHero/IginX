@@ -66,10 +66,11 @@ jobs:
             - name: Clear history data
               uses: ./.github/actions/dbWriter
               with:
-                  DB-name: ${{ inputs.DB-name }}
+                  DB-name: ${{ matrix.DB-name }}
                   Test-Way: clearHistoryData
 
             - name: oriHasDataExpHasData Normal IT
+              shell: bash
               run: |
                   mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
 
@@ -88,10 +89,11 @@ jobs:
             - name: Clear history data
               uses: ./.github/actions/dbWriter
               with:
-                  DB-name: ${{ inputs.DB-name }}
+                  DB-name: ${{ matrix.DB-name }}
                   Test-Way: clearHistoryData
 
             - name: oriNoDataExpNoData Normal IT
+              shell: bash
               run: |
                   mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
 
@@ -110,10 +112,11 @@ jobs:
             - name: Clear history data
               uses: ./.github/actions/dbWriter
               with:
-                  DB-name: ${{ inputs.DB-name }}
+                  DB-name: ${{ matrix.DB-name }}
                   Test-Way: clearHistoryData
 
             - name: oriHasDataExpNoData Normal IT
+              shell: bash
               run: |
                   mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
 
@@ -132,10 +135,11 @@ jobs:
             - name: Clear history data
               uses: ./.github/actions/dbWriter
               with:
-                  DB-name: ${{ inputs.DB-name }}
+                  DB-name: ${{ matrix.DB-name }}
                   Test-Way: clearHistoryData
 
             - name: oriNoDataExpHasData Normal IT
+              shell: bash
               run: |
                   mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
 
