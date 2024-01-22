@@ -24,7 +24,11 @@ import cn.edu.tsinghua.iginx.thrift.AggregateType;
 import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
 import cn.edu.tsinghua.iginx.thrift.TagFilterType;
+import cn.edu.tsinghua.iginx.utils.ShellRunner;
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -368,11 +372,10 @@ public class NewSessionIT {
       List<Long> sessionIDs = conn.getSessionIDs();
 
       List<Long> existsSessionIDs = conn.executeSql("show sessionid;").getSessionIDs();
-      for (long sessionID : sessionIDs) {
-        if (!existsSessionIDs.contains(sessionID)) {
-          logger.error("server session_id_list does not include an active session ID.");
-          fail();
-        }
+
+      if (!new HashSet<>(existsSessionIDs).equals(new HashSet<>(sessionIDs))) {
+        logger.error("server session_id_list does not equal to active_session_id_list.");
+        fail();
       }
 
       conn.closeSession();
@@ -393,14 +396,30 @@ public class NewSessionIT {
 
   @Test
   public void testCancelClient() {
-    String clientPath = "../client/target/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.sh";
+    // use .sh on unix & .bat on windows(absolute path)
+    String clientUnixPath = "../client/target/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.sh";
+    String clientWinPath = null;
+    try {
+      clientWinPath =
+          new File("../client/target/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.bat")
+              .getCanonicalPath();
+    } catch (IOException e) {
+      logger.info(
+          "Can't find script ../client/target/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.bat");
+      fail();
+    }
     try {
       List<Long> sessionIDs1 = conn.executeSql("show sessionid;").getSessionIDs();
       logger.info("before start a client, session_id_list size: " + sessionIDs1.size());
 
       // start a client
-      Runtime.getRuntime().exec(new String[] {"chmod", "+x", clientPath});
-      ProcessBuilder pb = new ProcessBuilder("bash", "-c", clientPath);
+      ProcessBuilder pb = new ProcessBuilder();
+      if (ShellRunner.isOnWin()) {
+        pb.command(clientWinPath);
+      } else {
+        Runtime.getRuntime().exec(new String[] {"chmod", "+x", clientUnixPath});
+        pb.command("bash", "-c", clientUnixPath);
+      }
       Process p = pb.start();
 
       Thread.sleep(3000);
@@ -414,6 +433,13 @@ public class NewSessionIT {
       logger.info("after start a client, session_id_list size: " + sessionIDs2.size());
 
       // kill the client
+      try (OutputStream os = p.getOutputStream();
+          PrintWriter writer = new PrintWriter(os, true)) {
+        // send exit command to client to close session.
+        // destroy() won't work on windows.
+        writer.println("exit;");
+        writer.flush();
+      }
       p.destroy();
       Thread.sleep(3000);
 
@@ -707,6 +733,7 @@ public class NewSessionIT {
   @Test
   public void testQueryAfterDelete() {
     if (!isAbleToDelete) return;
+
     // single path delete data
     try {
       // first
