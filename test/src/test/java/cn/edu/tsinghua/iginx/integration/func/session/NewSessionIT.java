@@ -66,6 +66,7 @@ public class NewSessionIT {
   private static boolean isInfluxdb = false;
 
   private static boolean isAbleToDelete = true;
+  protected static boolean isScaling = false;
 
   private static boolean dummyNoData = true;
 
@@ -130,6 +131,7 @@ public class NewSessionIT {
     }
     DBConf dbConf = conf.loadDBConf(conf.getStorageType());
     isAbleToDelete = dbConf.getEnumValue(DBConf.DBConfType.isAbleToDelete);
+    isScaling = conf.isScaling();
     if (isForSession) {
       conn =
           new MultiConnection(
@@ -494,6 +496,9 @@ public class NewSessionIT {
 
   @Test
   public void testDeletePaths() {
+    if (!isAbleToDelete || isScaling) {
+      return;
+    }
     // delete single path
     List<String> deleteColumns = Collections.singletonList("us.d1.s2");
     try {
