@@ -15,6 +15,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static cn.edu.tsinghua.iginx.utils.DataTypeUtils.parseStringByDataType;
+
 public class InfluxDBHistoryDataGenerator extends BaseHistoryDataGenerator {
 
   private static final Logger logger = LoggerFactory.getLogger(InfluxDBHistoryDataGenerator.class);
@@ -95,7 +97,7 @@ public class InfluxDBHistoryDataGenerator extends BaseHistoryDataGenerator {
                 Point.measurement(measurementName)
                     .addField(
                         fieldName.substring(0, fieldName.length() - 1),
-                        new String((byte[]) valueList.get(i)))
+                        (String) parseStringByDataType((String) valueList.get(i), DataType.BINARY))
                     .time(timeCnt, WRITE_PRECISION);
             break;
           case DOUBLE:
