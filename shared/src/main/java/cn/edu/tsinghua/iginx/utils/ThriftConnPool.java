@@ -117,7 +117,16 @@ public class ThriftConnPool {
     }
 
     @Override
-    public void activateObject(PooledObject<TTransport> pooledObject) throws Exception {}
+    public void activateObject(PooledObject<TTransport> pooledObject) throws Exception {
+      TTransport transport = pooledObject.getObject();
+      if (transport == null) {
+        TTransport newTransport = new TSocket(ip, port, maxWaitTime);
+        newTransport.open();
+        pooledObject = new DefaultPooledObject<>(newTransport);
+      } else if (!transport.isOpen()) {
+        transport.open();
+      }
+    }
 
     @Override
     public void passivateObject(PooledObject<TTransport> pooledObject) throws Exception {}
