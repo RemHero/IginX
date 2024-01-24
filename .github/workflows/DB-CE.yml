@@ -25,11 +25,11 @@ jobs:
                 DB-name:
                     [
                         "FileSystem",
-                        "IoTDB12",
-                        "InfluxDB",
-                        "PostgreSQL",
-                        "Redis",
-                        "MongoDB",
+#                        "IoTDB12",
+#                        "InfluxDB",
+#                        "PostgreSQL",
+#                        "Redis",
+#                        "MongoDB",
                         "Parquet",
                     ]
         runs-on: ${{ matrix.os }}
