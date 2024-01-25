@@ -75,7 +75,8 @@ jobs:
             - name: list dir
               shell: bash
               run: |
-                  tree ./
+                  ls ../
+                  tree ../test
 
             - name: oriHasDataExpHasData Normal IT
               shell: bash
@@ -89,7 +90,8 @@ jobs:
             - name: list dir
               shell: bash
               run: |
-                  tree ./
+                  ls ../
+                  tree ../test
 
             # 第 2 阶段测试开始==========================================
             - name: Prepare CapExp environment oriNoDataExpNoData
