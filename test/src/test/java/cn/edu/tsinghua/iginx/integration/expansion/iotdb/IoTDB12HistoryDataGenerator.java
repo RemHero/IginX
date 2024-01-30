@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.session.Session;
+import org.apache.iotdb.session.SessionDataSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

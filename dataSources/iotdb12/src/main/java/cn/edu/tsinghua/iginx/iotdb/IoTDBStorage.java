@@ -239,14 +239,19 @@ public class IoTDBStorage implements IStorage {
         String path = record.getFields().get(0).getStringValue();
         path = path.substring(5); // remove root.
         boolean isDummy = true;
+        logger.info("show columns iotdb");
         if (path.startsWith("unit")) {
+          logger.info("show columns iotdb unit");
           path = path.substring(path.indexOf('.') + 1);
           isDummy = false;
         }
         Pair<String, Map<String, String>> pair = TagKVUtils.splitFullName(path);
         String dataTypeName = record.getFields().get(3).getStringValue();
 
+        logger.info("raw columns " + record.getFields().get(2).getStringValue());
         String fragment = isDummy ? "" : record.getFields().get(2).getStringValue().substring(5);
+        logger.info("raw columns fragment " + fragment);
+        logger.info("raw columns pair " + pair.k);
         if (columns2StorageUnit != null) {
           columns2StorageUnit.put(pair.k, fragment);
         }
@@ -273,6 +278,8 @@ public class IoTDBStorage implements IStorage {
         }
       }
       dataSet.close();
+      logger.info("show columns iotdb" + columns);
+      System.out.println(columns);
     } catch (IoTDBConnectionException | StatementExecutionException e) {
       throw new PhysicalTaskExecuteFailureException("get time series failure: ", e);
     }

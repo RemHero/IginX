@@ -187,6 +187,7 @@ public class Controller {
         if (!needWriteHistoryData) {
           break;
         }
+        logger.info("wrong step!");
         int port = IS_EXP_DUMMY ? expPort : oriPort;
         List<List<Object>> rowValues = convertColumnsToRows(valuesList.get(i));
         BaseHistoryDataGenerator generator = getCurrentGenerator(conf);
@@ -265,6 +266,7 @@ public class Controller {
     List<List<Object>> lowerValuesList = null;
     // 划分数据区间
     if (medium != keyList.size() && medium != 0) {
+      logger.info("wrong step!");
       upperkeyList = keyList.subList(0, medium); // 上半部分，包括索引为 0 到 midIndex-1 的元素
       lowerKeyList =
           keyList.subList(medium, keyList.size()); // 下半部分，包括索引为 midIndex 到 keyList.size()-1 的元素
@@ -283,6 +285,7 @@ public class Controller {
     }
 
     try { // write data through session
+      logger.info("write data through session");
       writeDataWithSession(
           session,
           pathList,
@@ -297,6 +300,7 @@ public class Controller {
     }
 
     if (lowerKeyList != null && !lowerKeyList.isEmpty() && needWriteHistoryData) {
+      logger.info("write data through history data generator");
       int port = IS_EXP_DUMMY ? expPort : oriPort;
       BaseHistoryDataGenerator generator = getCurrentGenerator(conf);
       if (generator == null) {
