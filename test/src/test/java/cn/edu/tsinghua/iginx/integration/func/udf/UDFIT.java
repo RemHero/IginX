@@ -107,6 +107,16 @@ public class UDFIT {
               ("\"" + RandomStringUtils.randomAlphanumeric(10) + "\"").getBytes(),
               (i + 0.1d)));
     }
+    String test = "show cluster info;";
+    SessionExecuteSqlResult testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+    test = "show columns;";
+    testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+    test = "select count(*) from *;";
+    testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+
     Controller.writeRowsData(
         session,
         pathList,
@@ -117,6 +127,16 @@ public class UDFIT {
         InsertAPIType.Row,
         dummyNoData);
     dummyNoData = false;
+    test = "show cluster info;";
+    testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+    test = "show columns;";
+    testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+    test = "select count(*) from *;";
+    testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
+
   }
 
   @After
