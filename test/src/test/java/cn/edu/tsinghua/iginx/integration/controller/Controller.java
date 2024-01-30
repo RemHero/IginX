@@ -277,7 +277,6 @@ public class Controller {
     for (int j = 0; j < upperkeyList.size(); j++) {
       Object[] value = new Object[pathList.size()];
       for (int k = 0; k < pathList.size(); k++) {
-
         value[k] = upperValuesList.get(j).get(k);
       }
       newValuesList[j] = value;

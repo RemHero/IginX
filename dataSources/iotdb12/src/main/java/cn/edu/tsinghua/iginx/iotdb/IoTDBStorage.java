@@ -764,10 +764,12 @@ public class IoTDBStorage implements IStorage {
       List<String> paths = delete.getPatterns();
       if (paths.size() == 1 && paths.get(0).equals("*") && delete.getTagFilter() == null) {
         try {
+          logger.info("clear data: " + storageUnit);
           sessionPool.executeNonQueryStatement(
               String.format(DELETE_STORAGE_GROUP_CLAUSE, storageUnit));
         } catch (IoTDBConnectionException | StatementExecutionException e) {
           logger.warn("encounter error when clear data: " + e.getMessage());
+          e.printStackTrace();
           if (!e.getMessage().contains(DOES_NOT_EXISTED)) {
             return new TaskExecuteResult(
                 new PhysicalTaskExecuteFailureException(
