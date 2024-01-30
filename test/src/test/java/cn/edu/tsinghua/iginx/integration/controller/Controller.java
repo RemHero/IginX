@@ -241,6 +241,7 @@ public class Controller {
       List<Map<String, String>> tagsList,
       InsertAPIType type,
       boolean needWriteHistoryData) {
+    logger.info("write rows data" + pathList);
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     // medium 为划分数据的分界点，即前 medium 个数据写入非 dummy 数据库，后 medium 个数据写入 dummy 数据库
     int medium = 0;
