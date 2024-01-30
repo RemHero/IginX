@@ -146,6 +146,9 @@ public class UDFIT {
 
   @Test
   public void baseTests() {
+    String test = "show cluster info;";
+    SessionExecuteSqlResult testret = execute(test);
+    logger.info("check the cluster" + testret.getResultInString(false, ""));
     String showRegisterUDF = "SHOW REGISTER PYTHON TASK;";
     String udtfSQLFormat = "SELECT %s(s1) FROM us.d1 WHERE key < 200;";
     String udafSQLFormat = "SELECT %s(s1) FROM us.d1 OVER (RANGE 50 IN [0, 200));";

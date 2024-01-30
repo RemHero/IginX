@@ -768,7 +768,8 @@ public class IoTDBStorage implements IStorage {
           sessionPool.executeNonQueryStatement(
               String.format(DELETE_STORAGE_GROUP_CLAUSE, storageUnit));
         } catch (IoTDBConnectionException | StatementExecutionException e) {
-          logger.warn("encounter error when clear data: " + e.getMessage());
+          logger.warn("encounter error when clear data: " + e.getMessage() + ", " + storageUnit);
+          logger.info("meta info" + meta.toString());
           e.printStackTrace();
           if (!e.getMessage().contains(DOES_NOT_EXISTED)) {
             return new TaskExecuteResult(
