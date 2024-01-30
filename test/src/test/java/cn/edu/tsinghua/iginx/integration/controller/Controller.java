@@ -163,6 +163,7 @@ public class Controller {
               ? (int) (pathList.size() * PARTITION_POINT)
               : pathList.size();
     }
+    logger.info("show the medium: {}", medium);
 
     for (int i = 0; i < pathList.size(); i++) {
       if (i <= medium) {
@@ -255,6 +256,7 @@ public class Controller {
               ? (int) (keyList.size() * PARTITION_POINT)
               : keyList.size();
     }
+    logger.info("show the medium: {}", medium);
 
     // divide the data
     List<Long> upperkeyList = keyList;
