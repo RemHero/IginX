@@ -27,7 +27,7 @@ public class ConfLoader {
 
   private static final String DB_HISTORY_DATA_GEN_CLASS_NAME = "%s_data_gen_class";
 
-  private static final String DB_PORT_MAP = "%s_data_gen_class";
+  private static final String DB_PORT_MAP = "%s_port";
 
   private static final String RUNNING_STORAGE = "./src/test/resources/DBName.txt";
 
