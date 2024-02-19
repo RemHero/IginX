@@ -247,17 +247,17 @@ public class Controller {
       List<DataType> dataTypeList,
       List<List<Object>> valuesList,
       int port) {
-    System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+    logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
     ConfLoader conf = new ConfLoader(Controller.CONFIG_FILE);
     BaseHistoryDataGenerator generator = getCurrentGenerator(conf);
     if (generator == null) {
-      System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
       logger.error("write data fail, caused by generator is null");
       return;
     }
-    System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+    logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
     if (StorageEngineType.valueOf(conf.getStorageType().toLowerCase()) == parquet) {
-      System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
       ParquetHistoryDataGenerator parquetGenerator = (ParquetHistoryDataGenerator) generator;
       String path = pathList.get(0);
       String tableName = path.substring(0, path.indexOf("."));
@@ -350,10 +350,10 @@ public class Controller {
       }
       newValuesList[j] = value;
     }
-    System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+    logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
 
     try { // write data through session
-      System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
       writeDataWithSession(
           session,
           pathList,
@@ -368,7 +368,7 @@ public class Controller {
     }
 
     if (lowerKeyList != null && !lowerKeyList.isEmpty() && needWriteHistoryData) {
-      System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
       // 需要对4种情况做区分的情况
       Boolean IS_EXP_DUMMY = testConf.getDBCETestWay().contains(EXP_HAS_DATA_STRING);
       Boolean IS_ORI_DUMMY = testConf.getDBCETestWay().contains(ORI_HAS_DATA_STRING);
@@ -392,7 +392,7 @@ public class Controller {
         writeRowsDataToDummy(
             session, pathList, lowerDummyKeyList, dataTypeList, lowerDummyValuesList, expPort);
       } else {
-        System.out.println("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+        logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
         // 如果是has,has情况，则dummy数据的一半写入ori数据库，另一半写入exp数据库
         port = IS_EXP_DUMMY ? expPort : oriPort;
         writeRowsDataToDummy(session, pathList, lowerKeyList, dataTypeList, lowerValuesList, port);

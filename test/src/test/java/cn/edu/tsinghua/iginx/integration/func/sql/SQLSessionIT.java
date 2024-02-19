@@ -228,7 +228,10 @@ public class SQLSessionIT {
 
   @Test
   public void testCountPath() {
-    String statement = "SELECT COUNT(*) FROM us.d1;";
+    String statement = "show cluster info;";
+    System.out.println(executor.execute(statement));
+
+    statement = "SELECT COUNT(*) FROM us.d1;";
     String expected =
         "ResultSets:\n"
             + "+---------------+---------------+---------------+---------------+\n"
