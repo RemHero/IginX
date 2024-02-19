@@ -13,7 +13,6 @@ public abstract class BaseHistoryDataGenerator {
   @Test
   public void oriHasDataExpHasData() {
     writeInitDataToDummy(expPort);
-    writeInitDataToDummy(oriPort);
     writeHistoryDataToOri();
     writeHistoryDataToExp();
     writeHistoryDataToReadOnly();
