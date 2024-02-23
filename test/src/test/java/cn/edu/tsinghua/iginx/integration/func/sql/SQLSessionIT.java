@@ -230,6 +230,8 @@ public class SQLSessionIT {
   public void testCountPath() {
     String statement = "show cluster info;";
     System.out.println(executor.execute(statement));
+    statement = "show columns;";
+    System.out.println(executor.execute(statement));
 
     statement = "SELECT COUNT(*) FROM us.d1;";
     String expected =

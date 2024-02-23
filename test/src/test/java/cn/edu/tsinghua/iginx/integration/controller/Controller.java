@@ -2,8 +2,8 @@ package cn.edu.tsinghua.iginx.integration.controller;
 
 import static cn.edu.tsinghua.iginx.constant.GlobalConstant.CLEAR_DUMMY_DATA_CAUTION;
 import static cn.edu.tsinghua.iginx.integration.expansion.BaseCapacityExpansionIT.DBCE_PARQUET_FS_TEST_DIR;
-import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.expPort;
-import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.oriPort;
+import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.*;
+import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.INIT_VALUES_LIST;
 import static cn.edu.tsinghua.iginx.thrift.StorageEngineType.parquet;
 import static org.junit.Assert.fail;
 
@@ -216,10 +216,27 @@ public class Controller {
               port,
               dir,
               ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+              INIT_PATH_LIST,
+              INIT_DATA_TYPE_LIST,
+              INIT_KEYS_LIST,
+              INIT_VALUES_LIST);
+          parquetGenerator.writeHistoryData(
+              port,
+              dir,
+              ParquetHistoryDataGenerator.IT_DATA_FILENAME,
               Collections.singletonList(pathList.get(i)),
               Collections.singletonList(dataTypeList.get(i)),
               keyList.get(i),
               rowValues);
+          try {
+            addEmbeddedStorageEngine(
+                session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
+          } catch (SessionException | ExecutionException e) {
+            if (!e.getMessage().contains("unexpected repeated add")) {
+              logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+              fail();
+            }
+          }
         } else {
           generator.writeHistoryData(
               port,
@@ -266,10 +283,27 @@ public class Controller {
           port,
           dir,
           ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+          INIT_PATH_LIST,
+          INIT_DATA_TYPE_LIST,
+          INIT_KEYS_LIST,
+          INIT_VALUES_LIST);
+      parquetGenerator.writeHistoryData(
+          port,
+          dir,
+          ParquetHistoryDataGenerator.IT_DATA_FILENAME,
           pathList,
           dataTypeList,
           keyList,
           valuesList);
+      try {
+        addEmbeddedStorageEngine(
+            session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, tableName));
+      } catch (SessionException | ExecutionException e) {
+        if (!e.getMessage().contains("repeatedly add storage engine")) {
+          logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
+          fail();
+        }
+      }
     } else {
       logger.info("pathList contant:" + pathList.size());
       logger.info("port contant:" + port);
