@@ -149,6 +149,13 @@ public class UDFIT {
 
   @Test
   public void baseTests() {
+    String statement = "show cluster info;";
+    System.out.println(execute(statement).getResultInString(false, ""));
+    statement = "show columns;";
+    System.out.println(execute(statement).getResultInString(false, ""));
+    statement = "select count(*) from *;";
+    System.out.println(execute(statement).getResultInString(false, ""));
+
     String showRegisterUDF = "SHOW REGISTER PYTHON TASK;";
     String udtfSQLFormat = "SELECT %s(s1) FROM us.d1 WHERE key < 200;";
     String udafSQLFormat = "SELECT %s(s1) FROM us.d1 OVER (RANGE 50 IN [0, 200));";

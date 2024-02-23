@@ -47,7 +47,7 @@ public class Controller {
   private static final String MVN_RUN_TEST = "../.github/scripts/test/test_union.sh";
 
   private static final String ADD_STORAGE_ENGINE_PARQUET =
-      "ADD STORAGEENGINE (\"127.0.0.1\", 6669, \"parquet\", \"has_data:true, is_read_only:true, dir:test/parquet, dummy_dir:%s, iginx_port:6888\");";
+      "ADD STORAGEENGINE (\"127.0.0.1\", 6669, \"parquet\", \"has_data:true, is_read_only:false, dir:test/parquet, dummy_dir:%s, iginx_port:6888\");";
 
   // 将数据划分为两部分，一部分写入dummy数据库，一部分写入非dummy数据库, 0.3 为划分比例，即 30% 的数据写入 dummy 数据库
   private static final double PARTITION_POINT = 0.3;
