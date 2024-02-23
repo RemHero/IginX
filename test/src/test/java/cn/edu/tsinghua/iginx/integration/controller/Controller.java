@@ -229,6 +229,7 @@ public class Controller {
               keyList.get(i),
               rowValues);
           try {
+            logger.info("begin add");
             addEmbeddedStorageEngine(
                 session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir));
           } catch (SessionException | ExecutionException e) {
@@ -288,6 +289,7 @@ public class Controller {
           INIT_DATA_TYPE_LIST,
           INIT_KEYS_LIST,
           INIT_VALUES_LIST);
+      logger.info("write");
       parquetGenerator.writeHistoryData(
           6669,
           dir,
@@ -297,6 +299,7 @@ public class Controller {
           keyList,
           valuesList);
       try {
+        logger.info("begin add");
         addEmbeddedStorageEngine(
             session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir));
       } catch (SessionException | ExecutionException e) {
