@@ -168,22 +168,22 @@ public class Controller {
 
     for (int i = 0; i < pathList.size(); i++) {
       if (i <= medium) {
-        try { // write data through session
-          Object[] value = valuesList.get(i).toArray();
-          Object[] valueToInsert = new Object[1];
-          valueToInsert[0] = value;
-          writeDataWithSession(
-              session,
-              Collections.singletonList(pathList.get(i)),
-              keyList.get(i).stream().mapToLong(Long::longValue).toArray(),
-              valueToInsert,
-              Collections.singletonList(dataTypeList.get(i)),
-              Collections.singletonList(tagsList.get(i)),
-              type);
-        } catch (SessionException | ExecutionException e) {
-          logger.error("write data fail, caused by: {}", e.getMessage());
-          fail();
-        }
+//        try { // write data through session
+//          Object[] value = valuesList.get(i).toArray();
+//          Object[] valueToInsert = new Object[1];
+//          valueToInsert[0] = value;
+//          writeDataWithSession(
+//              session,
+//              Collections.singletonList(pathList.get(i)),
+//              keyList.get(i).stream().mapToLong(Long::longValue).toArray(),
+//              valueToInsert,
+//              Collections.singletonList(dataTypeList.get(i)),
+//              Collections.singletonList(tagsList.get(i)),
+//              type);
+//        } catch (SessionException | ExecutionException e) {
+//          logger.error("write data fail, caused by: {}", e.getMessage());
+//          fail();
+//        }
       } else {
         if (!needWriteHistoryData) {
           break;
