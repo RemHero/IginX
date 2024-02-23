@@ -37,6 +37,8 @@ public abstract class BaseCapacityExpansionIT {
 
   protected String extraParams;
 
+  public static final String DBCE_PARQUET_FS_TEST_DIR = "test";
+
   private final boolean IS_PARQUET_OR_FILE_SYSTEM =
       this instanceof FileSystemCapacityExpansionIT || this instanceof ParquetCapacityExpansionIT;
 
@@ -68,9 +70,9 @@ public abstract class BaseCapacityExpansionIT {
         statement.append("/");
       }
       if (IS_PARQUET_OR_FILE_SYSTEM) {
-        statement.append(", dummy_dir:test/");
+        statement.append(String.format(", dummy_dir:%s/", DBCE_PARQUET_FS_TEST_DIR));
         statement.append(PORT_TO_ROOT.get(port));
-        statement.append(", dir:test/iginx_");
+        statement.append(String.format(", dir:%s/iginx_", DBCE_PARQUET_FS_TEST_DIR));
         statement.append(PORT_TO_ROOT.get(port));
         statement.append(", iginx_port:" + oriPortIginx);
       }

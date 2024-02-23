@@ -1,6 +1,7 @@
 package cn.edu.tsinghua.iginx.integration.controller;
 
 import static cn.edu.tsinghua.iginx.constant.GlobalConstant.CLEAR_DUMMY_DATA_CAUTION;
+import static cn.edu.tsinghua.iginx.integration.expansion.BaseCapacityExpansionIT.DBCE_PARQUET_FS_TEST_DIR;
 import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.expPort;
 import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.oriPort;
 import static cn.edu.tsinghua.iginx.thrift.StorageEngineType.parquet;
@@ -208,7 +209,7 @@ public class Controller {
           String path = pathList.get(i);
           String tableName = path.substring(0, path.indexOf("."));
           String dir =
-              ParquetHistoryDataGenerator.IT_DATA_DIR
+              DBCE_PARQUET_FS_TEST_DIR
                   + System.getProperty("file.separator")
                   + tableName;
           parquetGenerator.writeHistoryData(
@@ -262,7 +263,7 @@ public class Controller {
       String path = pathList.get(0);
       String tableName = path.substring(0, path.indexOf("."));
       String dir =
-          ParquetHistoryDataGenerator.IT_DATA_DIR
+          DBCE_PARQUET_FS_TEST_DIR
               + System.getProperty("file.separator")
               + tableName;
       logger.info("path contant:" + path);
