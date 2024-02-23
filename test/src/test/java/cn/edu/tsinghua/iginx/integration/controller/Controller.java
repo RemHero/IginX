@@ -232,6 +232,7 @@ public class Controller {
             addEmbeddedStorageEngine(
                 session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir));
           } catch (SessionException | ExecutionException e) {
+            logger.info("fucking repeat added");
             if (!e.getMessage().contains("unexpected repeated add")) {
               logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
               fail();
@@ -299,6 +300,7 @@ public class Controller {
         addEmbeddedStorageEngine(
             session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir));
       } catch (SessionException | ExecutionException e) {
+        logger.info("fucking repeat added");
         if (!e.getMessage().contains("repeatedly add storage engine")) {
           logger.error("add embedded storage engine fail, caused by: {}", e.getMessage());
           fail();
