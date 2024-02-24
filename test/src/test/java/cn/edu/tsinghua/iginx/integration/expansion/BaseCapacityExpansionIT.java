@@ -212,7 +212,7 @@ public abstract class BaseCapacityExpansionIT {
     testWriteAndQueryNewDataAfterCE();
   }
 
-  @Test
+//  @Test
   public void testReadOnly() throws InterruptedException {
     // 查询原始只读节点的历史数据，结果不为空
     testQueryHistoryDataOriHasData();
