@@ -386,12 +386,16 @@ public class IginxWorker implements IService.Iface {
   private void addStorageEngineMetas(
       List<StorageEngineMeta> storageEngineMetas, Status status, boolean hasChecked) {
     // 检测是否与已有的存储引擎冲突
+    logger.info("add storage engines: {}.", storageEngineMetas);
     if (!hasChecked) {
+      logger.info("check");
       List<StorageEngineMeta> currentStorageEngines = metaManager.getStorageEngineList();
       List<StorageEngineMeta> duplicatedStorageEngines = new ArrayList<>();
       for (StorageEngineMeta storageEngine : storageEngineMetas) {
+        logger.info("check");
         for (StorageEngineMeta currentStorageEngine : currentStorageEngines) {
           if (isDuplicated(storageEngine, currentStorageEngine)) {
+            logger.info("check");
             duplicatedStorageEngines.add(storageEngine);
             logger.error("repeatedly add storage engine {}.", storageEngine);
             status.addToSubStatus(RpcUtils.FAILURE);
@@ -399,83 +403,113 @@ public class IginxWorker implements IService.Iface {
           }
         }
       }
+      logger.info("check");
       if (!duplicatedStorageEngines.isEmpty()) {
+        logger.info("check");
         storageEngineMetas.removeAll(duplicatedStorageEngines);
         if (!storageEngineMetas.isEmpty()) {
+          logger.info("check");
           status.setCode(RpcUtils.PARTIAL_SUCCESS.code);
         } else {
+          logger.info("check");
           status.setCode(RpcUtils.FAILURE.code);
           status.setMessage("repeatedly add storage engine");
           return;
         }
       }
     }
+    logger.info("check");
     if (!storageEngineMetas.isEmpty()
         && storageEngineMetas.stream().anyMatch(e -> !e.isReadOnly())) {
+      logger.info("check");
       storageEngineMetas
           .get(storageEngineMetas.size() - 1)
           .setNeedReAllocate(true); // 如果这批节点不是只读的话，每一批最后一个是 true，表示需要进行扩容
     }
+    logger.info("check");
     for (StorageEngineMeta meta : storageEngineMetas) {
+      logger.info("check");
       if (meta.isHasData()) {
+        logger.info("check");
         String dataPrefix = meta.getDataPrefix();
         String schemaPrefix = meta.getSchemaPrefix();
         StorageUnitMeta dummyStorageUnit = new StorageUnitMeta(generateDummyStorageUnitId(0), -1);
         Pair<ColumnsInterval, KeyInterval> boundary =
             StorageManager.getBoundaryOfStorage(meta, dataPrefix);
         FragmentMeta dummyFragment;
+        logger.info("dataPrefix {}, schemaPrefix {}", dataPrefix, schemaPrefix);
+        logger.info("boundary {}", boundary);
 
         if (dataPrefix == null) {
+          logger.info("check");
           boundary.k.setSchemaPrefix(schemaPrefix);
           dummyFragment = new FragmentMeta(boundary.k, boundary.v, dummyStorageUnit);
         } else {
+          logger.info("check");
           ColumnsInterval columnsInterval = new ColumnsInterval(dataPrefix);
           columnsInterval.setSchemaPrefix(schemaPrefix);
           dummyFragment = new FragmentMeta(columnsInterval, boundary.v, dummyStorageUnit);
         }
+        logger.info("check");
         dummyFragment.setDummyFragment(true);
         meta.setDummyStorageUnit(dummyStorageUnit);
         meta.setDummyFragment(dummyFragment);
+        logger.info("dummyFragment {}", dummyFragment);
       }
     }
 
     // init local parquet/file system before adding to meta
     // exclude remote parquet/file system
+    logger.info("check");
     List<StorageEngineMeta> localMetas = new ArrayList<>();
     List<StorageEngineMeta> otherMetas = new ArrayList<>();
     for (StorageEngineMeta meta : storageEngineMetas) {
+      logger.info("check");
       if (isEmbeddedStorageEngine(meta.getStorageEngine())) {
         if (!isLocal(meta)) {
+          logger.info("check");
           logger.error("storage engine {} needs to be local.", meta);
           status.addToSubStatus(RpcUtils.FAILURE);
         } else {
+          logger.info("check");
           localMetas.add(meta);
         }
       } else {
+        logger.info("check");
         otherMetas.add(meta);
       }
     }
+    logger.info("check");
 
     StorageManager storageManager = PhysicalEngineImpl.getInstance().getStorageManager();
     if (!metaManager.addStorageEngines(otherMetas)) {
+      logger.info("check");
       logger.error("add storage engines failed.");
       status.addToSubStatus(RpcUtils.FAILURE);
     }
+    logger.info("check");
     for (StorageEngineMeta meta : otherMetas) {
+      logger.info("check");
       storageManager.addStorage(meta);
     }
+    logger.info("check");
     for (StorageEngineMeta meta : localMetas) {
+      logger.info("check");
       IStorage storage = storageManager.initLocalStorage(meta);
       if (!metaManager.addStorageEngines(Collections.singletonList(meta))) {
+        logger.info("check");
         logger.error("add storage engine {} failed.", meta);
         status.addToSubStatus(RpcUtils.FAILURE);
       }
+      logger.info("check");
       storageManager.addStorage(meta, storage);
     }
+    logger.info("check");
     if (status.isSetSubStatus()) {
       status.setCode(RpcUtils.FAILURE.code);
       status.setMessage("add storage engines failed");
     }
+    logger.info("check");
   }
 
   private boolean isDuplicated(StorageEngineMeta engine1, StorageEngineMeta engine2) {
