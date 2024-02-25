@@ -322,6 +322,7 @@ public class IginxWorker implements IService.Iface {
       int port = storageEngine.getPort();
       StorageEngineType type = storageEngine.getType();
       Map<String, String> extraParams = storageEngine.getExtraParams();
+      logger.info("extraParams: {}", extraParams);
       boolean hasData = Boolean.parseBoolean(extraParams.getOrDefault(Constants.HAS_DATA, "false"));
       String dataPrefix = null;
       if (hasData && extraParams.containsKey(Constants.DATA_PREFIX)) {
