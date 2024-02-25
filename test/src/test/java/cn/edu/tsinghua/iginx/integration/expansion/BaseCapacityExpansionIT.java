@@ -120,9 +120,18 @@ public abstract class BaseCapacityExpansionIT {
   @AfterClass
   public static void tearDown() {
     try {
+      String statement = "show cluster info;";
+      System.out.println(session.executeSql(statement).getResultInString(false, ""));
+      statement = "show columns;";
+      System.out.println(session.executeSql(statement).getResultInString(false, ""));
+      statement = "select count(*) from *;";
+      System.out.println(session.executeSql(statement).getResultInString(false, ""));
+
       session.closeSession();
     } catch (SessionException e) {
       logger.error("close session error: {}", e.getMessage());
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -160,6 +169,8 @@ public abstract class BaseCapacityExpansionIT {
     testWriteAndQueryNewDataAfterCE();
     // 测试插入相同数据后warning
     testSameKeyWarning();
+
+
   }
 
   @Test

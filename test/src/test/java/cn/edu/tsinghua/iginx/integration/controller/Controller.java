@@ -376,20 +376,20 @@ public class Controller {
     }
     logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
 
-    try { // write data through session
-      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
-      writeDataWithSession(
-          session,
-          pathList,
-          upperkeyList.stream().mapToLong(Long::longValue).toArray(),
-          newValuesList,
-          dataTypeList,
-          tagsList,
-          type);
-    } catch (SessionException | ExecutionException e) {
-      logger.error("write data fail, caused by: {}", e.getMessage());
-      fail();
-    }
+//    try { // write data through session
+//      logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
+//      writeDataWithSession(
+//          session,
+//          pathList,
+//          upperkeyList.stream().mapToLong(Long::longValue).toArray(),
+//          newValuesList,
+//          dataTypeList,
+//          tagsList,
+//          type);
+//    } catch (SessionException | ExecutionException e) {
+//      logger.error("write data fail, caused by: {}", e.getMessage());
+//      fail();
+//    }
 
     if (lowerKeyList != null && !lowerKeyList.isEmpty() && needWriteHistoryData) {
       logger.info("test line:" + Thread.currentThread().getStackTrace()[2].getLineNumber());
