@@ -81,6 +81,8 @@ jobs:
                   else
                     mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
                   fi
+                  tree /home/runner/work/IGinX/IGinX/core/target
+                  tree /home/runner/work/IGinX/IGinX/test
 
 #            # 第 2 阶段测试开始==========================================
 #            - name: Prepare CapExp environment oriNoDataExpNoData
