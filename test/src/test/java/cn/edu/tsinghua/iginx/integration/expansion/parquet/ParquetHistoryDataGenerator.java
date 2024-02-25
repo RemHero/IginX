@@ -49,30 +49,41 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       List<DataType> dataTypeList,
       List<Long> keyList,
       List<List<Object>> valuesList) {
-    if (!PARQUET_PARAMS.containsKey(port)) {
-      logger.error("writing to unknown port {}.", port);
-      return;
-    }
+    logger.info("check");
+    logger.info("dir: {}, port: {}, filenam: {}, pathlist: {}, KetList: {}, valList:{} ", dir, port, filename, pathList, keyList.size(), valuesList.size());
+//    if (!PARQUET_PARAMS.containsKey(port)) {
+//      logger.error("writing to unknown port {}.", port);
+//      return;
+//    }
+    logger.info("check");
     Connection conn = getConnection();
     if (conn == null) {
+      logger.info("check");
       logger.error("can't get DuckDB connection.");
       return;
     }
+    logger.info("check");
     Statement stmt;
     try {
+      logger.info("check");
       stmt = conn.createStatement();
       if (stmt == null) {
+        logger.info("check");
         logger.error("can't create statement.");
         return;
       }
     } catch (SQLException e) {
+      logger.info("check");
       logger.error("statement creation error.");
       return;
     }
 
+    logger.info("check");
     Path dirPath = Paths.get("../" + dir);
     if (Files.notExists(dirPath)) {
+      logger.info("check");
       try {
+        logger.info("check");
         Files.createDirectories(dirPath);
       } catch (IOException e) {
         logger.error("can't create data file path {}.", dir);
@@ -80,24 +91,31 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       }
     }
 
+    logger.info("check");
     // <columnName, dataType>
     List<Pair<String, String>> columnList = new ArrayList<>();
     try {
+      logger.info("check");
       int columnCount = pathList.size();
       // table name does not affect query
       String separator = System.getProperty("file.separator");
       String tableName;
       if (dir.endsWith(separator)) {
+        logger.info("check");
         tableName = dir.substring(0, dir.lastIndexOf(separator));
         tableName = tableName.substring(tableName.lastIndexOf(separator) + 1);
       } else if (dir.contains(separator)) {
+        logger.info("check");
         tableName = dir.substring(dir.lastIndexOf(separator) + 1);
       } else {
+        logger.info("check");
         tableName = dir;
       }
       String columnName;
       String dataType;
+      logger.info("check");
       for (int i = 0; i < columnCount; i++) {
+        logger.info("check");
         columnName = pathList.get(i).replace(IGINX_SEPARATOR, PARQUET_SEPARATOR);
         columnName = columnName.substring(columnName.indexOf(PARQUET_SEPARATOR) + 1);
         dataType = dataTypeList.get(i).toString();
@@ -105,10 +123,12 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
         columnList.add(new Pair<>(columnName, dataType));
       }
 
+      logger.info("check");
       // create table
       StringBuilder typeListStr = new StringBuilder();
       StringBuilder insertStr;
       for (Pair<String, String> p : columnList) {
+        logger.info("check");
         typeListStr
             .append("\"")
             .append(p.k)
@@ -117,20 +137,26 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
             .append(", ");
       }
 
+      logger.info("check");
       stmt.execute(
           String.format(
               "CREATE TABLE %s (time LONG, %s);",
               tableName, typeListStr.substring(0, typeListStr.length() - 2)));
 
+      logger.info("check");
       // insert value
       insertStr = new StringBuilder();
       boolean hasKeys = !keyList.isEmpty();
       int keyCnt = 0;
+      logger.info("check");
       for (int index = 0; index < valuesList.size(); index++) {
+        logger.info("check");
         List<Object> values = valuesList.get(index);
         if (hasKeys) {
+          logger.info("check");
           keyCnt = Math.toIntExact(keyList.get(index));
         }
+        logger.info("check");
         insertStr.append("(").append(keyCnt).append(", ");
         for (int i = 0; i < columnCount; i++) {
           if (dataTypeList.get(i) == DataType.BINARY) {
@@ -143,11 +169,13 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
             insertStr.append(values.get(i)).append(", ");
           }
         }
+        logger.info("check");
         insertStr = new StringBuilder(insertStr.substring(0, insertStr.length() - 2));
         insertStr.append("), ");
         keyCnt++;
       }
 
+      logger.info("check");
       stmt.execute(
           String.format(
               "INSERT INTO %s VALUES %s;",
@@ -158,6 +186,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
           String.format(
               "COPY (SELECT * FROM %s) TO '%s' (FORMAT 'parquet');", tableName, parquetPath));
 
+      logger.info("check");
     } catch (SQLException e) {
       logger.error("write history data failed.");
     }
