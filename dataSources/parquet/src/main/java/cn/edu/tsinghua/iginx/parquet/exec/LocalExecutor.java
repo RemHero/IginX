@@ -711,8 +711,10 @@ public class LocalExecutor implements Executor {
   @Override
   public Pair<ColumnsInterval, KeyInterval> getBoundaryOfStorage() throws PhysicalException {
     File rootDir = new File(dataDir);
+    logger.info("rootDir: {}", rootDir.getAbsolutePath());
     List<String> parquetFiles = new ArrayList<>();
     findParquetFiles(parquetFiles, rootDir);
+    logger.info("parquetFiles: {}", parquetFiles);
 
     long startKey = Long.MAX_VALUE, endKey = Long.MIN_VALUE;
     TreeSet<String> pathTreeSet = new TreeSet<>();
@@ -723,16 +725,20 @@ public class LocalExecutor implements Executor {
         startKey = Math.min(startKey, ret.getV().getK());
         endKey = Math.max(endKey, ret.getV().getV());
       }
+      logger.info("ret: {}", ret);
     }
 
     startKey = startKey == Long.MAX_VALUE ? 0 : startKey;
     endKey = endKey == Long.MIN_VALUE ? Long.MAX_VALUE : endKey;
+    logger.info("startKey: {}, endKey: {}", startKey, endKey);
 
     if (!pathTreeSet.isEmpty()) {
+      logger.info("pathTreeSet: {}", pathTreeSet);
       return new Pair<>(
           new ColumnsInterval(pathTreeSet.first(), pathTreeSet.last()),
           new KeyInterval(startKey, endKey));
     } else {
+      logger.info("pathTreeSet is empty");
       return new Pair<>(new ColumnsInterval(null, null), new KeyInterval(startKey, endKey));
     }
   }

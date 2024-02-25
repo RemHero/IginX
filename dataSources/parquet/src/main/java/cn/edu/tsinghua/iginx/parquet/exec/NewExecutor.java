@@ -298,6 +298,7 @@ public class NewExecutor implements Executor {
 
   @Override
   public Pair<ColumnsInterval, KeyInterval> getBoundaryOfStorage() throws PhysicalException {
+    logger.info("Get boundary of storage");
     List<String> paths = new ArrayList<>();
     long start = Long.MAX_VALUE, end = Long.MIN_VALUE;
     for (DUManager duManager : duManagerMap.values()) {
@@ -309,14 +310,17 @@ public class NewExecutor implements Executor {
                 paths.add(pair.k);
               });
       KeyInterval interval = duManager.getTimeInterval();
+      logger.info("Interval: {}", interval);
       if (interval.getStartKey() < start) {
         start = interval.getStartKey();
       }
       if (interval.getEndKey() > end) {
         end = interval.getEndKey();
       }
+      logger.info("Start: {}, End: {}", start, end);
     }
     paths.sort(String::compareTo);
+    logger.info("Paths: {}", paths);
     if (paths.size() == 0) {
       throw new PhysicalTaskExecuteFailureException("no data");
     }
@@ -325,7 +329,9 @@ public class NewExecutor implements Executor {
     }
     ColumnsInterval columnsInterval =
         new ColumnsInterval(paths.get(0), StringUtils.nextString(paths.get(paths.size() - 1)));
+    logger.info("ColumnsInterval: {}", columnsInterval);
     KeyInterval keyInterval = new KeyInterval(start, end);
+    logger.info("KeyInterval: {}", keyInterval);
     return new Pair<>(columnsInterval, keyInterval);
   }
 

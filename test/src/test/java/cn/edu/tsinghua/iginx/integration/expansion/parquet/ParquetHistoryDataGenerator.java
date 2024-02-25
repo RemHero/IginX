@@ -150,13 +150,10 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       int keyCnt = 0;
       logger.info("check");
       for (int index = 0; index < valuesList.size(); index++) {
-        logger.info("check");
         List<Object> values = valuesList.get(index);
         if (hasKeys) {
-          logger.info("check");
           keyCnt = Math.toIntExact(keyList.get(index));
         }
-        logger.info("check");
         insertStr.append("(").append(keyCnt).append(", ");
         for (int i = 0; i < columnCount; i++) {
           if (dataTypeList.get(i) == DataType.BINARY) {
@@ -169,7 +166,6 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
             insertStr.append(values.get(i)).append(", ");
           }
         }
-        logger.info("check");
         insertStr = new StringBuilder(insertStr.substring(0, insertStr.length() - 2));
         insertStr.append("), ");
         keyCnt++;
