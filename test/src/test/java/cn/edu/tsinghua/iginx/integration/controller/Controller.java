@@ -59,6 +59,8 @@ public class Controller {
   private static final String ORI_HAS_DATA_STRING = "oriHasData";
   private static final ConfLoader testConf = new ConfLoader(Controller.CONFIG_FILE);
 
+  private static int pos = 0;
+
   public static final Map<String, Boolean> SUPPORT_KEY =
       new HashMap<String, Boolean>() {
         {
@@ -223,7 +225,7 @@ public class Controller {
           parquetGenerator.writeHistoryData(
               6669,
               dir,
-              "data2.parquet",
+              "data" + pos++ + ".parquet",
               Collections.singletonList(pathList.get(i)),
               Collections.singletonList(dataTypeList.get(i)),
               keyList.get(i),
@@ -293,7 +295,7 @@ public class Controller {
       parquetGenerator.writeHistoryData(
           6670,
           dir,
-          "data2.parquet",
+          "data" + pos++ + ".parquet",
           pathList,
           dataTypeList,
           keyList,
