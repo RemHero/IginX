@@ -281,13 +281,11 @@ public class Controller {
       logger.info("dir contant:" + dir);
       logger.info("port contant:" + port);
       logger.info("key contant:" + keyList.size());
-      List<String> INIT_PATH_LIST2 =
-          Arrays.asList("us.b.b", "us.zzzz.zzzz");
       parquetGenerator.writeHistoryData(
           6670,
           dir,
           "data.parquet",
-          INIT_PATH_LIST2,
+          INIT_PATH_LIST,
           INIT_DATA_TYPE_LIST,
           INIT_KEYS_LIST,
           INIT_VALUES_LIST);
