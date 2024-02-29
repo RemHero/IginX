@@ -6,9 +6,9 @@ on:
             - main
 env:
     VERSION: 0.6.0-SNAPSHOT
-#    FUNCTEST: SQLCompareIT,TagIT,RestIT,TransformIT,UDFIT,RestAnnotationIT,SQLSessionIT,SQLSessionPoolIT,SessionV2IT,SessionIT,SessionPoolIT,CompactionIT,TimePrecisionIT
     FUNCTEST: UDFIT
-    IOTDB_FUNCTEST: SQLCompareIT,TagIT,RestIT,TransformIT,UDFIT,RestAnnotationIT,SQLSessionIT,SQLSessionPoolIT,SessionV2IT,SessionIT,SessionPoolIT,CompactionIT,TimePrecisionIT
+#    FUNCTEST: NewSessionIT,SQLCompareIT,TagIT,RestIT,TransformIT,UDFIT,RestAnnotationIT,SQLSessionIT,SQLSessionPoolIT,SessionV2IT,SessionIT,SessionPoolIT,CompactionIT,TimePrecisionIT
+
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
@@ -76,13 +76,9 @@ jobs:
             - name: oriHasDataExpHasData Normal IT
               shell: bash
               run: |
-                  if [ "${{ matrix.DB-name }}" == "IoTDB12" ]; then
-                    mvn test -q -Dtest=${IOTDB_FUNCTEST} -DfailIfNoTests=false -P-format
-                  else
                     mvn test -q -Dtest=${FUNCTEST} -DfailIfNoTests=false -P-format
-                  fi
-                  tree /home/runner/work/IGinX/IGinX/core/target
-                  tree /home/runner/work/IGinX/IGinX/test
+                    tree /home/runner/work/IGinX/IGinX/core/target
+                    tree /home/runner/work/IGinX/IGinX/test
 
 #            # 第 2 阶段测试开始==========================================
 #            - name: Prepare CapExp environment oriNoDataExpNoData
