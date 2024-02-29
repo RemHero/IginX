@@ -215,7 +215,7 @@ public class Controller {
           parquetGenerator.writeHistoryData(
               6669,
               dir,
-              ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+              "data.parquet",
               INIT_PATH_LIST,
               INIT_DATA_TYPE_LIST,
               INIT_KEYS_LIST,
@@ -223,7 +223,7 @@ public class Controller {
           parquetGenerator.writeHistoryData(
               6669,
               dir,
-              ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+              "data2.parquet",
               Collections.singletonList(pathList.get(i)),
               Collections.singletonList(dataTypeList.get(i)),
               keyList.get(i),
@@ -286,7 +286,7 @@ public class Controller {
       parquetGenerator.writeHistoryData(
           6670,
           dir,
-          ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+          "data.parquet",
           INIT_PATH_LIST2,
           INIT_DATA_TYPE_LIST,
           INIT_KEYS_LIST,
@@ -295,7 +295,7 @@ public class Controller {
       parquetGenerator.writeHistoryData(
           6670,
           dir,
-          ParquetHistoryDataGenerator.IT_DATA_FILENAME,
+          "data2.parquet",
           pathList,
           dataTypeList,
           keyList,
