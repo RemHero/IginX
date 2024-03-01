@@ -1,6 +1,5 @@
 package cn.edu.tsinghua.iginx.integration.expansion.parquet;
 
-import static cn.edu.tsinghua.iginx.integration.expansion.BaseCapacityExpansionIT.DBCE_PARQUET_FS_TEST_DIR;
 import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.*;
 import cn.edu.tsinghua.iginx.format.parquet.ParquetWriter;
 import cn.edu.tsinghua.iginx.format.parquet.example.ExampleParquetWriter;
@@ -105,7 +104,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       List<DataType> dataTypeList,
       List<Long> keyList,
       List<List<Object>> valuesList) {
-    String dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
+    String dir = "test" + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
     String filename = PARQUET_PARAMS.get(port).get(1);
     writeHistoryData(port, dir, filename, pathList, dataTypeList, keyList, valuesList);
   }
@@ -125,7 +124,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       return;
     }
 
-    String dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
+    String dir = "test" + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
     String filename = PARQUET_PARAMS.get(port).get(1);
     Path parquetPath = Paths.get("../" + dir, filename);
     File file = new File(parquetPath.toString());
@@ -137,7 +136,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
 
     // delete the normal IT data
-    dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator");
+    dir = "test" + System.getProperty("file.separator");
     parquetPath = Paths.get("../" + dir);
 
     try {
