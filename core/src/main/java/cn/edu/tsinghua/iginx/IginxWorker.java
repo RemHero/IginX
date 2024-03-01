@@ -436,6 +436,7 @@ public class IginxWorker implements IService.Iface {
         dummyFragment.setDummyFragment(true);
         meta.setDummyStorageUnit(dummyStorageUnit);
         meta.setDummyFragment(dummyFragment);
+        System.out.println("lhz");
       }
     }
 
