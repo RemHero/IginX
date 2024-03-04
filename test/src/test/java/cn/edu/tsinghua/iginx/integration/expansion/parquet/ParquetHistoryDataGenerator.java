@@ -35,7 +35,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
 
   public static final String IT_DATA_DIR = "IT_data";
 
-  public static final String IT_DATA_FILENAME = "data.parquet";
+  public static final String IT_DATA_FILENAME = "data%s.parquet";
 
   public ParquetHistoryDataGenerator() {}
 
@@ -139,7 +139,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
 
     // delete the normal IT data
-    dir = IT_DATA_DIR + System.getProperty("file.separator");
+    dir = "test" + System.getProperty("file.separator");
     parquetPath = Paths.get("../" + dir);
 
     try {
