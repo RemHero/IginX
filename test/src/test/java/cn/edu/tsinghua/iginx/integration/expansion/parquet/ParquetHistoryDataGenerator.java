@@ -139,7 +139,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
 
     // delete the normal IT data
-    dir = "test" + System.getProperty("file.separator");
+    dir = IT_DATA_DIR + System.getProperty("file.separator");
     parquetPath = Paths.get("../" + dir);
 
     try {
