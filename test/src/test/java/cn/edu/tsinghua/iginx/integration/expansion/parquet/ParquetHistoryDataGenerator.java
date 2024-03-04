@@ -1,7 +1,7 @@
 package cn.edu.tsinghua.iginx.integration.expansion.parquet;
 
-import static cn.edu.tsinghua.iginx.integration.expansion.BaseCapacityExpansionIT.DBCE_PARQUET_FS_TEST_DIR;
-import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.*;
+import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.PARQUET_PARAMS;
+
 import cn.edu.tsinghua.iginx.format.parquet.ParquetWriter;
 import cn.edu.tsinghua.iginx.format.parquet.example.ExampleParquetWriter;
 import cn.edu.tsinghua.iginx.integration.expansion.BaseHistoryDataGenerator;
@@ -33,7 +33,9 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
 
   private static final char IGINX_SEPARATOR = '.';
 
-  public static final String IT_DATA_FILENAME = "data%s.parquet";
+  public static final String IT_DATA_DIR = "IT_data";
+
+  public static final String IT_DATA_FILENAME = "data.parquet";
 
   public ParquetHistoryDataGenerator() {}
 
@@ -105,7 +107,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       List<DataType> dataTypeList,
       List<Long> keyList,
       List<List<Object>> valuesList) {
-    String dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
+    String dir = "test" + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
     String filename = PARQUET_PARAMS.get(port).get(1);
     writeHistoryData(port, dir, filename, pathList, dataTypeList, keyList, valuesList);
   }
@@ -125,7 +127,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
       return;
     }
 
-    String dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
+    String dir = "test" + System.getProperty("file.separator") + PARQUET_PARAMS.get(port).get(0);
     String filename = PARQUET_PARAMS.get(port).get(1);
     Path parquetPath = Paths.get("../" + dir, filename);
     File file = new File(parquetPath.toString());
@@ -137,7 +139,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
 
     // delete the normal IT data
-    dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator");
+    dir = IT_DATA_DIR + System.getProperty("file.separator");
     parquetPath = Paths.get("../" + dir);
 
     try {
