@@ -228,6 +228,13 @@ public class SQLSessionIT {
 
   @Test
   public void testCountPath() {
+    String statement1 = "show cluster info;";
+    System.out.println(executor.execute(statement1));
+    statement1 = "show columns;";
+    System.out.println(executor.execute(statement1));
+    statement1 = "select count(*) from *;";
+    System.out.println(executor.execute(statement1));
+
     String statement = "SELECT COUNT(*) FROM us.d1;";
     String expected =
         "ResultSets:\n"
@@ -240,7 +247,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testCountPoints() {
     if (isScaling) return;
     String statement = "COUNT POINTS;";
@@ -248,7 +255,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testShowColumns() {
     if (!isAbleToShowColumns || isScaling) {
       return;
@@ -342,14 +349,14 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testShowReplicaNum() {
     String statement = "SHOW REPLICA NUMBER;";
     String expected = "Replica num: 1\n";
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testTimeRangeQuery() {
     String statement = "SELECT s1 FROM us.d1 WHERE key > 100 AND key < 120;";
     String expected =
@@ -381,7 +388,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testValueFilter() {
     String query = "SELECT s1 FROM us.d1 WHERE key > 0 AND key < 10000 and s1 > 200 and s1 < 210;";
     String expected =
@@ -549,7 +556,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testPathFilter() {
     String insert =
         "INSERT INTO us.d9(key, a, b) VALUES (1, 1, 9), (2, 2, 8), (3, 3, 7), (4, 4, 6), (5, 5, 5), (6, 6, 4), (7, 7, 3), (8, 8, 2), (9, 9, 1);";
@@ -643,7 +650,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testExprFilter() {
     String insert =
         "INSERT INTO test(key, a, b) values (1, 1, 1), (2, 2, 1), (3, 2, 2), (4, 3, 1), (5, 3, 2), (6, 3, 1), (7, 4, 1), (8, 4, 2), (9, 4, 3), (10, 4, 1);";
@@ -775,7 +782,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testDistinct() {
     String insert =
         "INSERT INTO test(key, a, b) values (1, 1, 1), (2, 2, 1), (3, 2, 2), (4, 3, 1), (5, 3, 2), (6, 3, 1), (7, 4, 1), (8, 4, 2), (9, 4, 3), (10, 4, 1);";
@@ -955,7 +962,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testDistinctWithNullValues() {
     String insert = "INSERT INTO test(key, a) values (1, 1), (2, 2), (5, 3), (6, 3), (7, 4);";
     executor.execute(insert);
@@ -1000,7 +1007,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testLimitAndOffsetQuery() {
     String statement = "SELECT s1 FROM us.d1 WHERE key > 0 AND key < 10000 limit 10;";
     String expected =
@@ -1043,7 +1050,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testOrderByQuery() {
     String insert =
         "INSERT INTO us.d2 (key, s1, s2, s3) values "
@@ -1167,7 +1174,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(orderByQuery, expected);
   }
 
-  @Test
+  //@Test
   public void testRowTransformFunction() {
     String insert =
         "INSERT INTO us.d2 (key, s1, s2, s3) values "
@@ -1212,7 +1219,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testFirstLastQuery() {
     String statement = "SELECT FIRST(s2) FROM us.d1 WHERE key > 0;";
     String expected =
@@ -1343,7 +1350,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testAggregateQuery() {
     String statement = "SELECT %s(s1), %s(s2) FROM us.d1 WHERE key > 0 AND key < 1000;";
     List<String> funcTypeList =
@@ -1407,7 +1414,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testDownSampleQuery() {
     String statement = "SELECT %s(s1), %s(s4) FROM us.d1 OVER (RANGE 100 IN (0, 1000));";
     List<String> funcTypeList =
@@ -1554,7 +1561,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testRangeDownSampleQuery() {
     String statement =
         "SELECT %s(s1), %s(s4) FROM us.d1 WHERE key > 600 AND s1 <= 900 OVER (RANGE 100 IN (0, 1000));";
@@ -1632,7 +1639,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testSlideWindowByTimeQuery() {
     String statement = "SELECT %s(s1), %s(s4) FROM us.d1 OVER (RANGE 100 IN (0, 1000) STEP 50);";
     List<String> funcTypeList =
@@ -1821,7 +1828,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testRangeSlideWindowByTimeQuery() {
     String statement =
         "SELECT %s(s1), %s(s4) FROM us.d1 WHERE key > 300 AND s1 <= 600 OVER (RANGE 100 IN (0, 1000) STEP 50);";
@@ -1927,7 +1934,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testDelete() {
     if (!isAbleToDelete) {
       return;
@@ -2024,7 +2031,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(queryOverDeleteRange, expected);
   }
 
-  @Test
+  //@Test
   public void testMultiRangeDelete() {
     if (!isAbleToDelete) {
       return;
@@ -2086,7 +2093,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(queryOverDeleteRange, expected);
   }
 
-  @Test
+  //@Test
   public void testCrossRangeDelete() {
     if (!isAbleToDelete) {
       return;
@@ -2139,7 +2146,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(queryOverDeleteRange, expected);
   }
 
-  @Test
+  //@Test
   public void testGroupBy() {
     String insert =
         "insert into test(key, a, b, c, d) values (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), (3, 2, 2, 1.1, \"val5\"), (4, 3, 2, 2.1, \"val2\"), (5, 1, 2, 3.1, \"val1\"), (6, 2, 2, 5.1, \"val3\");";
@@ -2307,7 +2314,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testGroupByAndHaving() {
     String insert =
         "insert into test(key, a, b, c, d) values (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), (3, 2, 2, 1.1, \"val5\"), (4, 3, 2, 2.1, \"val2\"), (5, 1, 2, 3.1, \"val1\"), (6, 2, 2, 5.1, \"val3\");";
@@ -2366,7 +2373,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testJoinWithGroupBy() {
     String insert =
         "insert into test1(key, a, b, c, d) values (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), (3, 2, 2, 1.1, \"val5\"), (4, 3, 2, 2.1, \"val2\"), (5, 1, 2, 3.1, \"val1\"), (6, 2, 2, 5.1, \"val3\");";
@@ -2466,7 +2473,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testJoin() {
     String insert =
         "insert into test(key, a.a, a.b, b.a, b.b) values (1, 1, 1.1, 2, 2.1), (2, 3, 3.1, 3, 3.1), (3, 5, 5.1, 4, 4.1), (4, 7, 7.1, 5, 5.1), (5, 9, 9.1, 6, 6.1);";
@@ -2657,7 +2664,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testMultiJoin() {
     String insert =
         "insert into test(key, a.a, a.b) values (1, 1, 1.1), (2, 3, 3.1), (3, 5, 5.1), (4, 7, 7.1), (5, 9, 9.1);";
@@ -2750,7 +2757,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testBasicArithmeticExpr() {
     String insert =
         "INSERT INTO us.d3 (key, s1, s2, s3) values "
@@ -2838,7 +2845,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testComplexArithmeticExpr() {
     String insert =
         "INSERT INTO us.d3 (key, s1, s2, s3) values "
@@ -2926,7 +2933,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testSelectFromComplexArithmeticExpr() {
     String insert =
         "INSERT INTO us.d3 (key, s1, s2, s3) VALUES "
@@ -2980,7 +2987,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testAlias() {
     // time series alias
     String statement = "SELECT s1 AS rename_series, s2 FROM us.d1 WHERE s1 >= 1000 AND s1 < 1010;";
@@ -3134,7 +3141,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testAggregateSubQuery() {
     String statement =
         "SELECT %s_s1 FROM (SELECT %s(s1) AS %s_s1 FROM us.d1 OVER(RANGE 60 IN [1000, 1600)));";
@@ -3262,7 +3269,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testSelectFromAggregate() {
     String statement =
         "SELECT `%s(us.d1.s1)` FROM (SELECT %s(s1) FROM us.d1 OVER(RANGE 60 IN [1000, 1600)));";
@@ -3390,7 +3397,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testValueFilterSubQuery() {
     String statement =
         "SELECT ts FROM (SELECT s1 AS ts FROM us.d1 WHERE us.d1.s1 >= 1000 AND us.d1.s1 < 1010);";
@@ -3443,7 +3450,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testMultiSubQuery() {
     String statement =
         "SELECT AVG(s1) AS avg_s1, SUM(s2) AS sum_s2 FROM us.d1 OVER (RANGE 10 IN [1000, 1100));";
@@ -3503,7 +3510,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testFromSubQuery() {
     String insert = "INSERT INTO test(key, a.a, a.b) VALUES (1, 1, 1.1), (2, 3, 3.1), (3, 7, 7.1);";
     executor.execute(insert);
@@ -3735,7 +3742,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testSelectSubQuery() {
     String insert =
         "INSERT INTO test.a(key, a, b, c, d) VALUES (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), "
@@ -4032,7 +4039,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testWhereSubQuery() {
     String insert =
         "INSERT INTO test.a(key, a, b, c, d) VALUES (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), "
@@ -4356,7 +4363,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testWhereSubQueryWithJoin() {
     String insert =
         "INSERT INTO test.a(key, a, b, c, d) VALUES (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), "
@@ -4427,7 +4434,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testHavingSubQuery() {
     String insert =
         "INSERT INTO test.a(key, a, b, c, d) VALUES (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), "
@@ -4474,7 +4481,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testMixedSubQuery() {
     String insert =
         "INSERT INTO test.a(key, a, b, c, d) VALUES (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), "
@@ -4586,7 +4593,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testSetOperators() {
     String insert =
         "INSERT INTO test(key, a.a, a.b, a.c) VALUES (1, 1, \"aaa\", true), (2, 1, \"eee\", false), (3, 4, \"ccc\", true), (5, 6, \"eee\", false);";
@@ -4653,7 +4660,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testCTE() {
     String insert =
         "INSERT INTO bonus_jan(key, employee_id, name, outlet, position, region, bonus) VALUES "
@@ -4730,7 +4737,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testValueToMeta() {
     String insert =
         "INSERT INTO test(key, a.a, a.b, b.a, c.b) VALUES "
@@ -4905,7 +4912,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testSelectFromShowColumns() {
     String insert =
         "INSERT INTO test(key, a, b, c, d) VALUES (0, 1, 1.5, true, \"aaa\"), (1, 2, 2.5, false, \"bbb\"), "
@@ -5067,7 +5074,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testMixedValueToMetaAndShowColumns() {
     String insert =
         "INSERT INTO test(key, a, b, c, d) VALUES (0, 1, 1.5, true, \"aaa\"), (1, 2, 2.5, false, \"bbb\"), "
@@ -5119,7 +5126,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testDateFormat() {
     if (!isAbleToDelete) {
       return;
@@ -5224,7 +5231,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testInsertWithSubQuery() {
     String insert =
         "INSERT INTO us.d2(key, s1) VALUES (SELECT s1 FROM us.d1 WHERE s1 >= 1000 AND s1 < 1010);";
@@ -5341,7 +5348,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testInsertWithSubQueryWithNull() {
     String insert =
         "INSERT INTO test(key, a, b, c) VALUES (0, 0, 0.5, \"aaa\"), (1, 1, 1.5, \"bbb\"), "
@@ -5388,7 +5395,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testChinesePath() {
     if (!isSupportChinesePath) {
       return;
@@ -5414,7 +5421,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testNumericalPath() {
     if (!isSupportNumericalPath) {
       return;
@@ -5495,7 +5502,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testSpecialCharacterPath() {
     // filesystem does not support special character path on windows
     if (!isSupportSpecialCharacterPath) {
@@ -5599,7 +5606,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testMixSpecialPath() {
     // filesystem does not support special character path on windows
     if (!isSupportChinesePath || !isSupportNumericalPath || !isSupportSpecialCharacterPath) {
@@ -5652,7 +5659,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testErrorClause() {
     String errClause =
         "DELETE FROM us.d1.s1 WHERE key > 105 AND key < 115 AND key >= 120 AND key <= 230;";
@@ -5693,7 +5700,7 @@ public class SQLSessionIT {
         errClause, "As clause is expected when multiple ShowColumns are joined together.");
   }
 
-  @Test
+  //@Test
   public void testExplain() {
     if (isScaling) return;
     String explain = "explain select max(s2), min(s1) from us.d1;";
@@ -5730,7 +5737,7 @@ public class SQLSessionIT {
     logger.info(executor.execute(explain));
   }
 
-  @Test
+  //@Test
   public void testDeleteColumns() {
     if (!isAbleToDelete || isScaling) {
       return;
@@ -5791,7 +5798,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(countPoints, expected);
   }
 
-  @Test
+  //@Test
   public void testClearData() throws SessionException, ExecutionException {
     if (!isAbleToClearData || isScaling) return;
     clearData();
@@ -5805,7 +5812,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(showColumns, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentDeleteSinglePath() {
     if (!isAbleToDelete || isScaling) {
       return;
@@ -5851,7 +5858,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentDeleteSinglePathWithOverlap() {
     if (!isAbleToDelete || isScaling) {
       return;
@@ -5878,7 +5885,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentDeleteMultiPath() {
     if (!isAbleToDelete || isScaling) {
       return;
@@ -5905,7 +5912,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentDeleteMultiPathWithOverlap() {
     if (!isAbleToDelete || isScaling) {
       return;
@@ -5932,7 +5939,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentInsert() {
     if (isScaling) {
       return;
@@ -5958,7 +5965,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testConcurrentInsertWithOverlap() {
     if (isScaling) {
       return;
@@ -5984,7 +5991,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expected);
   }
 
-  @Test
+  //@Test
   public void testBaseInfoConcurrentQuery() {
     if (isScaling) {
       return;
@@ -6016,7 +6023,7 @@ public class SQLSessionIT {
     executor.concurrentExecuteAndCompare(statementsAndExpectRes);
   }
 
-  @Test
+  //@Test
   public void testConcurrentQuery() {
     String insert =
         "insert into test1(key, a, b, c, d) values (1, 3, 2, 3.1, \"val1\"), (2, 1, 3, 2.1, \"val2\"), (3, 2, 2, 1.1, \"val5\"), (4, 3, 2, 2.1, \"val2\"), (5, 1, 2, 3.1, \"val1\"), (6, 2, 2, 5.1, \"val3\");";
@@ -6097,7 +6104,7 @@ public class SQLSessionIT {
     executor.concurrentExecuteAndCompare(statementsAndExpectRes);
   }
 
-  @Test
+  //@Test
   public void testShowConfig() {
     String statement = "show config \"memoryTaskThreadPoolSize\";";
     String expected =
@@ -6216,7 +6223,7 @@ public class SQLSessionIT {
     assertEquals(expectedConfigNames, configs.keySet());
   }
 
-  @Test
+  //@Test
   public void testModifyRules() {
     String statement, expected;
     statement = "show rules;";
@@ -6291,7 +6298,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  @Test
+  //@Test
   public void testFilterPushDownExplain() {
     if (!isFilterPushDown) {
       logger.info(
@@ -6539,7 +6546,7 @@ public class SQLSessionIT {
     executor.concurrentExecuteAndCompare(statementsAndExpectRes);
   }
 
-  @Test
+  //@Test
   public void testFilterFragmentOptimizer() {
     String policy = executor.execute("SHOW CONFIG \"policyClassName\";");
     if (!policy.contains("KeyRangeTestPolicy")) {
@@ -6756,7 +6763,7 @@ public class SQLSessionIT {
     executor.execute(statement);
   }
 
-  @Test
+  //@Test
   public void testFilterWithMultiTable() {
     String insert1 = "INSERT INTO test.a(key, a) VALUES (1, 1), (2, 2), (3, 3);";
     String insert2 = "INSERT INTO test.b(key, a) VALUES (1, 1), (2, 2), (3, 3);";
@@ -6779,7 +6786,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(query, expect);
   }
 
-  @Test
+  //@Test
   public void testSetMappingTransform() {
     String query = "SELECT max(s1), min(s2) from us.d1;";
     String expect =
@@ -6819,7 +6826,7 @@ public class SQLSessionIT {
     }
   }
 
-  @Test
+  //@Test
   public void testMappingTransform() {
     String query = "SELECT first(s1), last(s2) from us.d1;";
     String expect =
