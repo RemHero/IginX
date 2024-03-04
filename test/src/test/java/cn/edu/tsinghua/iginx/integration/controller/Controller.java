@@ -212,7 +212,7 @@ public class Controller {
           String tableName = path.substring(0, path.indexOf("."));
           String dir =
               DBCE_PARQUET_FS_TEST_DIR
-                  + System.getProperty("file.separator") + IT_DATA_DIR
+                  + System.getProperty("file.separator") + IT_DATA_DIR + System.getProperty("file.separator")
                   + tableName;
           parquetGenerator.writeHistoryData(
               port,
@@ -270,7 +270,7 @@ public class Controller {
       String tableName = path.substring(0, path.indexOf("."));
       String dir =
           DBCE_PARQUET_FS_TEST_DIR
-              + System.getProperty("file.separator") + IT_DATA_DIR
+              + System.getProperty("file.separator") + IT_DATA_DIR + System.getProperty("file.separator")
               + tableName;
       parquetGenerator.writeHistoryData(
           port,
