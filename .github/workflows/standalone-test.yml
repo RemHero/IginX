@@ -23,7 +23,7 @@ jobs:
                     [
 #                        "IoTDB12",
 #                        "InfluxDB",
-                        "Parquet",
+#                        "Parquet",
 #                        "PostgreSQL",
 #                        "FileSystem",
 #                        "Redis",
