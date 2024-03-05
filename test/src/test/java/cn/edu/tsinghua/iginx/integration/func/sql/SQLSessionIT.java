@@ -1,7 +1,6 @@
 package cn.edu.tsinghua.iginx.integration.func.sql;
 
-import static cn.edu.tsinghua.iginx.integration.controller.Controller.SUPPORT_KEY;
-import static cn.edu.tsinghua.iginx.integration.controller.Controller.clearAllData;
+import static cn.edu.tsinghua.iginx.integration.controller.Controller.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -194,6 +193,7 @@ public class SQLSessionIT {
         InsertAPIType.Row,
         dummyNoData);
     dummyNoData = false;
+    Controller.after(session);
   }
 
   private String generateDefaultInsertStatementByTimeRange(long start, long end) {
@@ -4912,7 +4912,7 @@ public class SQLSessionIT {
     executor.executeAndCompare(statement, expected);
   }
 
-  //@Test
+  @Test
   public void testSelectFromShowColumns() {
     String insert =
         "INSERT INTO test(key, a, b, c, d) VALUES (0, 1, 1.5, true, \"aaa\"), (1, 2, 2.5, false, \"bbb\"), "
