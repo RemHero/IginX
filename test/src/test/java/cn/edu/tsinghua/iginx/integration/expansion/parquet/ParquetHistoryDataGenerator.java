@@ -140,8 +140,7 @@ public class ParquetHistoryDataGenerator extends BaseHistoryDataGenerator {
     }
 
     // delete the normal IT data
-    dir = DBCE_PARQUET_FS_TEST_DIR + System.getProperty("file.separator") + IT_DATA_DIR;
-    parquetPath = Paths.get("../" + dir);
+    parquetPath = Paths.get(IT_DATA_DIR);
 
     try {
       Files.walkFileTree(parquetPath, new DeleteFileVisitor());

@@ -423,6 +423,7 @@ public class Controller {
         }
       }
     }
+    parquet_dir.clear();
   }
 
   private static <T> void addEmbeddedStorageEngine(T session, String stmt)
