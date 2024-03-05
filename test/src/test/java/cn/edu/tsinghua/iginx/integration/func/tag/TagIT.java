@@ -55,7 +55,7 @@ public class TagIT {
   }
 
   @Before
-  public void insertData() throws ExecutionException, SessionException {
+  public void insertData() throws ExecutionException, SessionException, InterruptedException {
     //    "insert into ah.hr01 (key, s, v, s[t1=v1, t2=vv1], v[t1=v2, t2=vv1]) values (0, 1, 2, 3,
     // 4), (1, 2, 3, 4, 5), (2, 3, 4, 5, 6), (3, 4, 5, 6, 7);",
     //    "insert into ah.hr02 (key, s, v) values (100, true, \"v1\");",
@@ -231,6 +231,22 @@ public class TagIT {
         tagList6,
         InsertAPIType.Row,
         false);
+    String statement1 = "show cluster info;";
+    System.out.println(execute(statement1));
+    statement1 = "show columns;";
+    System.out.println(execute(statement1));
+    statement1 = "select count(*) from *;";
+    System.out.println(execute(statement1));
+
+    Controller.after(session);
+    Thread.sleep(1000);
+
+    statement1 = "show cluster info;";
+    System.out.println(execute(statement1));
+    statement1 = "show columns;";
+    System.out.println(execute(statement1));
+    statement1 = "select count(*) from *;";
+    System.out.println(execute(statement1));
   }
 
   @After

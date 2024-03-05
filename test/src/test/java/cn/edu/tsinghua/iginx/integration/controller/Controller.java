@@ -413,6 +413,7 @@ public class Controller {
     // 处理parquet扩容操作
     for (String dir:parquet_dir) {
       try {
+        logger.info(String.format(ADD_STORAGE_ENGINE_PARQUET, dir, dir.substring(dir.lastIndexOf(System.getProperty("file.separator")) + 1)));
         addEmbeddedStorageEngine(
             session, String.format(ADD_STORAGE_ENGINE_PARQUET, dir, dir.substring(dir.lastIndexOf(System.getProperty("file.separator")) + 1)));
       } catch (SessionException | ExecutionException e) {
