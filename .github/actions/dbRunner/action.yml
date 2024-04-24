@@ -188,10 +188,15 @@ runs:
         mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
         dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data1 --port=3307
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data2 --port=3308
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data3 --port=3309
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data1 --port=3307 &
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data2 --port=3308 &
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data3 --port=3309 &
 
     - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
