@@ -190,7 +190,7 @@ runs:
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
           shell: bash
-          run: choco install mysql --params "/InstallLocation:./mysql"
+          run: choco install mysql --params "/InstallLocation:./"
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Configure and start MySQL instances
