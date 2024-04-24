@@ -196,6 +196,7 @@ runs:
           name: Configure and start MySQL instances
           shell: bash
           run: |
+            choco install tree
             tree ./
             mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
             ./mysql/bin/mysqld --initialize-insecure --datadir=./mysql/data1 --port=3307
