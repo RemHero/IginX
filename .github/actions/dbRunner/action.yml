@@ -186,6 +186,7 @@ runs:
       run: |
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'mysql'; FLUSH PRIVILEGES;" > init.sql
         mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
+        dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data1 --port=3307
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data2 --port=3308
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data3 --port=3309
