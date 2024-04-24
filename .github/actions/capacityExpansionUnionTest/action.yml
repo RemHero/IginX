@@ -25,6 +25,13 @@ inputs:
 runs:
     using: "composite" # Mandatory parameter
     steps:
+        - name: check the status of MySQL
+          shell: bash
+          run: |
+              sudo systemctl status mysql
+              num_instances=$(ps aux | grep mysqld | grep -v grep | wc -l)
+              echo "Number of MySQL instances running: $num_instances"
+
         - name: Clear history data
           uses: ./.github/actions/dbWriter
           with:
