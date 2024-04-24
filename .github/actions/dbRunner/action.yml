@@ -1,203 +1,203 @@
 name: "db-runner"
 description: "db runner"
 inputs:
-    DB-name:
-        description: "DB name"
-        required: false
-        default: IoTDB12
+  DB-name:
+    description: "DB name"
+    required: false
+    default: IoTDB12
 
 runs:
-    using: "composite" # Mandatory parameter
-    steps:
-        - if: inputs.DB-name=='InfluxDB'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb.sh" 8088 8087
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_windows.sh" 8088 8087
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_macos.sh" 8088 8087
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+  using: "composite" # Mandatory parameter
+  steps:
+    - if: inputs.DB-name=='InfluxDB'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb.sh" 8088 8087
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_windows.sh" 8088 8087
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/influxdb_macos.sh" 8088 8087
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='IoTDB12'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12.sh" 6667 6668 6669
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_windows.sh" 6667 6668 6669
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_macos.sh" 6667 6668 6669
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='IoTDB12'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12.sh" 6667 6668 6669
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_windows.sh" 6667 6668 6669
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/iotdb12_macos.sh" 6667 6668 6669
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='Parquet' #test/iginx_mn is the path for IT test data
-          name: Run DB
-          shell: bash
-          run: |
-              cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/conf/config.properties.bak"
-              if [[ "$RUNNER_OS" == "Linux" || "$RUNNER_OS" == "Windows" ]]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_linux_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_linux_windows.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_macos.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='Parquet' #test/iginx_mn is the path for IT test data
+      name: Run DB
+      shell: bash
+      run: |
+        cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/conf/config.properties.bak"
+        if [[ "$RUNNER_OS" == "Linux" || "$RUNNER_OS" == "Windows" ]]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_linux_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_linux_windows.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/parquet_macos.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='MongoDB'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb.sh" 27017 27018 27019
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_windows.sh" 27017 27018 27019
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_macos.sh" 27017 27018 27019
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='MongoDB'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb.sh" 27017 27018 27019
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_windows.sh" 27017 27018 27019
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mongodb_macos.sh" 27017 27018 27019
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='FileSystem' #test/iginx_mn is the path for IT test data
-          name: Run DB
-          shell: bash
-          run: |
-              cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/conf/config.properties.bak"
-              if [[ "$RUNNER_OS" == "Linux" || "$RUNNER_OS" == "Windows" ]]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_linux_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_linux_windows.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_macos.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='FileSystem' #test/iginx_mn is the path for IT test data
+      name: Run DB
+      shell: bash
+      run: |
+        cp -f "${GITHUB_WORKSPACE}/conf/config.properties" "${GITHUB_WORKSPACE}/conf/config.properties.bak"
+        if [[ "$RUNNER_OS" == "Linux" || "$RUNNER_OS" == "Windows" ]]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_linux_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_linux_windows.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/filesystem_macos.sh" 6667 6888 test/mn test/iginx_mn false false conf/config.properties
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='Redis'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis.sh" 6379 6380 6381
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_windows.sh" 6379 6380 6381
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_macos.sh" 6379 6380 6381
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='Redis'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis.sh" 6379 6380 6381
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_windows.sh" 6379 6380 6381
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/redis_macos.sh" 6379 6380 6381
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='Mix-IoTDB12-InfluxDB'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb.sh"
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_windows.sh"
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_macos.sh"
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='Mix-IoTDB12-InfluxDB'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb.sh"
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_windows.sh"
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mix_iotdb12_influxdb_macos.sh"
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name=='PostgreSQL'
-          name: Run DB
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql.sh" 5432 5433 5434
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_windows.sh" 5432 5433 5434
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_macos.sh" 5432 5433 5434
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name=='PostgreSQL'
+      name: Run DB
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql.sh" 5432 5433 5434
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_windows.sh" 5432 5433 5434
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/postgresql_macos.sh" 5432 5433 5434
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name == 'MySQL'
-          name: chan
-          shell: bash
-          run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql.sh"
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_windows.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_windows.sh"
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_macos.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_macos.sh"
-              else
-                echo "$RUNNER_OS is not supported"
-                exit 1
-              fi
+    - if: inputs.DB-name == 'MySQL'
+      name: chan
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql.sh"
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_windows.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_windows.sh"
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_macos.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/dataSources/mysql_macos.sh"
+        else
+          echo "$RUNNER_OS is not supported"
+          exit 1
+        fi
 
-        - if: inputs.DB-name == 'MySQL' && (runner.os == 'Linux' || runner.os == 'macOS')
-          name: Start MySQL Service
-          shell: bash
-          run: |
-              docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
-              docker run --name mysql2 -e MYSQL_ROOT_PASSWORD=mysql -p 3307:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
-              docker run --name mysql3 -e MYSQL_ROOT_PASSWORD=mysql -p 3308:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+    - if: inputs.DB-name == 'MySQL' && (runner.os == 'Linux' || runner.os == 'macOS')
+      name: Start MySQL Service
+      shell: bash
+      run: |
+        docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+        docker run --name mysql2 -e MYSQL_ROOT_PASSWORD=mysql -p 3307:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+        docker run --name mysql3 -e MYSQL_ROOT_PASSWORD=mysql -p 3308:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
 
-        - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
-          name: Install MySQL
-          shell: bash
-          run: choco install mysql --params "/InstallLocation:./"
+    - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
+      name: Install MySQL
+      shell: bash
+      run: choco install mysql --params "/InstallLocation:./"
 
-        - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
-          name: Configure and start MySQL instances
-          shell: bash
-          run: |
-            choco install tree
-            tree ./
-            mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data1 --port=3307
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data2 --port=3308
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data3 --port=3309
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data1 --port=3307 &
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data2 --port=3308 &
-            ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data3 --port=3309 &
+    - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
+      name: Configure and start MySQL instances
+      shell: bash
+      run: |
+        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'mysql'; FLUSH PRIVILEGES;" > init.sql
+        mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data1 --port=3307
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data2 --port=3308
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=./init.sql --datadir=./mysql/data3 --port=3309
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data1 --port=3307 &
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data2 --port=3308 &
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data3 --port=3309 &
 
-        - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
-          name: Setup Database for each instance
-          shell: bash
-          run: |
-            ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3307
-            ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3308
-            ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3309
+    - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
+      name: Setup Database for each instance
+      shell: bash
+      run: |
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3307
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3308
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root --port=3309
+
