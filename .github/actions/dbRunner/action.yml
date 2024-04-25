@@ -171,9 +171,9 @@ runs:
       name: Start MySQL Service
       shell: bash
       run: |
-        docker run --name mysql1 -e -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
-        docker run --name mysql2 -e -p 3307:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
-        docker run --name mysql3 -e -p 3308:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+        docker run --name mysql1 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+        docker run --name mysql2 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  -p 3307:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
+        docker run --name mysql3 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  -p 3308:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:8.0.26
 
     - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
       name: Install MySQL
@@ -187,11 +187,11 @@ runs:
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'mysql';" > init.txt
         mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
         dir
-        ./mysql/mysql-8.0.31-winx64/bin/mysqld --init-file=D:/a/IGinX/IGinX/init.txt --datadir=./mysql/data1 --port=3306  --console
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data1 --port=3306  --console
         dir
-        ./mysql/mysql-8.0.31-winx64/bin/mysqld --init-file=D:/a/IGinX/IGinX/init.txt --datadir=./mysql/data2 --port=3307  --console
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data2 --port=3307  --console
         dir
-        ./mysql/mysql-8.0.31-winx64/bin/mysqld --init-file=D:/a/IGinX/IGinX/init.txt --datadir=./mysql/data3 --port=3308  --console
+        ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize-insecure --datadir=./mysql/data3 --port=3308  --console
         dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --console --datadir=./mysql/data1 --port=3306 &
         dir
