@@ -203,7 +203,7 @@ runs:
       name: Setup Database for each instance
       shell: bash
       run: |
-        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root -p mysql --port=3307
-        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root -p mysql --port=3308
-        ./mysql/mysql-8.0.31-winx64/bin/mysql -u root -p mysql --port=3309
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -v -u root -p mysql --port=3307
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -v -u root -p mysql --port=3308
+        ./mysql/mysql-8.0.31-winx64/bin/mysql -v -u root -p mysql --port=3309
 
