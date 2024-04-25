@@ -184,7 +184,7 @@ runs:
       name: Configure and start MySQL instances
       shell: bash
       run: |
-        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'mysql'; FLUSH PRIVILEGES;" > init.sql
+        echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'mysql'; FLUSH PRIVILEGES;" > init.sql
         mkdir ./mysql/data1 ./mysql/data2 ./mysql/data3
         dir
         ./mysql/mysql-8.0.31-winx64/bin/mysqld --initialize --init-file=D:/a/IGinX/IGinX/init.sql --datadir=./mysql/data1 --port=3307  --console
