@@ -204,6 +204,8 @@ public class RelationalStorage implements IStorage {
     String password = extraParams.get(PASSWORD);
     String engine = meta.getExtraParams().get("engine");
     String connUrl =
+        password == null ? String.format("jdbc:%s://%s:%s/?user=%s", engine, meta.getIp(), meta.getPort(), username)
+            :
         String.format(
             "jdbc:%s://%s:%s/?user=%s&password=%s",
             engine, meta.getIp(), meta.getPort(), username, password);
