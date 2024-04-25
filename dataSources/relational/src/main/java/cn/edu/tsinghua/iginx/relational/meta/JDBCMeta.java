@@ -42,6 +42,8 @@ public class JDBCMeta extends AbstractRelationalMeta {
   public JDBCMeta(StorageEngineMeta meta, String propertiesPath) throws IOException {
     super(meta);
     properties = new Properties();
+    //@TODO: delete
+    System.out.println("TTT debug !!!!: " + propertiesPath);
     File file = new File(propertiesPath);
     if (!file.exists()) {
       throw new IOException(String.format("Properties file %s not found", file.getAbsolutePath()));
