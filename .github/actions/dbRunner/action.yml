@@ -185,17 +185,10 @@ runs:
           shell: bash
           run: |
             mkdir -p ./data1 ./data2 ./data3
-            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data1 --port=3306 &
-            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data2 --port=3307 &
-            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data3 --port=3308 &
-
-        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
-          name: Setup Database for each instance
-          shell: bash
-          run: |
-            mysql -v -u root --port=3306
-            mysql -v -u root --port=3307
-            mysql -v -u root --port=3308
+            /usr/local/opt/mysql@8.0/bin/mysqld_safe --skip-grant-tables &
+            brew services start mysql --port=3306
+            brew services start mysql --port=3307
+            brew services start mysql --port=3308
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
