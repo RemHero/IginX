@@ -185,10 +185,20 @@ runs:
           shell: bash
           run: |
             mkdir -p ./data1 ./data2 ./data3
-            /usr/local/opt/mysql@8.0/bin/mysqld_safe --skip-grant-tables &
-            brew services start mysql --port=3306
-            brew services start mysql --port=3307
-            brew services start mysql --port=3308
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --user=root --initialize-insecure --datadir=./data1 --port=3306
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --user=root --initialize-insecure --datadir=./data2 --port=3307
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --user=root --initialize-insecure --datadir=./data3 --port=3308
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --datadir=./data1 --port=3306 &
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --datadir=./data2 --port=3307 &
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --datadir=./data3 --port=3308 &
+
+        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
+          name: Setup Database for each instance
+          shell: bash
+          run: |
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3306
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3307
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3308
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
