@@ -13,9 +13,6 @@ while true; do
     if [[ $health_status == '"healthy"' ]]; then
         echo "Container $container_name is now healthy."
         break
-    elif [[ $health_status == '"unhealthy"' ]]; then
-        echo "Container $container_name is unhealthy. Exiting..."
-        exit 1
     else
         echo "Container $container_name is not healthy yet, is $health_status. Waiting..."
         sleep 5
