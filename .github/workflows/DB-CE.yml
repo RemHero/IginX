@@ -54,11 +54,24 @@ jobs:
                 "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
                 docker ps
                 "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
+                docker ps
 
             - name: Install IGinX with Maven
               shell: bash
               run: |
                   mvn clean package -DskipTests -P-format -q
+
+            - name: check the status of MySQL
+              shell: bash
+              run: |
+                docker ps
+                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh"
+                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql1
+                docker ps
+                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
+                docker ps
+                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
+                docker ps
 
             # 第 1 阶段测试开始==========================================
             - name: Prepare CapExp environment oriHasDataExpHasData
