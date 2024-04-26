@@ -111,7 +111,6 @@ jobs:
 
             # large image export only tested in FileSystem and Parquet
             - name: Test Client Export File
-              if: always()
               shell: bash
               run: |
                   if [[ "${{ matrix.DB-name }}" == "FileSystem" || "${{ matrix.DB-name }}" == "Parquet" ]]; then
@@ -133,7 +132,6 @@ jobs:
                   shell: client-after
 
             - name: Test Client Import File
-              if: always()
               shell: bash
               run: |
                   mvn test -q -Dtest=ImportFileIT -DfailIfNoTests=false -P-format
@@ -145,7 +143,6 @@ jobs:
                   metadata: ${{ matrix.metadata }}
 
             - name: TestController IT
-              if: always()
               shell: bash
               env:
                   METADATA_STORAGE: ${{ matrix.metadata }}
@@ -165,7 +162,6 @@ jobs:
                   metadata: ${{ matrix.metadata }}
 
             - name: FilterFragmentRuleTest IT
-              if: always()
               shell: bash
               run: |
                   chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/test_union.sh"
