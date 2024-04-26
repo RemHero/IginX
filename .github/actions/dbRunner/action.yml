@@ -184,13 +184,13 @@ runs:
           name: Configure and start MySQL instances
           shell: bash
           run: |
-            mkdir -p /usr/local/mysql/data1 /usr/local/mysql/data2 /usr/local/mysql/data3
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data1 --port=3306
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data2 --port=3307
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data3 --port=3308
-            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data1 --port=3306 &
-            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data2 --port=3307 &
-            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data3 --port=3308 &
+            mkdir -p ./data1 ./data2 ./data3
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data1 --port=3306
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data2 --port=3307
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data3 --port=3308
+            /usr/local/mysql/bin/mysqld --datadir=./data1 --port=3306 &
+            /usr/local/mysql/bin/mysqld --datadir=./data2 --port=3307 &
+            /usr/local/mysql/bin/mysqld --datadir=./data3 --port=3308 &
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
           name: Setup Database for each instance
