@@ -196,9 +196,10 @@ runs:
           name: Setup Database for each instance
           shell: bash
           run: |
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3306
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3307
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3308
+            sudo chmod -R 755 /var/lib/mysql/
+            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root -h 127.0.0.1 --port=3306
+            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root -h 127.0.0.1 --port=3307
+            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root -h 127.0.0.1 --port=3308
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
