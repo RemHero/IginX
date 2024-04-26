@@ -185,20 +185,17 @@ runs:
           shell: bash
           run: |
             mkdir -p ./data1 ./data2 ./data3
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data1 --port=3306
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data2 --port=3307
-            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=./data3 --port=3308
-            /usr/local/mysql/bin/mysqld --datadir=./data1 --port=3306 &
-            /usr/local/mysql/bin/mysqld --datadir=./data2 --port=3307 &
-            /usr/local/mysql/bin/mysqld --datadir=./data3 --port=3308 &
+            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data1 --port=3306 &
+            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data2 --port=3307 &
+            mysqld --skip-grant-tables --user=root --initialize-insecure --datadir=./data3 --port=3308 &
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
           name: Setup Database for each instance
           shell: bash
           run: |
-            /usr/local/mysql/bin/mysql -v -u root --port=3306
-            /usr/local/mysql/bin/mysql -v -u root --port=3307
-            /usr/local/mysql/bin/mysql -v -u root --port=3308
+            mysql -v -u root --port=3306
+            mysql -v -u root --port=3307
+            mysql -v -u root --port=3308
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
