@@ -40,16 +40,16 @@ jobs:
               with:
                   DB-name: ${{ matrix.DB-name }}
 
-            - name: check the status of MySQL
-              shell: bash
-              run: |
-                docker ps
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql1
-                docker ps
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
-                docker ps
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
+#            - name: check the status of MySQL
+#              shell: bash
+#              run: |
+#                docker ps
+#                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh"
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql1
+#                docker ps
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
+#                docker ps
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
 
             - name: Install IGinX with Maven
               shell: bash
@@ -70,17 +70,17 @@ jobs:
                   version: ${VERSION}
                   if-test-udf: "true"
 
-            - name: check the status of MySQL
-              shell: bash
-              run: |
-                docker ps
-                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh"
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql1
-                docker ps
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
-                docker ps
-                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
-                docker ps
+#            - name: check the status of MySQL
+#              shell: bash
+#              run: |
+#                docker ps
+#                chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh"
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql1
+#                docker ps
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql2
+#                docker ps
+#                "${GITHUB_WORKSPACE}/.github/scripts/test/tools/wait_for_health.sh" mysql3
+#                docker ps
 
             - name: Run UDF path test
               if: always()

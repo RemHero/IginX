@@ -167,13 +167,38 @@ runs:
                 exit 1
               fi
 
-        - if: inputs.DB-name == 'MySQL' && (runner.os == 'Linux' || runner.os == 'macOS')
+        - if: inputs.DB-name == 'MySQL' && runner.os == 'Linux'
           name: Start MySQL Service
           shell: bash
           run: |
               docker run --name mysql1 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:5.1.49
               docker run --name mysql2 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3307:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:5.1.49
               docker run --name mysql3 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3308:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 -d mysql:5.1.49
+
+        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
+          name: Install MySQL
+          shell: bash
+          run: brew install mysql@8.0.26
+
+        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
+          name: Configure and start MySQL instances
+          shell: bash
+          run: |
+            mkdir -p /usr/local/mysql/data1 /usr/local/mysql/data2 /usr/local/mysql/data3
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data1 --port=3306
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data2 --port=3307
+            /usr/local/mysql/bin/mysqld --initialize-insecure --datadir=/usr/local/mysql/data3 --port=3308
+            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data1 --port=3306 &
+            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data2 --port=3307 &
+            /usr/local/mysql/bin/mysqld --datadir=/usr/local/mysql/data3 --port=3308 &
+
+        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
+          name: Setup Database for each instance
+          shell: bash
+          run: |
+            /usr/local/mysql/bin/mysql -v -u root --port=3306
+            /usr/local/mysql/bin/mysql -v -u root --port=3307
+            /usr/local/mysql/bin/mysql -v -u root --port=3308
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
