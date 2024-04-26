@@ -18,7 +18,7 @@ jobs:
             matrix:
                 java: [8]
                 python-version: ["3.9"]
-                os: [macos-13]
+                os: [macos-12]
                 DB-name: ["MySQL"]
                 metadata: [zookeeper]
         runs-on: ${{ matrix.os }}
