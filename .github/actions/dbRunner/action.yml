@@ -178,7 +178,7 @@ runs:
         - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
           name: Install MySQL
           shell: bash
-          run: brew install mysql@8.0.26
+          run: brew install mysql@8.0
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
           name: Configure and start MySQL instances
