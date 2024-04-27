@@ -191,6 +191,7 @@ runs:
             sudo sh -c 'echo "port=3306" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "mysqlx_port=33060" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "user=root" >> /usr/local/etc/my.cnf'
+            sudo sh -c 'echo "socket=0.0.0.0" >> /usr/local/etc/my.cnf'
             cat /usr/local/etc/my.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my1.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my2.cnf
