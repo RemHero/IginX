@@ -191,23 +191,19 @@ runs:
             sudo sh -c 'echo "port=3306" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "mysqlx_port=33060" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "user=root" >> /usr/local/etc/my.cnf'
-            sudo sh -c 'echo "mysqlx_socket=/tmp/mysqlx.sock" >> /usr/local/etc/my.cnf'
             cat /usr/local/etc/my.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my1.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my2.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my3.cnf
-            cp /tmp/mysqlx.sock /tmp/mysqlx1.sock
-            cp /tmp/mysqlx.sock /tmp/mysqlx2.sock
-            cp /tmp/mysqlx.sock /tmp/mysqlx3.sock
-            sed -i '' -e 's/^port=.*$/port=3306/' -e 's/^mysqlx_port=.*$/mysqlx_port=33060/' -e 's/^user=.*$/user=root/' -e 's/^mysqlx_socket=.*$/mysqlx_socket=/usr/local/etc/my1.cnf/' /usr/local/etc/my1.cnf
-            sed -i '' -e 's/^port=.*$/port=3307/' -e 's/^mysqlx_port=.*$/mysqlx_port=33061/' -e 's/^user=.*$/user=root/' -e 's/^mysqlx_socket=.*$/mysqlx_socket=/usr/local/etc/my2.cnf/' /usr/local/etc/my2.cnf
-            sed -i '' -e 's/^port=.*$/port=3308/' -e 's/^mysqlx_port=.*$/mysqlx_port=33062/' -e 's/^user=.*$/user=root/' -e 's/^mysqlx_socket=.*$/mysqlx_socket=/usr/local/etc/my3.cnf/' /usr/local/etc/my3.cnf
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my1.cnf --user=root --initialize-insecure --datadir=./data1 --port=3306 
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --user=root --initialize-insecure --datadir=./data2 --port=3307
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --user=root --initialize-insecure --datadir=./data3 --port=3308
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my1.cnf --datadir=./data1 --port=3306 &
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --datadir=./data2 --port=3307 &
-            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --datadir=./data3 --port=3308 &
+            sed -i '' -e 's/^port=.*$/port=3306/' -e 's/^mysqlx_port=.*$/mysqlx_port=33060/' -e 's/^user=.*$/user=root/' /usr/local/etc/my1.cnf
+            sed -i '' -e 's/^port=.*$/port=3307/' -e 's/^mysqlx_port=.*$/mysqlx_port=33061/' -e 's/^user=.*$/user=root/' /usr/local/etc/my2.cnf
+            sed -i '' -e 's/^port=.*$/port=3308/' -e 's/^mysqlx_port=.*$/mysqlx_port=33062/' -e 's/^user=.*$/user=root/' /usr/local/etc/my3.cnf
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my1.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data1 --port=3306 
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data2 --port=3307
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data3 --port=3308
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my1.cnf --mysqlx=0 --datadir=./data1 --port=3306 &
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --mysqlx=0 --datadir=./data2 --port=3307 &
+            /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --mysqlx=0 --datadir=./data3 --port=3308 &
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
           name: Setup Database for each instance
