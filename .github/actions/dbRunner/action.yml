@@ -206,14 +206,14 @@ runs:
             /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --mysqlx=0 --datadir=./data2 --port=3307 &
             /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --mysqlx=0 --datadir=./data3 --port=3308 &
 
-        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
-          name: Setup Database for each instance
-          shell: bash
-          run: |
-            sudo chown -R _mysql:mysql /usr/local/var/mysql
-            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3306
-            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3307
-            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3308
+#        - if: inputs.DB-name == 'MySQL' && runner.os == 'macOS'
+#          name: Setup Database for each instance
+#          shell: bash
+#          run: |
+#            sudo chown -R _mysql:mysql /usr/local/var/mysql
+#            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3306 --socket=/tmp/mysql1.sock
+#            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3307 --socket=/tmp/mysql2.sock
+#            sudo /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysql -v -u root --port=3308 --socket=/tmp/mysql3.sock
 
         - if: inputs.DB-name == 'MySQL' && runner.os == 'Windows'
           name: Install MySQL
