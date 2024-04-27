@@ -191,14 +191,14 @@ runs:
             sudo sh -c 'echo "port=3306" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "mysqlx_port=33060" >> /usr/local/etc/my.cnf'
             sudo sh -c 'echo "user=root" >> /usr/local/etc/my.cnf'
-            sudo sh -c 'echo "socket=0.0.0.0" >> /usr/local/etc/my.cnf'
+            sudo sh -c 'echo "socket=/tmp/mysql.sock" >> /usr/local/etc/my.cnf'
             cat /usr/local/etc/my.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my1.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my2.cnf
             cp /usr/local/etc/my.cnf /usr/local/etc/my3.cnf
-            sed -i '' -e 's/^port=.*$/port=3306/' -e 's/^mysqlx_port=.*$/mysqlx_port=33060/' -e 's/^user=.*$/user=root/' /usr/local/etc/my1.cnf
-            sed -i '' -e 's/^port=.*$/port=3307/' -e 's/^mysqlx_port=.*$/mysqlx_port=33061/' -e 's/^user=.*$/user=root/' /usr/local/etc/my2.cnf
-            sed -i '' -e 's/^port=.*$/port=3308/' -e 's/^mysqlx_port=.*$/mysqlx_port=33062/' -e 's/^user=.*$/user=root/' /usr/local/etc/my3.cnf
+            sed -i '' -e 's/^port=.*$/port=3306/' -e 's/^mysqlx_port=.*$/mysqlx_port=33060/' -e 's/^user=.*$/user=root/' -e 's/^socket=.*$/socket=/tmp/mysql1.sock/' /usr/local/etc/my1.cnf
+            sed -i '' -e 's/^port=.*$/port=3307/' -e 's/^mysqlx_port=.*$/mysqlx_port=33061/' -e 's/^user=.*$/user=root/' -e 's/^socket=.*$/socket=/tmp/mysql2.sock/' /usr/local/etc/my2.cnf
+            sed -i '' -e 's/^port=.*$/port=3308/' -e 's/^mysqlx_port=.*$/mysqlx_port=33062/' -e 's/^user=.*$/user=root/' -e 's/^socket=.*$/socket=/tmp/mysql3.sock/' /usr/local/etc/my3.cnf
             /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my1.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data1 --port=3306 
             /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my2.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data2 --port=3307
             /usr/local/Cellar/mysql@8.0/8.0.36_1/bin/mysqld --defaults-file=/usr/local/etc/my3.cnf --mysqlx=0 --user=root --initialize-insecure --datadir=./data3 --port=3308
