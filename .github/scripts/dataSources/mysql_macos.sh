@@ -6,11 +6,11 @@ sed -i "" "s/storageEngineList=127.0.0.1#6667#iotdb12/#storageEngineList=127.0.0
 
 sed -i  "" "s^#storageEngineList=127.0.0.1#3306#relational#engine=mysql#username=root#password=mysql#has_data=false#meta_properties_path=your-meta-properties-path^storageEngineList=127.0.0.1#3306#relational#engine=mysql#username=root#has_data=false#meta_properties_path=/Users/runner/work/IGinX/IGinX/dataSources/relational/src/main/resources/mysql-meta-template.properties^g" conf/config.properties
 
-brew install mysql@8.0
+brew install mysql@8.0 | tee brew_install_output.txt
 
-brew info mysql
+MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($1, version, "/"); print version[5]}' brew_install_output.txt)
 
-MYSQL_VERSION=$(brew info mysql | awk '/stable/ { print $4 }')
+echo $MYSQL_VERSION
 
 for port in "$@"
 do
