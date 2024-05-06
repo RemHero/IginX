@@ -10,7 +10,7 @@ brew install mysql@8.0 | tee brew_install_output.txt
 
 awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {print $0}' brew_install_output.txt
 
-MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($2, version, "/"); print version[5]}' brew_install_output.txt)
+MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($2, version, "/"); print $1, $2, $3, version[5]}' brew_install_output.txt)
 
 echo "MYSQL_VERSION: $MYSQL_VERSION"
 
