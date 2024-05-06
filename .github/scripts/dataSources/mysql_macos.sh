@@ -8,7 +8,9 @@ sed -i  "" "s^#storageEngineList=127.0.0.1#3306#relational#engine=mysql#username
 
 brew install mysql@8.0
 
-MYSQL_VERSION=$(brew info mysql@8.0 | awk '/stable/ { print $2 }')
+brew info mysql
+
+MYSQL_VERSION=$(brew info mysql | awk '/stable/ { print $2 }')
 
 for port in "$@"
 do
