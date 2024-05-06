@@ -10,7 +10,7 @@ brew install mysql@8.0
 
 brew info mysql
 
-MYSQL_VERSION=$(brew info mysql | awk '/stable/ { print $2 }')
+MYSQL_VERSION=$(brew info mysql | awk '/stable/ { print $4 }')
 
 for port in "$@"
 do
