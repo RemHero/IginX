@@ -8,9 +8,11 @@ sed -i  "" "s^#storageEngineList=127.0.0.1#3306#relational#engine=mysql#username
 
 brew install mysql@8.0 | tee brew_install_output.txt
 
-MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($1, version, "/"); print version[5]}' brew_install_output.txt)
+MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($2, version, "/"); print $0}' brew_install_output.txt)
 
-echo $MYSQL_VERSION
+MYSQL_VERSION=$(awk -F'/' '/\/usr\/local\/Cellar\/mysql@8.0/ {split($2, version, "/"); print version[5]}' brew_install_output.txt)
+
+echo "MYSQL_VERSION: $MYSQL_VERSION"
 
 for port in "$@"
 do
