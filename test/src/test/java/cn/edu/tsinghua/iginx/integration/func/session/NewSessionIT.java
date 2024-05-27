@@ -397,12 +397,16 @@ public class NewSessionIT {
 
   @Test
   public void testCancelClient() {
+    File clientDir = new File("../client/target/");
+    File[] matchingFiles = clientDir.listFiles((dir, name) -> name.startsWith("iginx-client-"));
+    String dirName = matchingFiles[0].getName();
+    String version = dirName.substring(0, dirName.indexOf("iginx-client-"));
     // use .sh on unix & .bat on windows(absolute path)
-    String clientUnixPath = "../client/target/iginx-client-*/sbin/start_cli.sh";
+    String clientUnixPath = "../client/target/" + version + "/sbin/start_cli.sh";
     String clientWinPath = null;
     try {
       clientWinPath =
-          new File("../client/target/iginx-client-*/sbin/start_cli.bat")
+          new File("../client/target/" + version + "/sbin/start_cli.bat")
               .getCanonicalPath();
     } catch (IOException e) {
       LOGGER.info(
