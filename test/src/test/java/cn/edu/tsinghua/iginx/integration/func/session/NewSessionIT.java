@@ -400,6 +400,7 @@ public class NewSessionIT {
     File clientDir = new File("../client/target/");
     File[] matchingFiles = clientDir.listFiles((dir, name) -> name.startsWith("iginx-client-"));
     String version = matchingFiles[0].getName();
+    version = version.contains(".") ? version.substring(0, version.indexOf(".")) : version;
     // use .sh on unix & .bat on windows(absolute path)
     String clientUnixPath = "../client/target/" + version + "/sbin/start_cli.sh";
     LOGGER.error("clientUnixPath: {}", clientUnixPath);
