@@ -14,6 +14,7 @@ import cn.edu.tsinghua.iginx.integration.expansion.parquet.ParquetCapacityExpans
 import cn.edu.tsinghua.iginx.integration.expansion.utils.SQLTestTools;
 import cn.edu.tsinghua.iginx.integration.tool.ConfLoader;
 import cn.edu.tsinghua.iginx.session.ClusterInfo;
+import cn.edu.tsinghua.iginx.session.Column;
 import cn.edu.tsinghua.iginx.session.QueryDataSet;
 import cn.edu.tsinghua.iginx.session.Session;
 import cn.edu.tsinghua.iginx.thrift.RemovedStorageEngineInfo;
@@ -465,8 +466,22 @@ public abstract class BaseCapacityExpansionIT {
 
     List<List<Object>> valuesList = EXP_VALUES_LIST1;
 
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
+
     // 添加不同 schemaPrefix，相同 dataPrefix
     addStorageEngine(expPort, true, true, dataPrefix1, schemaPrefix1, extraParams);
+
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
 
     // 添加节点 dataPrefix = dataPrefix1 && schemaPrefix = p1 后查询
     String statement = "select status2 from *;";
@@ -476,6 +491,13 @@ public abstract class BaseCapacityExpansionIT {
     addStorageEngine(expPort, true, true, dataPrefix1, schemaPrefix2, extraParams);
     addStorageEngine(expPort, true, true, dataPrefix1, null, extraParams);
     testShowClusterInfo(5);
+
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
 
     // 如果是重复添加，则报错
     String res = addStorageEngine(expPort, true, true, dataPrefix1, null, extraParams);
@@ -490,6 +512,13 @@ public abstract class BaseCapacityExpansionIT {
     // 添加相同 schemaPrefix，不同 dataPrefix
     addStorageEngine(expPort, true, true, dataPrefix2, schemaPrefix3, extraParams);
     testShowClusterInfo(7);
+
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
 
     // 添加节点 dataPrefix = dataPrefix1 && schemaPrefix = p1 后查询
     statement = "select wt01.status2 from p1.nt.wf03;";
@@ -523,6 +552,14 @@ public abstract class BaseCapacityExpansionIT {
     } catch (SessionException e) {
       LOGGER.error("remove history data source through session api error: ", e);
     }
+
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
+
     // 移除节点 dataPrefix = dataPrefix1 && schemaPrefix = p2 + schemaPrefixSuffix 后再查询
     statement = "select * from p2.nt.wf03;";
     String expect =
@@ -562,6 +599,14 @@ public abstract class BaseCapacityExpansionIT {
         fail();
       }
     }
+
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
+
     testShowClusterInfo(2);
   }
 
