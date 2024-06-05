@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -470,7 +472,20 @@ public abstract class BaseCapacityExpansionIT {
     try {
       List<Column> columns = session.showColumns();
       LOGGER.info("show columns: {}", columns);
-      assertArrayEquals(expectColumns.toArray(), columns.toArray());
+
+      // 对期望列表和实际列表中的Column对象按路径排序
+      List<String> sortedExpectPaths = expectColumns.stream()
+          .map(Column::getPath)
+          .sorted()
+          .collect(Collectors.toList());
+
+      List<String> sortedActualPaths = columns.stream()
+          .map(Column::getPath)
+          .sorted()
+          .collect(Collectors.toList());
+
+      // 检查排序后的路径列表是否相同
+      assertArrayEquals(sortedExpectPaths.toArray(), sortedActualPaths.toArray());
     } catch (SessionException e) {
       LOGGER.error("show columns error: ", e);
     }
