@@ -514,13 +514,12 @@ public abstract class BaseCapacityExpansionIT {
     addStorageEngine(expPort, true, true, dataPrefix1, schemaPrefix1, extraParams);
 
     testShowColumns(Arrays.asList(
-        new Column("b.b.b", DataType.LONG),new Column("p1.b.b.b", DataType.LONG),
+        new Column("b.b.b", DataType.LONG),
         new Column("ln.wf02.status", DataType.BOOLEAN),
         new Column("ln.wf02.version", DataType.BINARY),
         new Column("nt.wf03.wt01.status2", DataType.LONG),new Column("p1.nt.wf03.wt01.status2", DataType.LONG),
-        new Column("nt.wf04.wt01.temperature", DataType.DOUBLE),new Column("p1.nt.wf04.wt01.temperature", DataType.DOUBLE),
-        new Column("zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG),
-        new Column("p1.zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG)
+        new Column("nt.wf04.wt01.temperature", DataType.DOUBLE),
+        new Column("zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG)
     ));
 
     // 添加节点 dataPrefix = dataPrefix1 && schemaPrefix = p1 后查询
