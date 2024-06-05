@@ -3,8 +3,7 @@ package cn.edu.tsinghua.iginx.integration.expansion;
 import static cn.edu.tsinghua.iginx.integration.controller.Controller.SUPPORT_KEY;
 import static cn.edu.tsinghua.iginx.integration.expansion.constant.Constant.*;
 import static cn.edu.tsinghua.iginx.integration.expansion.utils.SQLTestTools.executeShellScript;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import cn.edu.tsinghua.iginx.exception.SessionException;
 import cn.edu.tsinghua.iginx.integration.controller.Controller;
@@ -17,6 +16,7 @@ import cn.edu.tsinghua.iginx.session.ClusterInfo;
 import cn.edu.tsinghua.iginx.session.Column;
 import cn.edu.tsinghua.iginx.session.QueryDataSet;
 import cn.edu.tsinghua.iginx.session.Session;
+import cn.edu.tsinghua.iginx.thrift.DataType;
 import cn.edu.tsinghua.iginx.thrift.RemovedStorageEngineInfo;
 import cn.edu.tsinghua.iginx.thrift.StorageEngineType;
 import java.util.ArrayList;
@@ -324,6 +324,16 @@ public abstract class BaseCapacityExpansionIT {
     statement = "select wf05.wt01.status, wf05.wt01.temperature from tm;";
     SQLTestTools.executeAndContainValue(
         session, statement, READ_ONLY_PATH_LIST, READ_ONLY_EXTEND_VALUES_LIST);
+
+    // test show columns
+    testShowColumns(Arrays.asList(
+        new Column("ln.wf02.status", DataType.BOOLEAN),
+        new Column("ln.wf02.version", DataType.BINARY),
+        new Column("nt.wf03.wt01.status2", DataType.LONG),
+        new Column("nt.wf04.wt01.temperature", DataType.DOUBLE),
+        new Column("tm.wf05.wt01.status", DataType.LONG),
+        new Column("tm.wf05.wt01.temperature", DataType.DOUBLE)
+    ));
   }
 
   protected void queryExtendedColDummy() {
@@ -456,6 +466,16 @@ public abstract class BaseCapacityExpansionIT {
     SQLTestTools.executeAndCompare(session, statement, expect);
   }
 
+  private void testShowColumns(List<Column> expectColumns) {
+    try {
+      List<Column> columns = session.showColumns();
+      LOGGER.info("show columns: {}", columns);
+      assertArrayEquals(expectColumns.toArray(), columns.toArray());
+    } catch (SessionException e) {
+      LOGGER.error("show columns error: ", e);
+    }
+  }
+
   private void testAddAndRemoveStorageEngineWithPrefix() {
     String dataPrefix1 = "nt.wf03";
     String dataPrefix2 = "nt.wf04";
@@ -466,22 +486,27 @@ public abstract class BaseCapacityExpansionIT {
 
     List<List<Object>> valuesList = EXP_VALUES_LIST1;
 
-    try {
-      List<Column> columns = session.showColumns();
-      LOGGER.info("show columns: {}", columns);
-    } catch (SessionException e) {
-      LOGGER.error("show columns error: ", e);
-    }
+    testShowColumns(Arrays.asList(
+        new Column("b.b.b", DataType.LONG),
+        new Column("ln.wf02.status", DataType.BOOLEAN),
+        new Column("ln.wf02.version", DataType.BINARY),
+        new Column("nt.wf03.wt01.status2", DataType.LONG),
+        new Column("nt.wf04.wt01.temperature", DataType.DOUBLE),
+        new Column("zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG)
+    ));
 
     // 添加不同 schemaPrefix，相同 dataPrefix
     addStorageEngine(expPort, true, true, dataPrefix1, schemaPrefix1, extraParams);
 
-    try {
-      List<Column> columns = session.showColumns();
-      LOGGER.info("show columns: {}", columns);
-    } catch (SessionException e) {
-      LOGGER.error("show columns error: ", e);
-    }
+    testShowColumns(Arrays.asList(
+        new Column("b.b.b", DataType.LONG),new Column("p1.b.b.b", DataType.LONG),
+        new Column("ln.wf02.status", DataType.BOOLEAN),
+        new Column("ln.wf02.version", DataType.BINARY),
+        new Column("nt.wf03.wt01.status2", DataType.LONG),new Column("p1.nt.wf03.wt01.status2", DataType.LONG),
+        new Column("nt.wf04.wt01.temperature", DataType.DOUBLE),new Column("p1.nt.wf04.wt01.temperature", DataType.DOUBLE),
+        new Column("zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG),
+        new Column("p1.zzzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzz.zzzzzzzzzzzzzzzzzzzzzzzzzzzzz", DataType.LONG)
+    ));
 
     // 添加节点 dataPrefix = dataPrefix1 && schemaPrefix = p1 后查询
     String statement = "select status2 from *;";
