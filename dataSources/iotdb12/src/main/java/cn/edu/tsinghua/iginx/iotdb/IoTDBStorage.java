@@ -232,6 +232,7 @@ public class IoTDBStorage implements IStorage {
           isDummy = false;
         }
         Pair<String, Map<String, String>> pair = TagKVUtils.splitFullName(path);
+        LOGGER.info("LHZ-DEBUG: path: {}, tag: {}", pair.k, pair.v);
         String dataTypeName = record.getFields().get(3).getStringValue();
 
         String fragment = isDummy ? "" : record.getFields().get(2).getStringValue().substring(5);
