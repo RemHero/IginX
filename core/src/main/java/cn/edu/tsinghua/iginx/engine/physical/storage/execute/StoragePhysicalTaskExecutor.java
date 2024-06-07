@@ -338,7 +338,7 @@ public class StoragePhysicalTaskExecutor {
               if (dataPrefixRegex == null || Pattern.matches(dataPrefixRegex, column.getPath())) {
                 if (schemaPrefix != null) {
                   column.setPath(schemaPrefix + "." + column.getPath());
-                  boolean isMatch = false;
+                  boolean isMatch = patternSet.isEmpty();
                   for (String pathRegex : patternSet) {
                     if (Pattern.matches(StringUtils.reformatPath(pathRegex), column.getPath())) {
                       isMatch = true;
