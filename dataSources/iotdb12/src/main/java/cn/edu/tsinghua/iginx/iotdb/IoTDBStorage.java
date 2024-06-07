@@ -200,14 +200,18 @@ public class IoTDBStorage implements IStorage {
   }
 
   boolean isPathMatchPattern(String path, Set<String> pattern) {
+    LOGGER.info("LHZ-DEBUG: path: {}, pattern: {}", path, pattern);
     if (pattern.isEmpty()) {
+      LOGGER.info("return true");
       return true;
     }
     for (String pathRegex : pattern) {
       if (Pattern.matches(StringUtils.reformatPath(pathRegex), path)) {
+        LOGGER.info("match success");
         return true;
       }
     }
+    LOGGER.info("match failure");
     return false;
   }
 
@@ -243,10 +247,13 @@ public class IoTDBStorage implements IStorage {
         if (!isPathMatchPattern(pair.k, pattern)) {
           continue;
         }
+        LOGGER.info("LHZ-DEBUG: path: {}, tag: {}", pair.k, pair.v);
         // get columns by tag filter
         if (tagFilter != null && !TagKVUtils.match(pair.v, tagFilter)) {
+          LOGGER.info("tagFIlter {}, tag{}", tagFilter, pair.v);
           continue;
         }
+        LOGGER.info("next");
 
         switch (dataTypeName) {
           case "BOOLEAN":
