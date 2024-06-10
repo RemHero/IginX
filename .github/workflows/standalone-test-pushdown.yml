@@ -112,6 +112,7 @@ jobs:
             - name: Query optimization test for merging fragment
               shell: bash
               run: |
+                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/*.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/SDMF_insert_query.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/timeout_judge.sh"
 

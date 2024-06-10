@@ -1,5 +1,6 @@
 #!/bin/bash
-SCRIPT_COMMAND="/home/lhz/lhz/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.sh"
+set +e
+SCRIPT_COMMAND="/home/lhz/lhz/iginx-client-*/sbin/start_cli.sh"
 BATCH=10
 ALL=10
 

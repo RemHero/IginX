@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set +e
 SCRIPT_COMMAND="/home/lhz/lhz/iginx-client-0.6.0-SNAPSHOT/sbin/start_cli.sh"
 TIMES=$1
 PLL=10

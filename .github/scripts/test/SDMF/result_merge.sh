@@ -1,4 +1,5 @@
 #!/bin/bash
+set +e
 TIMES=10
 PLL=10
 echo "" > read_output_all.txt

@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set +e
 # 指定文件路径
 file_path="/home/lhz/lhz/iginx/conn_test/test_shell/read_output_all.txt"  # 替换为你的文件路径
 
