@@ -112,8 +112,9 @@ jobs:
             - name: Query optimization test for merging fragment
               shell: bash
               run: |
-                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/*.sh"
+                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/SDMF_insert_query.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/SDMF_insert_query.sh"
+                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/timeout_judge.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/timeout_judge.sh"
 
             # test push down in sigle DU multi fragment
@@ -126,5 +127,7 @@ jobs:
               shell: bash
               run: |
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/SDMF_insert_query.sh"
+                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/time_gather.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/time_gather.sh"
+                  chmod +x "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/time_avg_judge.sh"
                   "${GITHUB_WORKSPACE}/.github/scripts/test/SDMF/time_avg_judge.sh"
