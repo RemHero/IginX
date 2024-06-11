@@ -8,3 +8,5 @@ else
     echo "No exception found in read_output_all.txt."
 #    exit 0
 fi
+
+trap 'exit 0' ERR

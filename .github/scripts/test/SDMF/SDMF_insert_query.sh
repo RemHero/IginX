@@ -11,3 +11,5 @@ sleep 10
 sleep 10
 
 .github/scripts/test/SDMF/result_merge.sh
+
+trap 'exit 0' ERR

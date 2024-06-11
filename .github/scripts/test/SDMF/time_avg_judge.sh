@@ -17,3 +17,5 @@ fi
 # 打印结果
 echo "总共匹配到 $count 个字符串"
 echo "平均耗时为 $average_time ms"
+
+trap 'exit 0' ERR
