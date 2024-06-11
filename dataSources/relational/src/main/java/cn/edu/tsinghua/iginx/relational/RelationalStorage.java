@@ -335,7 +335,8 @@ public class RelationalStorage implements IStorage {
   }
 
   @Override
-  public List<Column> getColumns() throws RelationalTaskExecuteFailureException {
+  public List<Column> getColumns(Set<String> pattern, TagFilter tagFilter)
+      throws RelationalTaskExecuteFailureException {
     List<Column> columns = new ArrayList<>();
     Map<String, String> extraParams = meta.getExtraParams();
     try {
@@ -344,6 +345,9 @@ public class RelationalStorage implements IStorage {
             && !databaseName.startsWith(DATABASE_PREFIX)) {
           continue;
         }
+        boolean isDummy =
+            extraParams.get("has_data") != null
+                && extraParams.get("has_data").equalsIgnoreCase("true");
 
         List<String> tables = getTables(databaseName, "%");
         for (String tableName : tables) {
@@ -356,18 +360,25 @@ public class RelationalStorage implements IStorage {
             }
             Pair<String, Map<String, String>> nameAndTags = splitFullName(columnName);
             if (databaseName.startsWith(DATABASE_PREFIX)) {
-              columns.add(
-                  new Column(
-                      tableName + SEPARATOR + nameAndTags.k,
-                      relationalMeta.getDataTypeTransformer().fromEngineType(typeName),
-                      nameAndTags.v));
+              columnName = tableName + SEPARATOR + nameAndTags.k;
             } else {
-              columns.add(
-                  new Column(
-                      databaseName + SEPARATOR + tableName + SEPARATOR + nameAndTags.k,
-                      relationalMeta.getDataTypeTransformer().fromEngineType(typeName),
-                      nameAndTags.v));
+              columnName = databaseName + SEPARATOR + tableName + SEPARATOR + nameAndTags.k;
             }
+
+            // get columns by pattern
+            if (!isPathMatchPattern(columnName, pattern)) {
+              continue;
+            }
+            // get columns by tag filter
+            if (tagFilter != null && !TagKVUtils.match(nameAndTags.v, tagFilter)) {
+              continue;
+            }
+            columns.add(
+                new Column(
+                    columnName,
+                    relationalMeta.getDataTypeTransformer().fromEngineType(typeName),
+                    nameAndTags.v,
+                    isDummy));
           }
         }
       }
@@ -375,6 +386,18 @@ public class RelationalStorage implements IStorage {
       throw new RelationalTaskExecuteFailureException("failed to get columns ", e);
     }
     return columns;
+  }
+
+  boolean isPathMatchPattern(String path, Set<String> pattern) {
+    if (pattern == null || pattern.isEmpty()) {
+      return true;
+    }
+    for (String pathRegex : pattern) {
+      if (Pattern.matches(StringUtils.reformatPath(pathRegex), path)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -1833,7 +1856,7 @@ public class RelationalStorage implements IStorage {
   private List<Pair<String, String>> determineDeletedPaths(
       List<String> paths, TagFilter tagFilter) {
     try {
-      List<Column> columns = getColumns();
+      List<Column> columns = getColumns(null, null);
       List<Pair<String, String>> deletedPaths = new ArrayList<>();
 
       for (Column column : columns) {
