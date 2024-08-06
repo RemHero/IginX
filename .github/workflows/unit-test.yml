@@ -19,9 +19,6 @@ on:
                 required: false
                 default: '["ubuntu-latest", "macos-13", "windows-latest"]'
 
-env:
-    VERSION: 0.6.0-SNAPSHOT
-
 jobs:
     Unit-Test:
         strategy:
@@ -41,4 +38,4 @@ jobs:
 
             - name: Test with Maven
               run: |
-                  mvn clean package -pl core -am -P-format -q
+                  mvn clean package -pl dependency -pl core -am -P-format -q

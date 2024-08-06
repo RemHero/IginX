@@ -1,3 +1,21 @@
+/*
+ * IGinX - the polystore system with high performance
+ * Copyright (C) Tsinghua University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package cn.edu.tsinghua.iginx.engine.logical.generator;
 
 import static cn.edu.tsinghua.iginx.engine.logical.utils.MetaUtils.getFragmentsByColumnsInterval;
@@ -95,7 +113,7 @@ public class QueryGenerator extends AbstractGenerator {
         .forEach(
             cte -> {
               Operator root = generateRoot(cte.getStatement());
-              root = new Rename(new OperatorSource(root), cte.getAliasMap());
+              root = new Rename(new OperatorSource(root), cte.getAliasList());
               cte.setRoot(root);
             });
     return generateRoot(selectStatement);
@@ -364,7 +382,7 @@ public class QueryGenerator extends AbstractGenerator {
         throw new RuntimeException("Unknown FromPart type: " + fromPart.getType());
     }
     if (fromPart.hasAlias()) {
-      root = new Rename(new OperatorSource(root), fromPart.getAliasMap());
+      root = new Rename(new OperatorSource(root), fromPart.getAliasList());
     }
     return root;
   }
@@ -419,7 +437,7 @@ public class QueryGenerator extends AbstractGenerator {
                   throw new RuntimeException("Unknown FromPart type: " + fromPart.getType());
               }
               if (fromPart.hasAlias()) {
-                root = new Rename(new OperatorSource(root), fromPart.getAliasMap());
+                root = new Rename(new OperatorSource(root), fromPart.getAliasList());
               }
               joinList.add(root);
             });
@@ -779,16 +797,16 @@ public class QueryGenerator extends AbstractGenerator {
   }
 
   /**
-   * 如果SelectStatement有AliasMap, 在root之上构建一个Rename操作符
+   * 如果SelectStatement有AliasList, 在root之上构建一个Rename操作符
    *
    * @param selectStatement Select上下文
    * @param root 当前根节点
-   * @return 添加了Rename操作符的根节点；如果没有AliasMap，返回原根节点
+   * @return 添加了Rename操作符的根节点；如果没有AliasList，返回原根节点
    */
   private static Operator buildRename(UnarySelectStatement selectStatement, Operator root) {
-    Map<String, String> aliasMap = selectStatement.getSelectAliasMap();
-    if (!aliasMap.isEmpty()) {
-      root = new Rename(new OperatorSource(root), aliasMap);
+    List<Pair<String, String>> aliasList = selectStatement.getSelectAliasList();
+    if (!aliasList.isEmpty()) {
+      root = new Rename(new OperatorSource(root), aliasList);
     }
     return root;
   }

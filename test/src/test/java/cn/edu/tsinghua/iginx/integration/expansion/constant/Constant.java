@@ -1,3 +1,21 @@
+/*
+ * IGinX - the polystore system with high performance
+ * Copyright (C) Tsinghua University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package cn.edu.tsinghua.iginx.integration.expansion.constant;
 
 import cn.edu.tsinghua.iginx.integration.controller.Controller;
@@ -12,6 +30,8 @@ public class Constant {
   public static final String ORI_PORT_NAME = "ori_port";
   public static final String EXP_PORT_NAME = "exp_port";
   public static final String READ_ONLY_PORT_NAME = "read_only_port";
+
+  public static final String IGINX_DATA_PATH_PREFIX_NAME = "iginx_";
 
   // port
   public static int oriPort = 6667;
